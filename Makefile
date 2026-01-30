@@ -30,6 +30,13 @@ help:
 	@echo "  webapp-dev     Run web application with auto-reload"
 	@echo "  webapp-docker  Build and run webapp in Docker"
 	@echo ""
+	@echo "Docker Compose:"
+	@echo "  compose-up     Start services in background"
+	@echo "  compose-down   Stop and remove services"
+	@echo "  compose-logs   View service logs"
+	@echo "  compose-dev    Start development mode with hot-reload"
+	@echo "  compose-test   Run tests in container"
+	@echo ""
 	@echo "Documentation:"
 	@echo "  docs           Open documentation"
 	@echo ""
@@ -131,6 +138,28 @@ webapp-docker-run:
 
 # Build and run Docker
 webapp-docker: webapp-docker-build webapp-docker-run
+
+# Docker Compose commands
+compose-up:
+	docker compose up -d
+
+compose-down:
+	docker compose down
+
+compose-logs:
+	docker compose logs -f
+
+compose-build:
+	docker compose build
+
+compose-dev:
+	docker compose --profile dev up hsttb-dev
+
+compose-test:
+	docker compose --profile test run --rm hsttb-test
+
+compose-restart:
+	docker compose restart
 
 # =============================================================================
 # CLI Commands

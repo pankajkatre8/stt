@@ -1,0 +1,75 @@
+# HSTTB - Healthcare Streaming STT Benchmarking
+# Docker Compose configuration
+
+services:
+  # Main web application
+  hsttb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hsttb-webapp
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app/src
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    volumes:
+      # Mount for development (optional - comment out for production)
+      # - ./src:/app/src:ro
+      # Mount for reports output
+      - hsttb-reports:/app/reports
+    networks:
+      - hsttb-network
+
+  # Development mode with auto-reload
+  hsttb-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hsttb-dev
+    ports:
+      - "8001:8000"
+    environment:
+      - PYTHONPATH=/app/src
+      - PYTHONUNBUFFERED=1
+    command: uvicorn hsttb.webapp.app:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      # Mount source for hot-reload
+      - ./src:/app/src
+      - ./tests:/app/tests
+    networks:
+      - hsttb-network
+    profiles:
+      - dev
+
+  # Test runner service
+  hsttb-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hsttb-test
+    environment:
+      - PYTHONPATH=/app/src
+    command: pytest tests/ -v --tb=short
+    volumes:
+      - ./src:/app/src:ro
+      - ./tests:/app/tests:ro
+    networks:
+      - hsttb-network
+    profiles:
+      - test
+
+volumes:
+  hsttb-reports:
+    driver: local
+
+networks:
+  hsttb-network:
+    driver: bridge
