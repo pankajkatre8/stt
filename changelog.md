@@ -60,6 +60,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Network delay simulation
   - Async streaming interface
 
+- **TASK-1S01**: STT adapter interface implemented (`src/hsttb/adapters/`)
+  - Abstract STTAdapter base class (`base.py`)
+  - Adapter registry with factory pattern (`registry.py`)
+  - MockSTTAdapter for testing (`mock_adapter.py`)
+  - FailingMockAdapter for error handling tests
+  - 30 unit tests for adapter module
+
 ### Changed
 - N/A
 
