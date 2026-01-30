@@ -221,3 +221,11 @@ This project uses multiple specialized agents. See `.claude/` directory:
 4. Follow agent instructions in `.claude/`
 5. Update `changelog.md` after changes
 6. Update `memory.md` before context compaction
+
+## Auto-Commit Policy
+
+**IMPORTANT**: Auto-commit after each phase or major task completion.
+- Commit after completing each phase (Phase 1, Phase 2, etc.)
+- Commit after completing major task groups
+- Use descriptive commit messages following conventional commits
+- Continue implementation without asking for confirmation
