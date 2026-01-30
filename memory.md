@@ -10,18 +10,18 @@
 
 ### Project Phase
 - **Current Phase**: Phase 2 - TER Engine
-- **Phase Status**: In Progress (~50%)
+- **Phase Status**: COMPLETE
 - **Next Phase**: Phase 3 - NER Engine
 
 ### Active Work
-- **In Progress**: TER computation implementation
+- **In Progress**: None (Phase 2 complete)
 - **Blocked**: None
-- **Completed Recently**: Lexicons module, NLP normalizer
+- **Completed Recently**: TER computation engine with 25 tests
 
 ### Last Updated
 - **Date**: 2026-01-31
 - **By**: Claude
-- **Session**: Phase 2 in progress - 138 tests passing
+- **Session**: Phase 2 complete - 163 tests passing
 
 ---
 
@@ -53,7 +53,7 @@ Healthcare Streaming STT Benchmarking Framework - a model-agnostic evaluation sy
 |-------|------|--------|----------|
 | 0 | Planning | ✅ Complete | 100% |
 | 1 | Foundation | ✅ Complete | 100% |
-| 2 | TER Engine | 🔄 In Progress | 50% |
+| 2 | TER Engine | ✅ Complete | 100% |
 | 3 | NER Engine | ⏳ Not Started | 0% |
 | 4 | CRS Engine | ⏳ Not Started | 0% |
 | 5 | Orchestration | ⏳ Not Started | 0% |
@@ -79,7 +79,7 @@ Healthcare Streaming STT Benchmarking Framework - a model-agnostic evaluation sy
 - [x] `.claude/security_reviewer.md`
 - [x] `.claude/integration_tester.md`
 
-### Source Code (Phase 1 + Phase 2 Progress)
+### Source Code (Phase 1 + Phase 2 Complete)
 **Phase 1 - Foundation:**
 - [x] `src/hsttb/__init__.py`
 - [x] `src/hsttb/cli.py` - CLI commands
@@ -87,19 +87,20 @@ Healthcare Streaming STT Benchmarking Framework - a model-agnostic evaluation sy
 - [x] `src/hsttb/audio/` - loader, chunker
 - [x] `src/hsttb/adapters/` - base, registry, mocks
 
-**Phase 2 - TER Engine (In Progress):**
+**Phase 2 - TER Engine (Complete):**
 - [x] `src/hsttb/lexicons/base.py` - MedicalLexicon interface
 - [x] `src/hsttb/lexicons/mock_lexicon.py` - Mock with drugs/diagnoses
 - [x] `src/hsttb/lexicons/unified.py` - Multi-source lookup
 - [x] `src/hsttb/nlp/normalizer.py` - MedicalTextNormalizer
-- [ ] `src/hsttb/metrics/ter.py` - TER computation (TODO)
+- [x] `src/hsttb/metrics/ter.py` - TEREngine, compute_ter
 
 **Tests:**
 - [x] `tests/unit/core/test_types.py` - 36 type tests
 - [x] `tests/test_adapters.py` - 30 adapter tests
 - [x] `tests/test_audio.py` - 40 audio tests
 - [x] `tests/test_lexicons.py` - 32 lexicon tests
-- **Total: 138 tests passing**
+- [x] `tests/test_ter.py` - 25 TER tests
+- **Total: 163 tests passing**
 
 ---
 

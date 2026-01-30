@@ -93,6 +93,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Dosage normalization (500mg → 500 mg)
   - Number word conversion
   - normalize_for_ter utility function
+
+- **TASK-2T01**: TER computation engine implemented (`src/hsttb/metrics/`)
+  - TEREngine class for Term Error Rate computation
+  - Term extraction using lexicon matching
+  - Term alignment with greedy matching
+  - Detection of substitutions, deletions, insertions
+  - Category-wise TER breakdown
+  - 25 unit tests for TER module
+
+### Phase 2 Complete
+- 163 unit tests passing
+- Medical lexicons with drugs/diagnoses
+- Text normalization with medical abbreviations
+- TER engine with term extraction and alignment
+- Ready for Phase 3: NER Engine
 - Ready for Phase 2: TER Engine
 
 ### Changed
