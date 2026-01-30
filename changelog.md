@@ -107,8 +107,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Medical lexicons with drugs/diagnoses
 - Text normalization with medical abbreviations
 - TER engine with term extraction and alignment
-- Ready for Phase 3: NER Engine
-- Ready for Phase 2: TER Engine
+
+### Phase 3 Implementation (NER Engine)
+- **TASK-3N01**: NER Pipeline implemented (`src/hsttb/nlp/ner_pipeline.py`)
+  - NERPipeline abstract interface
+  - NERPipelineConfig for pipeline configuration
+  - MockNERPipeline with pattern-based extraction
+  - Support for DRUG, DIAGNOSIS, SYMPTOM, ANATOMY, PROCEDURE, LAB_VALUE, DOSAGE
+  - Negation detection for medical context
+  - `with_common_patterns()` factory with 60+ patterns
+  - `with_custom_patterns()` for user-defined patterns
+
+- **TASK-3E01**: Entity alignment implemented (`src/hsttb/nlp/entity_alignment.py`)
+  - EntityAligner class for matching gold/pred entities
+  - AlignmentConfig with configurable strategies
+  - SpanMatchStrategy: EXACT, PARTIAL, BOUNDARY
+  - Span IOU computation for overlap detection
+  - Text similarity for fuzzy matching
+  - Greedy alignment algorithm
+
+- **TASK-3A01**: NER accuracy engine implemented (`src/hsttb/metrics/ner.py`)
+  - NEREngine class for accuracy computation
+  - NEREngineConfig for engine configuration
+  - Precision, Recall, F1 computation
+  - Entity distortion rate, omission rate
+  - Per-entity-type metrics breakdown
+  - `compute_ner_accuracy()`, `compute_entity_f1()` utilities
+
+### Phase 3 Complete
+- 197 unit tests passing (34 new NER tests)
+- NER pipeline with pattern-based entity extraction
+- Entity alignment with configurable strategies
+- NER accuracy engine with precision/recall/F1
+- Ready for Phase 4: CRS Engine
 
 ### Changed
 - N/A

@@ -9,19 +9,19 @@
 ## Current State
 
 ### Project Phase
-- **Current Phase**: Phase 2 - TER Engine
+- **Current Phase**: Phase 3 - NER Engine
 - **Phase Status**: COMPLETE
-- **Next Phase**: Phase 3 - NER Engine
+- **Next Phase**: Phase 4 - CRS Engine
 
 ### Active Work
-- **In Progress**: None (Phase 2 complete)
+- **In Progress**: None (Phase 3 complete)
 - **Blocked**: None
-- **Completed Recently**: TER computation engine with 25 tests
+- **Completed Recently**: NER engine with 34 tests
 
 ### Last Updated
 - **Date**: 2026-01-31
 - **By**: Claude
-- **Session**: Phase 2 complete - 163 tests passing
+- **Session**: Phase 3 complete - 197 tests passing
 
 ---
 
@@ -54,7 +54,7 @@ Healthcare Streaming STT Benchmarking Framework - a model-agnostic evaluation sy
 | 0 | Planning | ✅ Complete | 100% |
 | 1 | Foundation | ✅ Complete | 100% |
 | 2 | TER Engine | ✅ Complete | 100% |
-| 3 | NER Engine | ⏳ Not Started | 0% |
+| 3 | NER Engine | ✅ Complete | 100% |
 | 4 | CRS Engine | ⏳ Not Started | 0% |
 | 5 | Orchestration | ⏳ Not Started | 0% |
 | 6 | Reporting | ⏳ Not Started | 0% |
@@ -94,13 +94,19 @@ Healthcare Streaming STT Benchmarking Framework - a model-agnostic evaluation sy
 - [x] `src/hsttb/nlp/normalizer.py` - MedicalTextNormalizer
 - [x] `src/hsttb/metrics/ter.py` - TEREngine, compute_ter
 
+**Phase 3 - NER Engine (Complete):**
+- [x] `src/hsttb/nlp/ner_pipeline.py` - NERPipeline interface, MockNERPipeline
+- [x] `src/hsttb/nlp/entity_alignment.py` - EntityAligner, alignment algorithms
+- [x] `src/hsttb/metrics/ner.py` - NEREngine, accuracy computation
+
 **Tests:**
 - [x] `tests/unit/core/test_types.py` - 36 type tests
 - [x] `tests/test_adapters.py` - 30 adapter tests
 - [x] `tests/test_audio.py` - 40 audio tests
 - [x] `tests/test_lexicons.py` - 32 lexicon tests
 - [x] `tests/test_ter.py` - 25 TER tests
-- **Total: 163 tests passing**
+- [x] `tests/test_ner.py` - 34 NER tests
+- **Total: 197 tests passing**
 
 ---
 
