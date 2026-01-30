@@ -67,6 +67,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - FailingMockAdapter for error handling tests
   - 30 unit tests for adapter module
 
+- **TASK-1CLI**: CLI implementation complete (`src/hsttb/cli.py`)
+  - `transcribe` - Transcribe audio with streaming simulation
+  - `profiles` - List available streaming profiles
+  - `adapters` - List registered STT adapters
+  - `info` - Show audio file information
+  - `simulate` - Preview chunk boundaries
+
+### Phase 1 Complete
+- 106 unit tests passing
+- All core modules implemented (types, config, exceptions, audio, adapters)
+- CLI operational with mock adapters
+- Ready for Phase 2: TER Engine
+
 ### Changed
 - N/A
 
