@@ -194,7 +194,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 252 unit tests passing (22 new evaluation tests)
 - Benchmark runner for full evaluation pipeline
 - SRS engine for streaming robustness analysis
-- Ready for Phase 6: Reporting
+
+### Phase 6 Implementation (Reporting)
+- **TASK-6R01**: Report generator implemented (`src/hsttb/reporting/generator.py`)
+  - ReportGenerator class for multi-format reports
+  - ReportConfig for customizable output
+  - JSON report with detailed metrics
+  - CSV report for spreadsheet analysis
+  - HTML report with styled summary
+  - Clinical risk report for safety analysis
+  - ClinicalRiskItem and ClinicalRiskReport types
+  - Drug substitution/omission detection (critical)
+  - Dosage error detection (high)
+  - Negation flip detection (high)
+  - `generate_report()` convenience function
+
+### Phase 6 Complete
+- 270 unit tests passing (18 new reporting tests)
+- Report generation in JSON, CSV, HTML formats
+- Clinical risk analysis for patient safety
+- All 6 phases complete
 
 ### Changed
 - N/A
