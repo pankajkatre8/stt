@@ -5,7 +5,7 @@ This module provides the core metric engines:
 - TER (Term Error Rate)
 - NER Accuracy
 - CRS (Context Retention Score)
-- SRS (Streaming Robustness Score) (to be implemented)
+- SRS (Streaming Robustness Score)
 
 Example:
     >>> from hsttb.metrics import TEREngine, compute_ter
@@ -21,6 +21,9 @@ Example:
     >>> from hsttb.metrics import CRSEngine, compute_crs
     >>> engine = CRSEngine()
     >>> crs = compute_crs(["segment 1"], ["segment 1"])
+
+    >>> from hsttb.metrics import SRSEngine
+    >>> engine = SRSEngine()
 """
 from __future__ import annotations
 
@@ -47,6 +50,7 @@ from hsttb.metrics.semantic_similarity import (
     compute_semantic_similarity,
     create_similarity_engine,
 )
+from hsttb.metrics.srs import SRSConfig, SRSEngine, compute_srs
 from hsttb.metrics.ter import TEREngine, TERResult, compute_ter
 
 __all__ = [
@@ -60,6 +64,8 @@ __all__ = [
     "EntityOccurrence",
     "NEREngine",
     "NEREngineConfig",
+    "SRSConfig",
+    "SRSEngine",
     "SemanticSimilarityEngine",
     "SimilarityConfig",
     "TEREngine",
@@ -70,6 +76,7 @@ __all__ = [
     "compute_entity_f1",
     "compute_ner_accuracy",
     "compute_semantic_similarity",
+    "compute_srs",
     "compute_ter",
     "create_similarity_engine",
 ]

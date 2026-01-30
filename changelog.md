@@ -172,7 +172,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Entity continuity tracking across segments
 - Negation detection and consistency checking
 - CRS engine with weighted composite scoring
-- Ready for Phase 5: Orchestration
+
+### Phase 5 Implementation (Orchestration)
+- **TASK-5R01**: Benchmark runner implemented (`src/hsttb/evaluation/runner.py`)
+  - BenchmarkRunner class for evaluation orchestration
+  - BenchmarkConfig for runner configuration
+  - EvaluationResult for single-file results
+  - Audio loading, chunking, and STT pipeline
+  - Lazy initialization of metric engines
+  - Text segmentation for CRS
+
+- **TASK-5S01**: SRS computation implemented (`src/hsttb/metrics/srs.py`)
+  - SRSEngine for Streaming Robustness Score
+  - SRSConfig with profile settings
+  - Runs evaluation under ideal and realtime conditions
+  - Computes degradation per metric
+  - Weighted composite SRS score
+  - `compute_srs()` convenience function
+
+### Phase 5 Complete
+- 252 unit tests passing (22 new evaluation tests)
+- Benchmark runner for full evaluation pipeline
+- SRS engine for streaming robustness analysis
+- Ready for Phase 6: Reporting
 
 ### Changed
 - N/A
