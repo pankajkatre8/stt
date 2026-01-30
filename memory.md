@@ -9,19 +9,19 @@
 ## Current State
 
 ### Project Phase
-- **Current Phase**: Phase 1 - Foundation & Infrastructure
-- **Phase Status**: COMPLETE
-- **Next Phase**: Phase 2 - TER Engine
+- **Current Phase**: Phase 2 - TER Engine
+- **Phase Status**: In Progress (~50%)
+- **Next Phase**: Phase 3 - NER Engine
 
 ### Active Work
-- **In Progress**: None (Phase 1 complete)
+- **In Progress**: TER computation implementation
 - **Blocked**: None
-- **Completed Recently**: CLI implementation, audio tests, adapter tests
+- **Completed Recently**: Lexicons module, NLP normalizer
 
 ### Last Updated
 - **Date**: 2026-01-31
 - **By**: Claude
-- **Session**: Phase 1 complete - 106 tests passing
+- **Session**: Phase 2 in progress - 138 tests passing
 
 ---
 
@@ -53,7 +53,7 @@ Healthcare Streaming STT Benchmarking Framework - a model-agnostic evaluation sy
 |-------|------|--------|----------|
 | 0 | Planning | ✅ Complete | 100% |
 | 1 | Foundation | ✅ Complete | 100% |
-| 2 | TER Engine | ⏳ Not Started | 0% |
+| 2 | TER Engine | 🔄 In Progress | 50% |
 | 3 | NER Engine | ⏳ Not Started | 0% |
 | 4 | CRS Engine | ⏳ Not Started | 0% |
 | 5 | Orchestration | ⏳ Not Started | 0% |
@@ -79,24 +79,27 @@ Healthcare Streaming STT Benchmarking Framework - a model-agnostic evaluation sy
 - [x] `.claude/security_reviewer.md`
 - [x] `.claude/integration_tester.md`
 
-### Source Code (Phase 1 Complete)
+### Source Code (Phase 1 + Phase 2 Progress)
+**Phase 1 - Foundation:**
 - [x] `src/hsttb/__init__.py`
-- [x] `src/hsttb/cli.py` - CLI with transcribe, profiles, adapters, info, simulate
-- [x] `src/hsttb/core/__init__.py`
-- [x] `src/hsttb/core/types.py` - Core data types and enums
-- [x] `src/hsttb/core/config.py` - Configuration system with profiles
-- [x] `src/hsttb/core/exceptions.py` - Exception hierarchy
-- [x] `src/hsttb/audio/__init__.py`
-- [x] `src/hsttb/audio/loader.py` - Audio file loading
-- [x] `src/hsttb/audio/chunker.py` - Streaming simulation
-- [x] `src/hsttb/adapters/__init__.py`
-- [x] `src/hsttb/adapters/base.py` - STTAdapter interface
-- [x] `src/hsttb/adapters/registry.py` - Adapter factory
-- [x] `src/hsttb/adapters/mock_adapter.py` - Mock adapters
+- [x] `src/hsttb/cli.py` - CLI commands
+- [x] `src/hsttb/core/` - types, config, exceptions
+- [x] `src/hsttb/audio/` - loader, chunker
+- [x] `src/hsttb/adapters/` - base, registry, mocks
+
+**Phase 2 - TER Engine (In Progress):**
+- [x] `src/hsttb/lexicons/base.py` - MedicalLexicon interface
+- [x] `src/hsttb/lexicons/mock_lexicon.py` - Mock with drugs/diagnoses
+- [x] `src/hsttb/lexicons/unified.py` - Multi-source lookup
+- [x] `src/hsttb/nlp/normalizer.py` - MedicalTextNormalizer
+- [ ] `src/hsttb/metrics/ter.py` - TER computation (TODO)
+
+**Tests:**
 - [x] `tests/unit/core/test_types.py` - 36 type tests
 - [x] `tests/test_adapters.py` - 30 adapter tests
 - [x] `tests/test_audio.py` - 40 audio tests
-- **Total: 106 tests passing**
+- [x] `tests/test_lexicons.py` - 32 lexicon tests
+- **Total: 138 tests passing**
 
 ---
 

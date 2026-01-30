@@ -78,6 +78,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 106 unit tests passing
 - All core modules implemented (types, config, exceptions, audio, adapters)
 - CLI operational with mock adapters
+
+### Phase 2 Implementation (TER Engine)
+- **TASK-2L01**: Medical lexicons implemented (`src/hsttb/lexicons/`)
+  - LexiconEntry, LexiconSource base types
+  - MedicalLexicon abstract interface
+  - MockMedicalLexicon with 30+ common drugs and diagnoses
+  - UnifiedMedicalLexicon for multi-source lookup
+  - 32 unit tests for lexicon module
+
+- **TASK-2N01**: Text normalizer implemented (`src/hsttb/nlp/`)
+  - MedicalTextNormalizer with configurable options
+  - 70+ medical abbreviation expansions
+  - Dosage normalization (500mg → 500 mg)
+  - Number word conversion
+  - normalize_for_ter utility function
 - Ready for Phase 2: TER Engine
 
 ### Changed
