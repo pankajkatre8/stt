@@ -9,14 +9,15 @@ Healthcare Streaming STT Benchmarking Framework - A comprehensive guide to evalu
 1. [Overview](#overview)
 2. [Installation](#installation)
 3. [Quick Start](#quick-start)
-4. [Core Concepts](#core-concepts)
-5. [CLI Reference](#cli-reference)
-6. [Python API](#python-api)
-7. [Metrics Explained](#metrics-explained)
-8. [Streaming Profiles](#streaming-profiles)
-9. [STT Adapters](#stt-adapters)
-10. [Report Generation](#report-generation)
-11. [Best Practices](#best-practices)
+4. [Web Application](#web-application)
+5. [Core Concepts](#core-concepts)
+6. [CLI Reference](#cli-reference)
+7. [Python API](#python-api)
+8. [Metrics Explained](#metrics-explained)
+9. [Streaming Profiles](#streaming-profiles)
+10. [STT Adapters](#stt-adapters)
+11. [Report Generation](#report-generation)
+12. [Best Practices](#best-practices)
 
 ---
 
@@ -111,14 +112,18 @@ asyncio.run(transcribe_audio())
 ### 2. Compute TER (Term Error Rate)
 
 ```python
-from hsttb.metrics.ter import TEREngine, compute_ter
+from hsttb.metrics.ter import TEREngine
 from hsttb.lexicons.mock_lexicon import MockMedicalLexicon
 
-# Quick computation
+# Create lexicon and engine
+lexicon = MockMedicalLexicon()
+engine = TEREngine(lexicon)
+
+# Compute TER
 ground_truth = "Patient takes metformin 500mg for type 2 diabetes"
 prediction = "Patient takes methotrexate 500mg for type 2 diabetes"
 
-result = compute_ter(ground_truth, prediction)
+result = engine.compute(ground_truth, prediction)
 
 print(f"TER: {result.overall_ter:.2%}")
 print(f"Substitutions: {len(result.substitutions)}")
@@ -128,12 +133,18 @@ print(f"Deletions: {len(result.deletions)}")
 ### 3. Compute NER Accuracy
 
 ```python
-from hsttb.metrics.ner import NEREngine, compute_ner_accuracy
+from hsttb.metrics.ner import NEREngine
+from hsttb.nlp.ner_pipeline import MockNERPipeline
 
+# Create NER pipeline and engine
+pipeline = MockNERPipeline.with_common_patterns()
+engine = NEREngine(pipeline)
+
+# Compute NER accuracy
 ground_truth = "Patient denies chest pain. History of diabetes."
 prediction = "Patient has chest pain. History of diabetes."
 
-result = compute_ner_accuracy(ground_truth, prediction)
+result = engine.compute(ground_truth, prediction)
 
 print(f"Precision: {result.precision:.2%}")
 print(f"Recall: {result.recall:.2%}")
@@ -143,8 +154,12 @@ print(f"F1 Score: {result.f1_score:.2%}")
 ### 4. Compute CRS (Context Retention Score)
 
 ```python
-from hsttb.metrics.crs import CRSEngine, compute_crs
+from hsttb.metrics.crs import CRSEngine
 
+# Create CRS engine
+engine = CRSEngine()
+
+# Define segments (e.g., from streaming transcription)
 gt_segments = [
     "Patient presents with chest pain.",
     "No prior history of cardiac issues.",
@@ -157,7 +172,8 @@ pred_segments = [
     "Prescribed aspirin 81mg daily."
 ]
 
-result = compute_crs(gt_segments, pred_segments)
+# Compute CRS
+result = engine.compute(gt_segments, pred_segments)
 
 print(f"Composite CRS: {result.composite_score:.2%}")
 print(f"Semantic Similarity: {result.semantic_similarity:.2%}")
@@ -208,6 +224,200 @@ reports = generate_report(
 print(f"JSON report: {reports['json']}")
 print(f"HTML report: {reports['html']}")
 print(f"Clinical risk: {reports['clinical_risk']}")
+```
+
+---
+
+## Web Application
+
+HSTTB includes a web-based interface for running evaluations without writing code.
+
+### Starting the Web App
+
+```bash
+# Option 1: Quick start with uvx (no installation required)
+PYTHONPATH=src uvx --with fastapi --with uvicorn --with jinja2 \
+  --with pydantic --with rapidfuzz --with numpy --with pyyaml \
+  uvicorn hsttb.webapp.app:app --port 8000
+
+# Option 2: After installing dependencies
+pip install -e ".[api]"
+uvicorn hsttb.webapp.app:app --reload --port 8000
+```
+
+Then open your browser to **http://localhost:8000**
+
+### Web Interface Features
+
+| Feature | Description |
+|---------|-------------|
+| **Evaluation Form** | Input ground truth and predicted text |
+| **Metric Selection** | Toggle TER, NER, and CRS metrics |
+| **Example Scenarios** | Pre-loaded test cases for common errors |
+| **Real-time Results** | Instant metric computation |
+| **Error Highlighting** | Critical errors shown with severity levels |
+| **Overall Score** | Combined score with color coding |
+
+### Screenshot Tour
+
+#### Landing Page
+The main interface provides two text areas:
+- **Ground Truth**: Enter the correct/reference transcription
+- **Predicted**: Enter the STT output to evaluate
+
+Select which metrics to compute (TER, NER, CRS) and click **Evaluate**.
+
+#### Results Display
+Results show:
+- **Overall Score**: Color-coded combined score (green >90%, yellow >70%, red <70%)
+- **TER Card**: Term error rate with substitution/deletion/insertion counts
+- **NER Card**: Precision, recall, F1 score for entity extraction
+- **CRS Card**: Semantic similarity, entity continuity, negation consistency
+
+#### Error Details
+When errors are detected, they're categorized by severity:
+- **Critical** (red): Drug substitutions, drug omissions
+- **High** (orange): Dosage errors, negation flips
+- **Medium** (blue): Other term errors
+
+### API Endpoints
+
+The web app exposes REST API endpoints:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Landing page (HTML) |
+| `/health` | GET | Health check |
+| `/api/evaluate` | POST | Run evaluation |
+| `/api/evaluate/segments` | POST | CRS with pre-segmented text |
+| `/api/examples` | GET | Get example scenarios |
+| `/docs` | GET | OpenAPI documentation (Swagger UI) |
+| `/redoc` | GET | Alternative API documentation |
+
+### API Usage Examples
+
+#### Evaluate Text
+
+```bash
+curl -X POST http://localhost:8000/api/evaluate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ground_truth": "Patient takes metformin 500mg for diabetes",
+    "predicted": "Patient takes methotrexate 500mg for diabetes",
+    "compute_ter": true,
+    "compute_ner": true,
+    "compute_crs": true
+  }'
+```
+
+Response:
+```json
+{
+  "ground_truth": "Patient takes metformin 500mg for diabetes",
+  "predicted": "Patient takes methotrexate 500mg for diabetes",
+  "ter": {
+    "overall_ter": 0.33,
+    "total_terms": 3,
+    "substitutions": 1,
+    "deletions": 0,
+    "insertions": 0,
+    "category_ter": {"drug": 1.0},
+    "errors": [
+      {
+        "type": "substitution",
+        "ground_truth": "metformin",
+        "predicted": "methotrexate",
+        "category": "drug"
+      }
+    ]
+  },
+  "ner": {
+    "precision": 0.67,
+    "recall": 0.67,
+    "f1_score": 0.67,
+    "entity_distortion_rate": 0.33,
+    "entity_omission_rate": 0.0
+  },
+  "crs": {
+    "composite_score": 0.89,
+    "semantic_similarity": 0.74,
+    "entity_continuity": 1.0,
+    "negation_consistency": 1.0,
+    "context_drift_rate": 0.0
+  },
+  "overall_score": 0.63,
+  "status": "success"
+}
+```
+
+#### Get Examples
+
+```bash
+curl http://localhost:8000/api/examples
+```
+
+Returns pre-configured test scenarios:
+- Drug Substitution Error
+- Negation Flip
+- Dosage Error
+- Perfect Match
+- Minor Variations
+
+#### Segmented CRS Evaluation
+
+For pre-segmented transcripts (e.g., from streaming STT):
+
+```bash
+curl -X POST http://localhost:8000/api/evaluate/segments \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ground_truth_segments": [
+      "Patient presents with chest pain.",
+      "No history of cardiac issues.",
+      "Prescribed aspirin daily."
+    ],
+    "predicted_segments": [
+      "Patient presents with chest pain.",
+      "History of cardiac issues.",
+      "Prescribed aspirin daily."
+    ]
+  }'
+```
+
+### Configuration
+
+The web app can be customized:
+
+```python
+# Run on different port
+uvicorn hsttb.webapp.app:app --port 3000
+
+# Enable auto-reload for development
+uvicorn hsttb.webapp.app:app --reload
+
+# Bind to all interfaces (for Docker/remote access)
+uvicorn hsttb.webapp.app:app --host 0.0.0.0 --port 8000
+
+# Production with multiple workers
+uvicorn hsttb.webapp.app:app --workers 4
+```
+
+### Docker Deployment
+
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+COPY . .
+RUN pip install -e ".[api]"
+
+EXPOSE 8000
+CMD ["uvicorn", "hsttb.webapp.app:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+```bash
+docker build -t hsttb .
+docker run -p 8000:8000 hsttb
 ```
 
 ---
@@ -333,18 +543,33 @@ from hsttb.metrics.ter import TEREngine
 from hsttb.metrics.ner import NEREngine
 from hsttb.metrics.crs import CRSEngine
 from hsttb.metrics.srs import SRSEngine
+from hsttb.lexicons.mock_lexicon import MockMedicalLexicon
+from hsttb.nlp.ner_pipeline import MockNERPipeline
 
-# TER Engine
-ter_engine = TEREngine()
+# TER Engine (requires lexicon)
+lexicon = MockMedicalLexicon()
+ter_engine = TEREngine(lexicon)
 ter_result = ter_engine.compute(ground_truth, prediction)
 
-# NER Engine
-ner_engine = NEREngine()
+print(f"TER: {ter_result.overall_ter:.2%}")
+print(f"Total GT Terms: {ter_result.total_gt_terms}")
+print(f"Substitutions: {len(ter_result.substitutions)}")
+
+# NER Engine (requires NER pipeline)
+pipeline = MockNERPipeline.with_common_patterns()
+ner_engine = NEREngine(pipeline)
 ner_result = ner_engine.compute(ground_truth, prediction)
 
-# CRS Engine
+print(f"Precision: {ner_result.precision:.2%}")
+print(f"Recall: {ner_result.recall:.2%}")
+print(f"F1: {ner_result.f1_score:.2%}")
+
+# CRS Engine (no dependencies)
 crs_engine = CRSEngine()
 crs_result = crs_engine.compute(gt_segments, pred_segments)
+
+print(f"CRS: {crs_result.composite_score:.2%}")
+print(f"Semantic: {crs_result.semantic_similarity:.2%}")
 
 # SRS Engine (Streaming Robustness)
 srs_engine = SRSEngine()
@@ -352,6 +577,8 @@ srs_result = srs_engine.compute(
     ideal_result=ideal_benchmark,
     realtime_result=realtime_benchmark
 )
+
+print(f"SRS: {srs_result.composite_srs:.2%}")
 ```
 
 ### Lexicons Module
