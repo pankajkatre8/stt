@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSTTB - Healthcare STT Benchmarking</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HSTTB</h1>
+            <p class="subtitle">Healthcare Streaming STT Benchmarking</p>
+        </header>
+
+        <main>
+            <section class="intro">
+                <p>Evaluate speech-to-text transcriptions for healthcare applications.
+                   Measures medical terminology accuracy, entity preservation, and context retention.</p>
+            </section>
+
+            <section class="input-section">
+                <h2>Run Evaluation</h2>
+
+                <div class="form-group">
+                    <label for="ground-truth">Ground Truth (Reference Text)</label>
+                    <textarea id="ground-truth" rows="4" placeholder="Enter the correct transcription..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="predicted">Predicted (STT Output)</label>
+                    <textarea id="predicted" rows="4" placeholder="Enter the STT transcription to evaluate..."></textarea>
+                </div>
+
+                <div class="metrics-selection">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="compute-ter" checked>
+                        <span>TER</span>
+                        <small>Term Error Rate</small>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="compute-ner" checked>
+                        <span>NER</span>
+                        <small>Entity Accuracy</small>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="compute-crs" checked>
+                        <span>CRS</span>
+                        <small>Context Retention</small>
+                    </label>
+                </div>
+
+                <button id="evaluate-btn" class="btn-primary">Evaluate</button>
+                <button id="clear-btn" class="btn-secondary">Clear</button>
+            </section>
+
+            <section class="examples-section">
+                <h3>Try an Example</h3>
+                <div id="examples-container" class="examples-grid">
+                    <!-- Examples loaded dynamically -->
+                </div>
+            </section>
+
+            <section id="results-section" class="results-section hidden">
+                <h2>Results</h2>
+
+                <div class="overall-score">
+                    <div class="score-circle" id="overall-score-circle">
+                        <span id="overall-score-value">--</span>
+                    </div>
+                    <div class="score-label">Overall Score</div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card" id="ter-card">
+                        <h3>TER <span class="metric-badge">Term Error Rate</span></h3>
+                        <div class="metric-value" id="ter-value">--</div>
+                        <div class="metric-details" id="ter-details"></div>
+                    </div>
+
+                    <div class="metric-card" id="ner-card">
+                        <h3>NER <span class="metric-badge">Entity Accuracy</span></h3>
+                        <div class="metric-value" id="ner-value">--</div>
+                        <div class="metric-details" id="ner-details"></div>
+                    </div>
+
+                    <div class="metric-card" id="crs-card">
+                        <h3>CRS <span class="metric-badge">Context Retention</span></h3>
+                        <div class="metric-value" id="crs-value">--</div>
+                        <div class="metric-details" id="crs-details"></div>
+                    </div>
+                </div>
+
+                <div id="errors-section" class="errors-section hidden">
+                    <h3>Detected Errors</h3>
+                    <div id="errors-list" class="errors-list"></div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>HSTTB - Healthcare Streaming STT Benchmarking Framework</p>
+            <p class="footer-links">
+                <span>TER: Medical Term Accuracy</span> |
+                <span>NER: Entity Preservation</span> |
+                <span>CRS: Context Continuity</span>
+            </p>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
