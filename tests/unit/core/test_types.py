@@ -19,12 +19,10 @@ from hsttb.core.types import (
     MedicalTerm,
     MedicalTermCategory,
     NERResult,
-    SegmentCRSScore,
-    TERResult,
     TermError,
+    TERResult,
     TranscriptSegment,
 )
-
 
 # ==============================================================================
 # AudioChunk Tests
