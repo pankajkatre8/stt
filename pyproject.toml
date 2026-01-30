@@ -33,6 +33,7 @@ dependencies = [
     "pyyaml>=6.0.0",
     "orjson>=3.9.0",
     "aiofiles>=23.0.0",
+    "click>=8.1.0",
 ]
 
 [project.optional-dependencies]
@@ -152,8 +153,13 @@ module = [
     "mlflow.*",
     "plotly.*",
     "networkx.*",
+    "click.*",
 ]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "hsttb.cli"
+disallow_untyped_decorators = false
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
