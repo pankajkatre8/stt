@@ -139,7 +139,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - NER pipeline with pattern-based entity extraction
 - Entity alignment with configurable strategies
 - NER accuracy engine with precision/recall/F1
-- Ready for Phase 4: CRS Engine
+
+### Phase 4 Implementation (CRS Engine)
+- **TASK-4S01**: Semantic similarity engine implemented (`src/hsttb/metrics/semantic_similarity.py`)
+  - SemanticSimilarityEngine abstract interface
+  - TokenBasedSimilarity using Jaccard/n-gram/LCS
+  - EmbeddingBasedSimilarity (requires sentence-transformers)
+  - Segment-wise and average similarity computation
+
+- **TASK-4E01**: Entity continuity tracker implemented (`src/hsttb/metrics/entity_continuity.py`)
+  - EntityContinuityTracker for cross-segment tracking
+  - DiscontinuityType: disappearance, conflict, label_change, negation_flip
+  - Entity occurrence mapping and timeline building
+  - Entity preservation rate computation
+
+- **TASK-4N01**: Negation detection implemented (`src/hsttb/nlp/negation.py`)
+  - NegationDetector with rule-based patterns
+  - 15+ pre-negation cues (no, not, denies, without, etc.)
+  - Negation scope detection
+  - Negation consistency checking between GT/pred
+
+- **TASK-4C01**: CRS computation engine implemented (`src/hsttb/metrics/crs.py`)
+  - CRSEngine combining all CRS components
+  - CRSConfig with configurable weights
+  - Composite score from semantic/entity/negation
+  - Per-segment scores and context drift rate
+  - `compute_crs()` convenience function
+
+### Phase 4 Complete
+- 230 unit tests passing (33 new CRS tests)
+- Semantic similarity with token-based fallback
+- Entity continuity tracking across segments
+- Negation detection and consistency checking
+- CRS engine with weighted composite scoring
+- Ready for Phase 5: Orchestration
 
 ### Changed
 - N/A

@@ -18,6 +18,10 @@ Example:
 
     >>> from hsttb.nlp import EntityAligner, align_entities
     >>> matches = align_entities(gold_entities, pred_entities)
+
+    >>> from hsttb.nlp import NegationDetector
+    >>> detector = NegationDetector()
+    >>> negations = detector.detect_negations("patient denies chest pain")
 """
 from __future__ import annotations
 
@@ -26,6 +30,13 @@ from hsttb.nlp.entity_alignment import (
     EntityAligner,
     SpanMatchStrategy,
     align_entities,
+)
+from hsttb.nlp.negation import (
+    NegationConfig,
+    NegationConsistencyResult,
+    NegationDetector,
+    NegationSpan,
+    check_negation_consistency,
 )
 from hsttb.nlp.ner_pipeline import (
     MockNERPipeline,
@@ -46,9 +57,14 @@ __all__ = [
     "MockNERPipeline",
     "NERPipeline",
     "NERPipelineConfig",
+    "NegationConfig",
+    "NegationConsistencyResult",
+    "NegationDetector",
+    "NegationSpan",
     "NormalizerConfig",
     "SpanMatchStrategy",
     "align_entities",
+    "check_negation_consistency",
     "create_normalizer",
     "normalize_for_ter",
 ]
