@@ -93,6 +93,14 @@ class TTSRequest(BaseModel):
     text: str
     voice: str = "professional"
     model: str = "eleven_turbo_v2"
+    label: str = ""  # Optional user-defined label
+    save_to_history: bool = True  # Save to history by default
+
+
+class TTSLabelUpdate(BaseModel):
+    """Request model for updating TTS entry label."""
+
+    label: str
 
 
 # ============================================================================
@@ -594,6 +602,7 @@ def create_app() -> FastAPI:
                 TTSGenerationError,
             )
             from hsttb.webapp.audio_handler import get_audio_handler
+            from hsttb.webapp.tts_history import get_tts_history
             import uuid
 
             if not req.text.strip():
@@ -618,6 +627,20 @@ def create_app() -> FastAPI:
             # Get file info
             file_size = output_path.stat().st_size
 
+            # Save to history if requested
+            history_entry = None
+            if req.save_to_history:
+                history = get_tts_history()
+                entry = history.add_entry(
+                    file_id=file_id,
+                    text=req.text,
+                    voice=req.voice,
+                    file_path=output_path,
+                    model=req.model,
+                    label=req.label,
+                )
+                history_entry = entry.to_dict()
+
             return JSONResponse(content={
                 "status": "success",
                 "file_id": file_id,
@@ -626,6 +649,8 @@ def create_app() -> FastAPI:
                 "file_size": file_size,
                 "text": req.text,
                 "voice": req.voice,
+                "saved_to_history": req.save_to_history,
+                "history_entry": history_entry,
             })
 
         except TTSGenerationError as e:
@@ -687,6 +712,124 @@ def create_app() -> FastAPI:
                 },
                 status_code=501,
             )
+
+    # ========================================================================
+    # TTS History Endpoints
+    # ========================================================================
+
+    @application.get("/api/tts/history")
+    async def get_tts_history_list(
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> JSONResponse:
+        """List TTS history entries."""
+        from hsttb.webapp.tts_history import get_tts_history
+
+        history = get_tts_history()
+        entries = history.list_entries(limit=limit, offset=offset)
+
+        return JSONResponse(content={
+            "status": "success",
+            "entries": [e.to_dict() for e in entries],
+            "total": len(history._entries),
+            "stats": history.get_stats(),
+        })
+
+    @application.get("/api/tts/history/{file_id}")
+    async def get_tts_history_entry(file_id: str) -> JSONResponse:
+        """Get a specific TTS history entry."""
+        from hsttb.webapp.tts_history import get_tts_history
+
+        history = get_tts_history()
+        entry = history.get_entry(file_id)
+
+        if not entry:
+            return JSONResponse(
+                content={"status": "error", "error": "Entry not found"},
+                status_code=404,
+            )
+
+        return JSONResponse(content={
+            "status": "success",
+            "entry": entry.to_dict(),
+        })
+
+    @application.delete("/api/tts/history/{file_id}")
+    async def delete_tts_history_entry(file_id: str) -> JSONResponse:
+        """Delete a TTS history entry."""
+        from hsttb.webapp.tts_history import get_tts_history
+
+        history = get_tts_history()
+        deleted = history.delete_entry(file_id)
+
+        if not deleted:
+            return JSONResponse(
+                content={"status": "error", "error": "Entry not found"},
+                status_code=404,
+            )
+
+        return JSONResponse(content={
+            "status": "success",
+            "message": f"Entry {file_id} deleted",
+        })
+
+    @application.patch("/api/tts/history/{file_id}")
+    async def update_tts_history_entry(
+        file_id: str,
+        update: TTSLabelUpdate,
+    ) -> JSONResponse:
+        """Update a TTS history entry label."""
+        from hsttb.webapp.tts_history import get_tts_history
+
+        history = get_tts_history()
+        updated = history.update_label(file_id, update.label)
+
+        if not updated:
+            return JSONResponse(
+                content={"status": "error", "error": "Entry not found"},
+                status_code=404,
+            )
+
+        entry = history.get_entry(file_id)
+        return JSONResponse(content={
+            "status": "success",
+            "entry": entry.to_dict() if entry else None,
+        })
+
+    @application.delete("/api/tts/history")
+    async def clear_tts_history() -> JSONResponse:
+        """Clear all TTS history entries."""
+        from hsttb.webapp.tts_history import get_tts_history
+
+        history = get_tts_history()
+        count = history.clear_all()
+
+        return JSONResponse(content={
+            "status": "success",
+            "message": f"Cleared {count} entries",
+            "deleted_count": count,
+        })
+
+    @application.get("/api/tts/history/{file_id}/audio")
+    async def get_tts_history_audio(file_id: str) -> Any:
+        """Serve the audio file for a TTS history entry."""
+        from fastapi.responses import FileResponse
+        from hsttb.webapp.tts_history import get_tts_history
+
+        history = get_tts_history()
+        file_path = history.get_file_path(file_id)
+
+        if not file_path:
+            return JSONResponse(
+                content={"status": "error", "error": "Audio file not found"},
+                status_code=404,
+            )
+
+        return FileResponse(
+            path=file_path,
+            media_type="audio/mpeg",
+            filename=f"{file_id}.mp3",
+        )
 
     # ========================================================================
     # WebSocket Endpoints

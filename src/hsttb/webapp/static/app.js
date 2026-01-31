@@ -40,12 +40,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // TTS elements
     const ttsText = document.getElementById('tts-text');
     const ttsVoice = document.getElementById('tts-voice');
+    const ttsLabel = document.getElementById('tts-label');
     const ttsGenerateBtn = document.getElementById('tts-generate-btn');
     const ttsResult = document.getElementById('tts-result');
     const ttsAudioPlayer = document.getElementById('tts-audio-player');
     const ttsUseAudioBtn = document.getElementById('tts-use-audio');
     const ttsError = document.getElementById('tts-error');
     const ttsErrorMessage = document.getElementById('tts-error-message');
+
+    // TTS History elements
+    const ttsHistoryList = document.getElementById('tts-history-list');
+    const ttsHistoryEmpty = document.getElementById('tts-history-empty');
+    const historyCount = document.getElementById('history-count');
+    const historySize = document.getElementById('history-size');
+    const refreshHistoryBtn = document.getElementById('refresh-history-btn');
+    const clearHistoryBtn = document.getElementById('clear-history-btn');
 
     // Tab elements
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -65,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let recordingStartTime = null;
     let recordingInterval = null;
     let ttsGeneratedFileId = null;
+    let ttsHistoryEntries = [];
 
     // ========================================================================
     // Initialization
@@ -72,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadExamples();
     loadBackends();
+    loadTTSHistory();
     setupEventListeners();
 
     // ========================================================================
@@ -125,6 +136,14 @@ document.addEventListener('DOMContentLoaded', () => {
             ttsUseAudioBtn.addEventListener('click', useTTSAudio);
         }
 
+        // TTS History
+        if (refreshHistoryBtn) {
+            refreshHistoryBtn.addEventListener('click', loadTTSHistory);
+        }
+        if (clearHistoryBtn) {
+            clearHistoryBtn.addEventListener('click', clearTTSHistory);
+        }
+
         // Export buttons
         document.getElementById('export-json')?.addEventListener('click', exportJSON);
         document.getElementById('export-csv')?.addEventListener('click', exportCSV);
@@ -143,10 +162,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Show/hide adapter section based on tab
-        if (tabId === 'text' || tabId === 'tts') {
+        if (tabId === 'text' || tabId === 'tts' || tabId === 'history') {
             adapterSection.classList.add('hidden');
         } else {
             adapterSection.classList.remove('hidden');
+        }
+
+        // Refresh history when switching to history tab
+        if (tabId === 'history') {
+            loadTTSHistory();
         }
     }
 
@@ -329,6 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const voice = ttsVoice.value;
+        const label = ttsLabel ? ttsLabel.value.trim() : '';
 
         // Show loading state
         ttsGenerateBtn.disabled = true;
@@ -343,6 +368,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     text: text,
                     voice: voice,
+                    label: label,
+                    save_to_history: true,
                 }),
             });
 
@@ -360,6 +387,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Show success result
                 ttsResult.classList.remove('hidden');
                 ttsError.classList.add('hidden');
+
+                // Clear label input after successful generation
+                if (ttsLabel) {
+                    ttsLabel.value = '';
+                }
             } else {
                 throw new Error(data.error || 'TTS generation failed');
             }
@@ -407,6 +439,225 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Scroll to adapter section
         adapterSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // ========================================================================
+    // TTS History Management
+    // ========================================================================
+
+    async function loadTTSHistory() {
+        try {
+            const response = await fetch('/api/tts/history');
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                ttsHistoryEntries = data.entries;
+                renderTTSHistory();
+                updateHistoryStats(data.stats);
+            }
+        } catch (error) {
+            console.error('Failed to load TTS history:', error);
+        }
+    }
+
+    function updateHistoryStats(stats) {
+        if (historyCount) {
+            historyCount.textContent = stats.count;
+        }
+        if (historySize) {
+            historySize.textContent = stats.total_size_mb.toFixed(1);
+        }
+    }
+
+    function renderTTSHistory() {
+        if (!ttsHistoryList) return;
+
+        // Clear existing entries (except the empty state)
+        const existingEntries = ttsHistoryList.querySelectorAll('.tts-history-entry');
+        existingEntries.forEach(entry => entry.remove());
+
+        // Show/hide empty state
+        if (ttsHistoryEntries.length === 0) {
+            if (ttsHistoryEmpty) ttsHistoryEmpty.classList.remove('hidden');
+            return;
+        }
+
+        if (ttsHistoryEmpty) ttsHistoryEmpty.classList.add('hidden');
+
+        // Render entries
+        ttsHistoryEntries.forEach(entry => {
+            const entryEl = createHistoryEntryElement(entry);
+            ttsHistoryList.appendChild(entryEl);
+        });
+    }
+
+    function createHistoryEntryElement(entry) {
+        const div = document.createElement('div');
+        div.className = 'tts-history-entry';
+        div.dataset.fileId = entry.file_id;
+
+        const date = new Date(entry.created_at);
+        const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        const textPreview = entry.text.length > 60 ? entry.text.substring(0, 57) + '...' : entry.text;
+
+        div.innerHTML = `
+            <div class="history-entry-header">
+                <span class="history-entry-label">${entry.label || 'Untitled'}</span>
+                <span class="history-entry-voice">${entry.voice}</span>
+            </div>
+            <div class="history-entry-text">${escapeHtml(textPreview)}</div>
+            <div class="history-entry-footer">
+                <span class="history-entry-date">${formattedDate}</span>
+                <span class="history-entry-size">${(entry.file_size / 1024).toFixed(0)} KB</span>
+            </div>
+            <div class="history-entry-actions">
+                <button class="btn-history-play" title="Play audio">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                </button>
+                <button class="btn-history-use" title="Use for evaluation">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Use
+                </button>
+                <button class="btn-history-delete" title="Delete">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+            </div>
+            <audio class="history-entry-audio" src="/api/tts/history/${entry.file_id}/audio"></audio>
+        `;
+
+        // Event listeners
+        const playBtn = div.querySelector('.btn-history-play');
+        const useBtn = div.querySelector('.btn-history-use');
+        const deleteBtn = div.querySelector('.btn-history-delete');
+        const audio = div.querySelector('.history-entry-audio');
+
+        playBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Stop other audio
+            document.querySelectorAll('.history-entry-audio').forEach(a => {
+                if (a !== audio) {
+                    a.pause();
+                    a.currentTime = 0;
+                }
+            });
+            if (audio.paused) {
+                audio.play();
+                playBtn.classList.add('playing');
+            } else {
+                audio.pause();
+                playBtn.classList.remove('playing');
+            }
+        });
+
+        audio.addEventListener('ended', () => {
+            playBtn.classList.remove('playing');
+        });
+
+        useBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            useHistoryEntry(entry);
+        });
+
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteHistoryEntry(entry.file_id);
+        });
+
+        return div;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    async function useHistoryEntry(entry) {
+        // Set as current audio file
+        currentAudioFileId = entry.file_id;
+        ttsGeneratedFileId = entry.file_id;
+
+        // Set ground truth from the stored text
+        groundTruthInput.value = entry.text;
+
+        // Switch to upload tab to show audio controls
+        switchTab('upload');
+
+        // Show transcribe button
+        transcribeBtn.classList.remove('hidden');
+        adapterSection.classList.remove('hidden');
+
+        // Update audio preview
+        audioFilename.textContent = entry.label || 'TTS Audio';
+        audioPlayer.src = `/api/tts/history/${entry.file_id}/audio`;
+        audioDropzone.classList.add('hidden');
+        audioPreview.classList.remove('hidden');
+
+        // Scroll to adapter section
+        adapterSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    async function deleteHistoryEntry(fileId) {
+        if (!confirm('Delete this TTS audio entry?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/tts/history/${fileId}`, {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                // Remove from local array and re-render
+                ttsHistoryEntries = ttsHistoryEntries.filter(e => e.file_id !== fileId);
+                renderTTSHistory();
+
+                // Reload stats
+                loadTTSHistory();
+            } else {
+                alert('Failed to delete entry: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Failed to delete history entry:', error);
+            alert('Failed to delete entry');
+        }
+    }
+
+    async function clearTTSHistory() {
+        if (!confirm('Delete ALL TTS history entries? This cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/tts/history', {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                ttsHistoryEntries = [];
+                renderTTSHistory();
+                updateHistoryStats({ count: 0, total_size_mb: 0 });
+            } else {
+                alert('Failed to clear history: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Failed to clear history:', error);
+            alert('Failed to clear history');
+        }
     }
 
     // ========================================================================

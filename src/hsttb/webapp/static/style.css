@@ -437,6 +437,213 @@ section h3 {
     font-size: 0.85rem;
 }
 
+.tts-label-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+}
+
+.tts-label-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* TTS History Section */
+.tts-history-section {
+    padding: 10px 0;
+}
+
+.tts-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.tts-history-header h3 {
+    margin: 0;
+}
+
+.tts-history-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-icon-text {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-color);
+    transition: all 0.2s;
+}
+
+.btn-icon-text:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-icon-text.btn-danger:hover {
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+}
+
+.tts-history-stats {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: var(--bg-color);
+    border-radius: 8px;
+}
+
+.stat-item {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.stat-item strong {
+    color: var(--text-color);
+}
+
+.tts-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.tts-history-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.tts-history-empty svg {
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.tts-history-empty p {
+    margin: 4px 0;
+}
+
+.tts-history-empty .hint {
+    font-size: 0.85rem;
+}
+
+.tts-history-entry {
+    padding: 16px;
+    background: var(--bg-color);
+    border-radius: var(--radius);
+    border: 2px solid transparent;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.tts-history-entry:hover {
+    border-color: var(--border-color);
+}
+
+.history-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.history-entry-label {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.history-entry-voice {
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 12px;
+}
+
+.history-entry-text {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.history-entry-footer {
+    display: flex;
+    gap: 16px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.history-entry-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.history-entry-actions button {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    transition: all 0.2s;
+}
+
+.history-entry-actions button:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-history-play.playing {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.btn-history-use {
+    background: #f0f9ff !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+}
+
+.btn-history-use:hover {
+    background: var(--primary-color) !important;
+    color: white !important;
+}
+
+.btn-history-delete:hover {
+    border-color: var(--danger-color) !important;
+    color: var(--danger-color) !important;
+}
+
+.history-entry-audio {
+    display: none;
+}
+
 /* Adapter Grid */
 .adapter-grid {
     display: grid;
