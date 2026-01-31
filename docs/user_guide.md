@@ -16,8 +16,10 @@ Healthcare Streaming STT Benchmarking Framework - A comprehensive guide to evalu
 8. [Metrics Explained](#metrics-explained)
 9. [Streaming Profiles](#streaming-profiles)
 10. [STT Adapters](#stt-adapters)
-11. [Report Generation](#report-generation)
-12. [Best Practices](#best-practices)
+11. [NLP Pipelines](#nlp-pipelines)
+12. [Multi-Model Comparison](#multi-model-comparison)
+13. [Report Generation](#report-generation)
+14. [Best Practices](#best-practices)
 
 ---
 
@@ -251,12 +253,17 @@ Then open your browser to **http://localhost:8000**
 
 | Feature | Description |
 |---------|-------------|
+| **Audio Input** | Upload audio files or record from microphone |
+| **STT Adapter Selection** | Choose from Whisper, Gemini, Deepgram |
+| **NLP Model Selection** | Compare multiple NLP models simultaneously |
 | **Evaluation Form** | Input ground truth and predicted text |
 | **Metric Selection** | Toggle TER, NER, and CRS metrics |
 | **Example Scenarios** | Pre-loaded test cases for common errors |
 | **Real-time Results** | Instant metric computation |
 | **Error Highlighting** | Critical errors shown with severity levels |
-| **Overall Score** | Combined score with color coding |
+| **Radar Chart** | Visual comparison of model performance |
+| **Diff View** | Side-by-side error highlighting |
+| **Export** | Download results as JSON or CSV |
 
 ### Screenshot Tour
 
@@ -290,6 +297,13 @@ The web app exposes REST API endpoints:
 | `/health` | GET | Health check |
 | `/api/evaluate` | POST | Run evaluation |
 | `/api/evaluate/segments` | POST | CRS with pre-segmented text |
+| `/api/evaluate/multi-model` | POST | Compare across NLP models |
+| `/api/evaluate/multi-adapter` | POST | Compare across STT adapters |
+| `/api/audio/upload` | POST | Upload audio file |
+| `/api/audio/transcribe` | POST | Transcribe with selected adapter |
+| `/ws/transcribe` | WebSocket | Real-time streaming transcription |
+| `/api/adapters` | GET | List available STT adapters |
+| `/api/nlp-models` | GET | List available NLP models |
 | `/api/examples` | GET | Get example scenarios |
 | `/docs` | GET | OpenAPI documentation (Swagger UI) |
 | `/redoc` | GET | Alternative API documentation |
@@ -804,6 +818,47 @@ class CustomAdapter(STTAdapter):
 
 1. **MockSTTAdapter**: For testing without real STT
 2. **FailingMockAdapter**: For error handling tests
+3. **WhisperAdapter**: Local Whisper STT (requires `openai-whisper`)
+4. **GeminiAdapter**: Google Cloud Speech-to-Text API
+5. **DeepgramAdapter**: Deepgram API with nova-2-medical model
+
+### Using Production Adapters
+
+```python
+from hsttb.adapters import get_adapter, list_adapters
+
+# List available adapters
+print(list_adapters())  # ['mock', 'whisper', 'gemini', 'deepgram', ...]
+
+# Use Whisper adapter (local)
+whisper = get_adapter("whisper", model_size="base")
+await whisper.initialize()
+text = await whisper.transcribe_file("audio.wav")
+
+# Use Deepgram adapter (cloud, medical vocabulary)
+deepgram = get_adapter("deepgram", api_key="your-key")
+await deepgram.initialize()
+text = await deepgram.transcribe_file("audio.wav")
+
+# Use Google Cloud Speech
+gemini = get_adapter("gemini")
+await gemini.initialize()
+text = await gemini.transcribe_file("audio.wav")
+```
+
+### ElevenLabs TTS (Test Audio Generation)
+
+Generate test audio from ground truth text:
+
+```python
+from hsttb.adapters import ElevenLabsTTSGenerator
+
+generator = ElevenLabsTTSGenerator(api_key="your-key")
+await generator.generate_audio(
+    text="Patient takes metformin 500mg daily",
+    output_path="test_audio.wav"
+)
+```
 
 ### Registering Custom Adapters
 
@@ -818,6 +873,103 @@ adapter = AdapterRegistry.get("my_adapter")
 
 # List available adapters
 adapters = AdapterRegistry.list_adapters()
+```
+
+---
+
+## NLP Pipelines
+
+HSTTB supports multiple NLP pipelines for medical entity extraction.
+
+### Available Pipelines
+
+| Pipeline | Description | Dependency |
+|----------|-------------|------------|
+| `mock` | Mock pipeline for testing | None |
+| `scispacy` | SciSpaCy BC5CDR model | `scispacy` |
+| `biomedical` | HuggingFace d4data/biomedical-ner-all | `transformers` |
+| `medspacy` | MedSpaCy with context detection | `medspacy` |
+
+### Using the NLP Registry
+
+```python
+from hsttb.nlp import get_nlp_pipeline, list_nlp_pipelines
+
+# List available pipelines
+print(list_nlp_pipelines())  # ['mock', 'scispacy', 'biomedical', 'medspacy']
+
+# Get a pipeline
+pipeline = get_nlp_pipeline("scispacy")
+
+# Extract entities
+entities = pipeline.extract_entities("Patient takes metformin for diabetes")
+for entity in entities:
+    print(f"{entity.text}: {entity.label}")
+```
+
+### Registering Custom Pipelines
+
+```python
+from hsttb.nlp import register_nlp_pipeline, NERPipeline
+
+@register_nlp_pipeline("my_custom_ner")
+class MyCustomNERPipeline(NERPipeline):
+    def extract_entities(self, text: str) -> list[Entity]:
+        # Your implementation
+        pass
+```
+
+---
+
+## Multi-Model Comparison
+
+Compare multiple NLP models side-by-side for entity extraction quality.
+
+### Using MultiNLPEvaluator
+
+```python
+from hsttb.metrics.multi_nlp import MultiNLPEvaluator, create_default_evaluator
+from hsttb.nlp import get_nlp_pipeline
+
+# Create evaluator with multiple models
+evaluator = MultiNLPEvaluator()
+evaluator.add_model("scispacy", get_nlp_pipeline("scispacy"))
+evaluator.add_model("biomedical", get_nlp_pipeline("biomedical"))
+evaluator.add_model("mock", get_nlp_pipeline("mock"))
+
+# Or use default evaluator with all available models
+evaluator = create_default_evaluator()
+
+# Run comparison
+result = evaluator.evaluate(
+    ground_truth="Patient takes metformin 500mg for type 2 diabetes",
+    predicted="Patient takes methotrexate 500mg for type 2 diabetes"
+)
+
+# View results per model
+for model_name, eval_result in result.model_evaluations.items():
+    print(f"{model_name}:")
+    print(f"  Precision: {eval_result.precision:.2%}")
+    print(f"  Recall: {eval_result.recall:.2%}")
+    print(f"  F1 Score: {eval_result.f1_score:.2%}")
+
+# Best performing model
+print(f"Best model: {result.best_model}")
+
+# Agreement rate between models
+print(f"Agreement rate: {result.agreement_rate:.2%}")
+```
+
+### Multi-Model API Endpoint
+
+```bash
+curl -X POST http://localhost:8000/api/evaluate/multi-model \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ground_truth": "Patient takes metformin",
+    "predicted": "Patient takes methotrexate",
+    "models": ["scispacy", "biomedical", "mock"]
+  }'
 ```
 
 ---

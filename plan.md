@@ -726,3 +726,114 @@ print(f"CRS: {results.crs.composite_score:.3f}")
 1. **Week 0**: Environment setup, UMLS license application, data sourcing
 2. **Week 1**: Begin Phase 1 implementation
 3. **Ongoing**: Weekly progress review and metric validation
+
+---
+
+## 14. Phase 7: Multi-Adapter & Enhanced UI (COMPLETED)
+
+### 14.1 Overview
+
+Phase 7 extended HSTTB with production STT adapters, enhanced NLP pipelines, and a modern web UI with audio input capabilities.
+
+### 14.2 Deliverables
+
+**STT Adapters:**
+- [x] WhisperAdapter - Local Whisper STT with model size selection
+- [x] GeminiAdapter - Google Cloud Speech-to-Text integration
+- [x] DeepgramAdapter - Deepgram API with nova-2-medical model
+- [x] ElevenLabsTTSGenerator - Test audio generation from ground truth
+
+**NLP Enhancements:**
+- [x] NLP Pipeline Registry - Factory pattern with lazy loading
+- [x] SciSpaCy NER Pipeline - BC5CDR model for chemical/disease
+- [x] Biomedical NER Pipeline - HuggingFace d4data model
+- [x] MedSpaCy NER Pipeline - Clinical context and negation detection
+- [x] MultiNLPEvaluator - Side-by-side model comparison
+
+**Audio & WebSocket:**
+- [x] AudioHandler - File upload, validation, metadata extraction
+- [x] WebSocketHandler - Real-time streaming transcription
+
+**Web UI:**
+- [x] Audio input tabs (Upload/Record/Text Only)
+- [x] STT adapter selection cards
+- [x] NLP model multi-select
+- [x] Radar chart for model comparison
+- [x] Diff view for error highlighting
+- [x] JSON/CSV export
+
+**API Endpoints:**
+- [x] POST /api/audio/upload
+- [x] POST /api/audio/transcribe
+- [x] WS /ws/transcribe
+- [x] GET /api/adapters
+- [x] GET /api/nlp-models
+- [x] POST /api/evaluate/multi-model
+- [x] POST /api/evaluate/multi-adapter
+
+### 14.3 Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Audio Input Layer                             │
+│  ┌──────────────────┐    ┌──────────────┐    ┌──────────────────┐  │
+│  │  File Upload     │    │  Microphone  │    │  Text Only       │  │
+│  │  (drag-and-drop) │    │  Recording   │    │  (manual input)  │  │
+│  └────────┬─────────┘    └──────┬───────┘    └────────┬─────────┘  │
+│           └─────────────────────┼─────────────────────┘             │
+│                                 ▼                                    │
+│              ┌─────────────────────────────────┐                    │
+│              │      STT Adapter Selection      │                    │
+│              │  Whisper | Gemini | Deepgram    │                    │
+│              └────────────────┬────────────────┘                    │
+└───────────────────────────────┼─────────────────────────────────────┘
+                                ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                      NLP Pipeline Selection                           │
+│   ┌──────────┐  ┌───────────┐  ┌────────────┐  ┌─────────────────┐   │
+│   │ SciSpaCy │  │Biomedical │  │  MedSpaCy  │  │ Custom Pipeline │   │
+│   └──────────┘  └───────────┘  └────────────┘  └─────────────────┘   │
+│                                 ▼                                     │
+│              ┌─────────────────────────────────┐                     │
+│              │   Multi-NLP Evaluator           │                     │
+│              │   (side-by-side comparison)     │                     │
+│              └────────────────┬────────────────┘                     │
+└───────────────────────────────┼──────────────────────────────────────┘
+                                ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                        Results & Visualization                        │
+│   ┌────────────────┐  ┌────────────────┐  ┌────────────────────────┐ │
+│   │  Radar Chart   │  │   Diff View    │  │  JSON/CSV Export       │ │
+│   └────────────────┘  └────────────────┘  └────────────────────────┘ │
+└───────────────────────────────────────────────────────────────────────┘
+```
+
+### 14.4 Files Created
+
+| File | Purpose |
+|------|---------|
+| `adapters/whisper_adapter.py` | Local Whisper STT |
+| `adapters/gemini_adapter.py` | Google Cloud Speech |
+| `adapters/deepgram_adapter.py` | Deepgram API |
+| `adapters/elevenlabs_tts.py` | TTS for test audio |
+| `nlp/registry.py` | NLP pipeline registry |
+| `nlp/scispacy_ner.py` | SciSpaCy NER |
+| `nlp/biomedical_ner.py` | HuggingFace NER |
+| `nlp/medspacy_ner.py` | MedSpaCy NER |
+| `nlp/semantic_similarity.py` | Transformer similarity |
+| `metrics/multi_nlp.py` | Multi-model evaluator |
+| `metrics/multi_backend.py` | Multi-backend TER |
+| `webapp/audio_handler.py` | Audio upload handling |
+| `webapp/websocket_handler.py` | WebSocket streaming |
+| `lexicons/scispacy_lexicon.py` | SciSpaCy lexicon |
+| `lexicons/medcat_lexicon.py` | MedCAT lexicon |
+| `lexicons/biomedical_lexicon.py` | Biomedical lexicon |
+
+### 14.5 Dependencies Added
+
+```toml
+[project.optional-dependencies]
+cloud-adapters = ["google-cloud-speech>=2.21.0", "deepgram-sdk>=3.0.0"]
+tts = ["elevenlabs>=1.0.0"]
+api = ["python-multipart>=0.0.6", "websockets>=12.0"]
+```
