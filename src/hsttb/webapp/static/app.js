@@ -37,6 +37,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const recordingTimer = document.getElementById('recording-timer');
     const recordingStatus = document.getElementById('recording-status');
 
+    // TTS elements
+    const ttsText = document.getElementById('tts-text');
+    const ttsVoice = document.getElementById('tts-voice');
+    const ttsGenerateBtn = document.getElementById('tts-generate-btn');
+    const ttsResult = document.getElementById('tts-result');
+    const ttsAudioPlayer = document.getElementById('tts-audio-player');
+    const ttsUseAudioBtn = document.getElementById('tts-use-audio');
+    const ttsError = document.getElementById('tts-error');
+    const ttsErrorMessage = document.getElementById('tts-error-message');
+
     // Tab elements
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -54,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let recordedChunks = [];
     let recordingStartTime = null;
     let recordingInterval = null;
+    let ttsGeneratedFileId = null;
 
     // ========================================================================
     // Initialization
@@ -106,6 +117,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Recording
         recordBtn.addEventListener('click', toggleRecording);
 
+        // TTS
+        if (ttsGenerateBtn) {
+            ttsGenerateBtn.addEventListener('click', generateTTS);
+        }
+        if (ttsUseAudioBtn) {
+            ttsUseAudioBtn.addEventListener('click', useTTSAudio);
+        }
+
         // Export buttons
         document.getElementById('export-json')?.addEventListener('click', exportJSON);
         document.getElementById('export-csv')?.addEventListener('click', exportCSV);
@@ -124,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Show/hide adapter section based on tab
-        if (tabId === 'text') {
+        if (tabId === 'text' || tabId === 'tts') {
             adapterSection.classList.add('hidden');
         } else {
             adapterSection.classList.remove('hidden');
@@ -295,6 +314,99 @@ document.addEventListener('DOMContentLoaded', () => {
         const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
         const secs = Math.floor(elapsed % 60).toString().padStart(2, '0');
         recordingTimer.textContent = `${mins}:${secs}`;
+    }
+
+    // ========================================================================
+    // TTS Generation
+    // ========================================================================
+
+    async function generateTTS() {
+        const text = ttsText.value.trim();
+
+        if (!text) {
+            showTTSError('Please enter text to convert to speech.');
+            return;
+        }
+
+        const voice = ttsVoice.value;
+
+        // Show loading state
+        ttsGenerateBtn.disabled = true;
+        ttsGenerateBtn.classList.add('loading');
+        ttsResult.classList.add('hidden');
+        ttsError.classList.add('hidden');
+
+        try {
+            const response = await fetch('/api/tts/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text: text,
+                    voice: voice,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                ttsGeneratedFileId = data.file_id;
+
+                // Set audio player source
+                ttsAudioPlayer.src = `/api/audio/file/${data.file_id}`;
+
+                // Also set the ground truth text
+                groundTruthInput.value = text;
+
+                // Show success result
+                ttsResult.classList.remove('hidden');
+                ttsError.classList.add('hidden');
+            } else {
+                throw new Error(data.error || 'TTS generation failed');
+            }
+        } catch (error) {
+            console.error('TTS error:', error);
+            showTTSError(error.message);
+        } finally {
+            ttsGenerateBtn.disabled = false;
+            ttsGenerateBtn.classList.remove('loading');
+        }
+    }
+
+    function showTTSError(message) {
+        ttsErrorMessage.textContent = message;
+        ttsError.classList.remove('hidden');
+        ttsResult.classList.add('hidden');
+    }
+
+    async function useTTSAudio() {
+        if (!ttsGeneratedFileId) {
+            alert('No TTS audio generated yet.');
+            return;
+        }
+
+        // Set as current audio file
+        currentAudioFileId = ttsGeneratedFileId;
+
+        // Copy text to ground truth
+        if (ttsText.value.trim()) {
+            groundTruthInput.value = ttsText.value.trim();
+        }
+
+        // Switch to upload tab to show audio controls
+        switchTab('upload');
+
+        // Show transcribe button
+        transcribeBtn.classList.remove('hidden');
+        adapterSection.classList.remove('hidden');
+
+        // Update audio preview
+        audioFilename.textContent = 'TTS Generated Audio';
+        audioPlayer.src = ttsAudioPlayer.src;
+        audioDropzone.classList.add('hidden');
+        audioPreview.classList.remove('hidden');
+
+        // Scroll to adapter section
+        adapterSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     // ========================================================================

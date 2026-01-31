@@ -87,6 +87,14 @@ class TranscribeRequest(BaseModel):
     language: str | None = None
 
 
+class TTSRequest(BaseModel):
+    """Request model for TTS generation."""
+
+    text: str
+    voice: str = "professional"
+    model: str = "eleven_turbo_v2"
+
+
 # ============================================================================
 # Application Factory
 # ============================================================================
@@ -538,6 +546,146 @@ def create_app() -> FastAPI:
             return JSONResponse(
                 content={"status": "error", "error": str(e)},
                 status_code=500,
+            )
+
+    @application.get("/api/audio/file/{file_id}")
+    async def get_audio_file(file_id: str) -> Any:
+        """Serve an audio file by ID."""
+        from fastapi.responses import FileResponse
+        from hsttb.webapp.audio_handler import get_audio_handler
+
+        handler = get_audio_handler()
+        file_path = handler.get_file(file_id)
+
+        if not file_path or not file_path.exists():
+            return JSONResponse(
+                content={"status": "error", "error": "File not found"},
+                status_code=404,
+            )
+
+        # Determine media type
+        ext = file_path.suffix.lower()
+        media_types = {
+            ".mp3": "audio/mpeg",
+            ".wav": "audio/wav",
+            ".flac": "audio/flac",
+            ".ogg": "audio/ogg",
+            ".m4a": "audio/mp4",
+            ".webm": "audio/webm",
+        }
+        media_type = media_types.get(ext, "audio/mpeg")
+
+        return FileResponse(
+            path=file_path,
+            media_type=media_type,
+            filename=file_path.name,
+        )
+
+    # ========================================================================
+    # TTS Endpoints
+    # ========================================================================
+
+    @application.post("/api/tts/generate")
+    async def generate_tts(req: TTSRequest) -> JSONResponse:
+        """Generate audio from text using ElevenLabs TTS."""
+        try:
+            from hsttb.adapters.elevenlabs_tts import (
+                ElevenLabsTTSGenerator,
+                TTSGenerationError,
+            )
+            from hsttb.webapp.audio_handler import get_audio_handler
+            import uuid
+
+            if not req.text.strip():
+                return JSONResponse(
+                    content={"status": "error", "error": "Text is required"},
+                    status_code=400,
+                )
+
+            # Generate audio
+            generator = ElevenLabsTTSGenerator(
+                voice=req.voice,
+                model=req.model,
+            )
+
+            # Create output path in audio storage
+            handler = get_audio_handler()
+            file_id = str(uuid.uuid4())
+            output_path = handler._storage_dir / f"{file_id}.mp3"
+
+            await generator.generate_audio(req.text, output_path)
+
+            # Get file info
+            file_size = output_path.stat().st_size
+
+            return JSONResponse(content={
+                "status": "success",
+                "file_id": file_id,
+                "file_path": str(output_path),
+                "format": "mp3",
+                "file_size": file_size,
+                "text": req.text,
+                "voice": req.voice,
+            })
+
+        except TTSGenerationError as e:
+            return JSONResponse(
+                content={"status": "error", "error": str(e)},
+                status_code=400,
+            )
+        except ImportError:
+            return JSONResponse(
+                content={
+                    "status": "error",
+                    "error": "ElevenLabs not installed. Install with: pip install elevenlabs"
+                },
+                status_code=501,
+            )
+        except Exception as e:
+            logger.error(f"TTS generation error: {e}")
+            return JSONResponse(
+                content={"status": "error", "error": str(e)},
+                status_code=500,
+            )
+
+    @application.get("/api/tts/voices")
+    async def get_tts_voices() -> JSONResponse:
+        """Get available TTS voices."""
+        try:
+            from hsttb.adapters.elevenlabs_tts import (
+                ElevenLabsTTSGenerator,
+                VOICE_PRESETS,
+            )
+
+            # Return preset voices
+            voices = [
+                {"id": voice_id, "name": name, "type": "preset"}
+                for name, voice_id in VOICE_PRESETS.items()
+            ]
+
+            # Try to get custom voices if API key is available
+            try:
+                generator = ElevenLabsTTSGenerator()
+                custom_voices = await generator.get_available_voices()
+                voices.extend([
+                    {"id": v["voice_id"], "name": v["name"], "type": "custom"}
+                    for v in custom_voices
+                ])
+            except Exception:
+                pass  # API key not available
+
+            return JSONResponse(content={
+                "status": "success",
+                "voices": voices,
+            })
+
+        except ImportError:
+            return JSONResponse(
+                content={
+                    "status": "error",
+                    "error": "ElevenLabs not installed"
+                },
+                status_code=501,
             )
 
     # ========================================================================

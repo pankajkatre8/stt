@@ -27,6 +27,7 @@
                 <div class="audio-tabs">
                     <button class="tab-btn active" data-tab="upload">Upload File</button>
                     <button class="tab-btn" data-tab="record">Record</button>
+                    <button class="tab-btn" data-tab="tts">Generate TTS</button>
                     <button class="tab-btn" data-tab="text">Text Only</button>
                 </div>
 
@@ -70,6 +71,61 @@
                         </button>
                         <div id="recording-timer" class="recording-timer hidden">00:00</div>
                         <div id="recording-status" class="recording-status"></div>
+                    </div>
+                </div>
+
+                <!-- TTS Generation -->
+                <div class="tab-content" id="tab-tts">
+                    <div class="tts-section">
+                        <p class="tts-hint">Generate test audio from ground truth text using ElevenLabs TTS.</p>
+
+                        <div class="tts-input-group">
+                            <label for="tts-text">Text to Convert</label>
+                            <textarea id="tts-text" rows="3" placeholder="Enter text to convert to speech (e.g., 'Patient takes metformin 500mg twice daily')"></textarea>
+                        </div>
+
+                        <div class="tts-options">
+                            <div class="tts-option">
+                                <label for="tts-voice">Voice</label>
+                                <select id="tts-voice">
+                                    <option value="professional">Professional (Female)</option>
+                                    <option value="clinical">Clinical (Male)</option>
+                                    <option value="rachel">Rachel (Female)</option>
+                                    <option value="adam">Adam (Male, Deep)</option>
+                                    <option value="sam">Sam (Male)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button id="tts-generate-btn" class="btn-primary btn-tts">
+                            <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            <span class="btn-text">Generate Audio</span>
+                            <span class="btn-spinner"></span>
+                        </button>
+
+                        <div id="tts-result" class="tts-result hidden">
+                            <div class="tts-success">
+                                <svg class="success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                                <span>Audio generated successfully!</span>
+                            </div>
+                            <audio id="tts-audio-player" controls></audio>
+                            <button id="tts-use-audio" class="btn-secondary">
+                                Use This Audio for Evaluation
+                            </button>
+                        </div>
+
+                        <div id="tts-error" class="tts-error hidden">
+                            <p id="tts-error-message"></p>
+                        </div>
+
+                        <div class="tts-note">
+                            <small>Requires ELEVENLABS_API_KEY environment variable to be set.</small>
+                        </div>
                     </div>
                 </div>
 
