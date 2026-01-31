@@ -16,6 +16,11 @@ Example:
     >>> print([e.text for e in entities])
     ['metformin']
 
+    >>> from hsttb.nlp import get_nlp_pipeline, list_nlp_pipelines
+    >>> print(list_nlp_pipelines())
+    ['biomedical', 'medspacy', 'mock', 'scispacy']
+    >>> pipeline = get_nlp_pipeline("scispacy")
+
     >>> from hsttb.nlp import EntityAligner, align_entities
     >>> matches = align_entities(gold_entities, pred_entities)
 
@@ -49,22 +54,73 @@ from hsttb.nlp.normalizer import (
     create_normalizer,
     normalize_for_ter,
 )
+from hsttb.nlp.registry import (
+    clear_nlp_registry,
+    get_nlp_pipeline,
+    get_pipeline_info,
+    is_nlp_pipeline_registered,
+    list_nlp_pipelines,
+    register_nlp_pipeline,
+    register_nlp_pipeline_factory,
+    unregister_nlp_pipeline,
+)
+
+
+# Lazy loading for heavy NLP pipelines
+def __getattr__(name: str) -> type:
+    """Lazy import NLP pipelines."""
+    if name == "SciSpacyNERPipeline":
+        from hsttb.nlp.scispacy_ner import SciSpacyNERPipeline
+        return SciSpacyNERPipeline
+
+    if name == "BiomedicalNERPipeline":
+        from hsttb.nlp.biomedical_ner import BiomedicalNERPipeline
+        return BiomedicalNERPipeline
+
+    if name == "MedSpacyNERPipeline":
+        from hsttb.nlp.medspacy_ner import MedSpacyNERPipeline
+        return MedSpacyNERPipeline
+
+    if name == "TransformerSimilarityEngine":
+        from hsttb.nlp.semantic_similarity import TransformerSimilarityEngine
+        return TransformerSimilarityEngine
+
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
+    # Entity alignment
     "AlignmentConfig",
     "EntityAligner",
-    "MedicalTextNormalizer",
-    "MockNERPipeline",
-    "NERPipeline",
-    "NERPipelineConfig",
+    "SpanMatchStrategy",
+    "align_entities",
+    # Negation detection
     "NegationConfig",
     "NegationConsistencyResult",
     "NegationDetector",
     "NegationSpan",
-    "NormalizerConfig",
-    "SpanMatchStrategy",
-    "align_entities",
     "check_negation_consistency",
+    # NER pipelines
+    "MockNERPipeline",
+    "NERPipeline",
+    "NERPipelineConfig",
+    # Lazy-loaded pipelines
+    "SciSpacyNERPipeline",
+    "BiomedicalNERPipeline",
+    "MedSpacyNERPipeline",
+    "TransformerSimilarityEngine",
+    # Text normalization
+    "MedicalTextNormalizer",
+    "NormalizerConfig",
     "create_normalizer",
     "normalize_for_ter",
+    # Pipeline registry
+    "clear_nlp_registry",
+    "get_nlp_pipeline",
+    "get_pipeline_info",
+    "is_nlp_pipeline_registered",
+    "list_nlp_pipelines",
+    "register_nlp_pipeline",
+    "register_nlp_pipeline_factory",
+    "unregister_nlp_pipeline",
 ]

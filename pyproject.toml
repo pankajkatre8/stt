@@ -37,12 +37,21 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# NLP dependencies
+# NLP dependencies for medical term extraction
 nlp = [
     "spacy>=3.7.0",
     "scispacy>=0.5.0",
     "medspacy>=1.0.0",
     "rapidfuzz>=3.5.0",
+]
+# MedCAT for UMLS/SNOMED linking
+medcat = [
+    "medcat>=1.12.0",
+]
+# scispaCy models (install separately)
+# pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.4/en_ner_bc5cdr_md-0.5.4.tar.gz
+scispacy-models = [
+    "scispacy>=0.5.0",
 ]
 # Embeddings for CRS
 embeddings = [
@@ -51,6 +60,15 @@ embeddings = [
 # STT adapters
 whisper = [
     "openai-whisper>=20230918",
+]
+# Cloud STT adapters
+cloud-adapters = [
+    "google-cloud-speech>=2.21.0",
+    "deepgram-sdk>=3.0.0",
+]
+# TTS for test audio generation
+tts = [
+    "elevenlabs>=1.0.0",
 ]
 # Metrics and evaluation
 metrics = [
@@ -65,6 +83,8 @@ api = [
     "uvicorn>=0.27.0",
     "jinja2>=3.1.0",
     "plotly>=5.18.0",
+    "python-multipart>=0.0.6",
+    "websockets>=12.0",
 ]
 # Experiment tracking
 tracking = [
@@ -83,7 +103,7 @@ dev = [
 ]
 # All dependencies
 all = [
-    "hsttb[nlp,embeddings,whisper,metrics,api,tracking,dev]",
+    "hsttb[nlp,embeddings,whisper,cloud-adapters,tts,metrics,api,tracking,dev]",
 ]
 
 [project.scripts]
@@ -155,6 +175,9 @@ module = [
     "plotly.*",
     "networkx.*",
     "click.*",
+    "google.cloud.*",
+    "deepgram.*",
+    "elevenlabs.*",
 ]
 ignore_missing_imports = true
 
