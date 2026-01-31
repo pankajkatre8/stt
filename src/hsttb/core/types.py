@@ -34,11 +34,15 @@ class EntityLabel(str, Enum):
     DOSAGE = "DOSAGE"
     SYMPTOM = "SYMPTOM"
     DIAGNOSIS = "DIAGNOSIS"
+    CONDITION = "CONDITION"  # Diseases/disorders
     ANATOMY = "ANATOMY"
     LAB_VALUE = "LAB_VALUE"
     PROCEDURE = "PROCEDURE"
     FREQUENCY = "FREQUENCY"
     DURATION = "DURATION"
+    DATE = "DATE"
+    TIME = "TIME"
+    OTHER = "OTHER"
 
 
 class MedicalTermCategory(str, Enum):

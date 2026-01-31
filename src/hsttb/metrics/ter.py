@@ -234,7 +234,8 @@ class TEREngine:
         """
         Extract medical terms from text.
 
-        Uses lexicon lookup with n-gram matching.
+        Uses lexicon's extract_terms if available (NER-based),
+        otherwise falls back to n-gram lookup.
 
         Args:
             text: Text to extract terms from.
@@ -242,6 +243,27 @@ class TEREngine:
         Returns:
             List of identified medical terms.
         """
+        # Check if lexicon has NER-based extraction (more efficient)
+        if hasattr(self.lexicon, "extract_terms"):
+            entries = self.lexicon.extract_terms(text)
+            terms = []
+            for entry in entries:
+                # Find span in text
+                start = text.lower().find(entry.term.lower())
+                end = start + len(entry.term) if start >= 0 else 0
+                terms.append(
+                    MedicalTerm(
+                        text=entry.term,
+                        normalized=entry.normalized,
+                        category=self._map_category(entry.category),
+                        source=entry.source.value,
+                        span=(start, end),
+                    )
+                )
+            terms.sort(key=lambda t: t.span[0])
+            return terms
+
+        # Fallback: n-gram lookup
         terms: list[MedicalTerm] = []
         words = text.split()
 

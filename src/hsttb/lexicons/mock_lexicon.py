@@ -187,6 +187,7 @@ class MockMedicalLexicon(MedicalLexicon):
             ("omeprazole", "7646", ("Prilosec",)),
             ("amlodipine", "17767", ("Norvasc",)),
             ("metoprolol", "6918", ("Lopressor", "Toprol")),
+            ("atenolol", "1202", ("Tenormin",)),
             ("losartan", "52175", ("Cozaar",)),
             ("gabapentin", "25480", ("Neurontin",)),
             ("hydrochlorothiazide", "5487", ("HCTZ", "Microzide")),
@@ -246,10 +247,10 @@ class MockMedicalLexicon(MedicalLexicon):
         """
         lexicon = cls(source=LexiconSource.MOCK)
 
-        # Merge drugs
+        # Merge drugs - copy all key mappings including synonyms
         drugs_lexicon = cls.with_common_drugs()
-        for entry in drugs_lexicon._entries.values():
-            lexicon._entries[entry.normalized] = LexiconEntry(
+        for key, entry in drugs_lexicon._entries.items():
+            new_entry = LexiconEntry(
                 term=entry.term,
                 normalized=entry.normalized,
                 code=entry.code,
@@ -257,11 +258,12 @@ class MockMedicalLexicon(MedicalLexicon):
                 source=LexiconSource.MOCK,
                 synonyms=entry.synonyms,
             )
+            lexicon._entries[key] = new_entry
 
-        # Merge diagnoses
+        # Merge diagnoses - copy all key mappings including synonyms
         diagnoses_lexicon = cls.with_common_diagnoses()
-        for entry in diagnoses_lexicon._entries.values():
-            lexicon._entries[entry.normalized] = LexiconEntry(
+        for key, entry in diagnoses_lexicon._entries.items():
+            new_entry = LexiconEntry(
                 term=entry.term,
                 normalized=entry.normalized,
                 code=entry.code,
@@ -269,6 +271,7 @@ class MockMedicalLexicon(MedicalLexicon):
                 source=LexiconSource.MOCK,
                 synonyms=entry.synonyms,
             )
+            lexicon._entries[key] = new_entry
 
         lexicon._is_loaded = True
         return lexicon
