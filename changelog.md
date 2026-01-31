@@ -8,7 +8,100 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Added
+### Added - Phase 7: Multi-Adapter & Enhanced UI (2026-01-31)
+
+#### STT Adapters (Batch 1, 2, 3)
+- **WhisperAdapter** (`src/hsttb/adapters/whisper_adapter.py`)
+  - Local Whisper STT with model size selection (tiny/base/small/medium/large)
+  - Supports file transcription and streaming audio
+  - Graceful degradation if openai-whisper not installed
+
+- **GeminiAdapter** (`src/hsttb/adapters/gemini_adapter.py`)
+  - Google Cloud Speech-to-Text API integration
+  - Supports `recognize()`, `long_running_recognize()`, `streaming_recognize()`
+  - Configurable recognition settings
+
+- **DeepgramAdapter** (`src/hsttb/adapters/deepgram_adapter.py`)
+  - Deepgram API with nova-2-medical model (optimized for medical vocabulary)
+  - WebSocket-based live transcription support
+  - Medical terminology enhancement
+
+- **ElevenLabsTTSGenerator** (`src/hsttb/adapters/elevenlabs_tts.py`)
+  - TTS generator for test audio creation from ground truth
+  - `AudioTestGenerator` for batch audio generation
+  - Voice selection and audio format options
+
+#### NLP Enhancements (Batch 1)
+- **NLP Pipeline Registry** (`src/hsttb/nlp/registry.py`)
+  - Factory pattern for NLP pipeline instantiation
+  - Decorator-based registration (`@register_nlp_pipeline`)
+  - Lazy loading for optional dependencies
+  - Pre-registers: mock, scispacy, biomedical, medspacy
+
+- **MedSpaCy NER Pipeline** (`src/hsttb/nlp/medspacy_ner.py`)
+  - Clinical context and negation detection
+  - Label mapping: PROBLEM→CONDITION, TREATMENT→DRUG, TEST→PROCEDURE
+  - Integration with MedSpaCy's ContextComponent
+
+- **Biomedical NER Fix** (`src/hsttb/nlp/biomedical_ner.py`)
+  - Added `_post_process_entities()` to fix word boundary tokenization
+  - Added `_deduplicate_entities()` for overlapping spans
+
+- **Multi-NLP Evaluator** (`src/hsttb/metrics/multi_nlp.py`)
+  - `MultiNLPEvaluator` for side-by-side model comparison
+  - Per-model precision/recall/F1 metrics
+  - Consensus entity detection across models
+  - Agreement rate computation
+
+#### Audio & WebSocket Integration (Batch 2)
+- **AudioHandler** (`src/hsttb/webapp/audio_handler.py`)
+  - File upload handling with validation (wav, mp3, flac, ogg, m4a, webm, opus)
+  - Audio metadata extraction (duration, sample rate, channels)
+  - File hash computation for deduplication
+  - Audio format conversion to WAV
+
+- **WebSocketHandler** (`src/hsttb/webapp/websocket_handler.py`)
+  - Real-time audio streaming transcription
+  - `AudioStreamBuffer` for chunk management
+  - Session management (start/end)
+  - Error recovery and reconnection
+
+#### Web API Endpoints (Batch 2)
+- `POST /api/audio/upload` - Upload audio file
+- `POST /api/audio/transcribe` - Transcribe with selected adapter
+- `WS /ws/transcribe` - Real-time streaming transcription
+- `GET /api/adapters` - List available STT adapters
+- `GET /api/nlp-models` - List available NLP models
+- `POST /api/evaluate/multi-model` - Compare across NLP models
+- `POST /api/evaluate/multi-adapter` - Compare across STT adapters
+
+#### Web UI Enhancements (Batch 4)
+- Audio input tabs: Upload, Record, Text Only
+- Drag-and-drop file upload with preview
+- MediaRecorder API for browser audio recording
+- STT adapter selection cards
+- NLP model multi-select checkboxes
+- Chart.js radar chart for model comparison
+- Diff view for error highlighting
+- JSON/CSV export functionality
+
+#### Dependencies Added
+- `google-cloud-speech>=2.21.0` (optional: cloud-adapters)
+- `deepgram-sdk>=3.0.0` (optional: cloud-adapters)
+- `elevenlabs>=1.0.0` (optional: tts)
+- `python-multipart>=0.0.6` (api)
+- `websockets>=12.0` (api)
+
+#### Tests Added
+- `tests/test_nlp_registry.py` - 25 tests for NLP registry
+- `tests/test_multi_nlp.py` - 30 tests for MultiNLPEvaluator
+- `tests/test_audio_handler.py` - 28 tests for audio handling
+- `tests/test_new_adapters.py` - 22 tests for new STT adapters
+- `tests/test_websocket_handler.py` - 18 tests for WebSocket handling
+
+---
+
+### Added (Previous Phases)
 - Initial project documentation and planning
 - CLAUDE.md project context file
 - Agent instruction files in `.claude/` directory
