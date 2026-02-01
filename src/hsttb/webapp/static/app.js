@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const multiBackendToggle = document.getElementById('multi-backend');
     const multiNlpToggle = document.getElementById('multi-nlp');
     const nlpModelSection = document.getElementById('nlp-model-section');
+    const multiBackendDescription = document.getElementById('multi-backend-description');
 
     // Audio elements
     const audioDropzone = document.getElementById('audio-dropzone');
@@ -98,6 +99,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && e.ctrlKey) {
                 runEvaluation();
+            }
+        });
+
+        // Multi-Backend toggle
+        multiBackendToggle.addEventListener('change', () => {
+            if (multiBackendDescription) {
+                multiBackendDescription.classList.toggle('hidden', !multiBackendToggle.checked);
             }
         });
 

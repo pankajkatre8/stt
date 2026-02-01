@@ -262,27 +262,68 @@
                     </label>
                 </div>
 
+                <!-- Multi-Backend Description -->
+                <div class="feature-description hidden" id="multi-backend-description">
+                    <div class="feature-description-header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        <strong>Multi-Backend Comparison</strong>
+                    </div>
+                    <p>Compare different text matching algorithms for TER (Term Error Rate) calculation:</p>
+                    <ul class="feature-list">
+                        <li><strong>RapidFuzz</strong> - Fast fuzzy matching with Levenshtein distance, best for typo detection</li>
+                        <li><strong>Difflib</strong> - Python's sequence matcher, good for longer text comparisons</li>
+                        <li><strong>Basic</strong> - Simple word-level comparison, fastest but less nuanced</li>
+                    </ul>
+                    <p class="feature-hint">Results show a comparison table with each backend's scores to help you choose the best algorithm for your use case.</p>
+                </div>
+
                 <!-- NLP Model Selection -->
                 <div class="nlp-model-section hidden" id="nlp-model-section">
-                    <h3>NLP Models</h3>
+                    <div class="feature-description-header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        <strong>Multi-NLP Comparison</strong>
+                    </div>
+                    <p>Compare different Named Entity Recognition (NER) models for extracting medical entities (drugs, conditions, procedures):</p>
+                    <h3>Select NLP Models to Compare</h3>
                     <div class="nlp-model-grid" id="nlp-model-grid">
-                        <label class="nlp-model-checkbox">
+                        <label class="nlp-model-checkbox" title="Pattern-based entity extraction using regex rules. Fast, no dependencies, but limited accuracy.">
                             <input type="checkbox" value="mock" checked>
-                            <span>Mock (Pattern-based)</span>
+                            <div class="model-info">
+                                <span class="model-name">Mock (Pattern-based)</span>
+                                <span class="model-desc">Regex rules, fast, no ML</span>
+                            </div>
                         </label>
-                        <label class="nlp-model-checkbox">
+                        <label class="nlp-model-checkbox" title="SciSpaCy with BC5CDR model trained on biomedical literature. Good for drugs and diseases.">
                             <input type="checkbox" value="scispacy" checked>
-                            <span>scispaCy (BC5CDR)</span>
+                            <div class="model-info">
+                                <span class="model-name">scispaCy (BC5CDR)</span>
+                                <span class="model-desc">Biomedical NER, drugs & diseases</span>
+                            </div>
                         </label>
-                        <label class="nlp-model-checkbox">
+                        <label class="nlp-model-checkbox" title="HuggingFace BioBERT-based model. Strong on biomedical literature and research text.">
                             <input type="checkbox" value="biomedical" checked>
-                            <span>Biomedical (HuggingFace)</span>
+                            <div class="model-info">
+                                <span class="model-name">Biomedical (HuggingFace)</span>
+                                <span class="model-desc">BioBERT, research literature</span>
+                            </div>
                         </label>
-                        <label class="nlp-model-checkbox">
+                        <label class="nlp-model-checkbox" title="MedSpaCy with clinical context detection. Handles negation (e.g., 'no chest pain') and clinical notes.">
                             <input type="checkbox" value="medspacy">
-                            <span>MedSpaCy (Clinical)</span>
+                            <div class="model-info">
+                                <span class="model-name">MedSpaCy (Clinical)</span>
+                                <span class="model-desc">Clinical notes, negation detection</span>
+                            </div>
                         </label>
                     </div>
+                    <p class="feature-hint">Results show a radar chart comparing NER accuracy, precision, and recall across selected models.</p>
                 </div>
 
                 <div class="button-group">
