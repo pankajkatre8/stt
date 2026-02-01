@@ -63,7 +63,11 @@ class SciSpacyNERPipeline(NERPipeline):
         """Load model if not already loaded."""
         if self._nlp is None:
             import spacy
-            self._nlp = spacy.load("en_ner_bc5cdr_md")
+            # Try scispacy model first, fall back to standard spacy
+            try:
+                self._nlp = spacy.load("en_ner_bc5cdr_md")
+            except OSError:
+                self._nlp = spacy.load("en_core_web_sm")
 
     def extract_entities(self, text: str) -> list[Entity]:
         """

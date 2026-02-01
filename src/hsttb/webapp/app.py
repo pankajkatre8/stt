@@ -140,7 +140,12 @@ def create_app() -> FastAPI:
         nonlocal _lexicon
         if _lexicon is None:
             _lexicon = SciSpacyLexicon()
-            _lexicon.load("en_ner_bc5cdr_md")
+            # Try scispacy model first, fall back to standard spacy
+            try:
+                _lexicon.load("en_ner_bc5cdr_md")
+            except OSError:
+                logger.warning("scispacy model not found, using en_core_web_sm")
+                _lexicon.load("en_core_web_sm")
         return _lexicon
 
     def get_similarity_engine() -> TransformerSimilarityEngine:
@@ -157,9 +162,18 @@ def create_app() -> FastAPI:
 
             # Add scispaCy lexicon (production)
             scispacy_lex = SciSpacyLexicon()
-            scispacy_lex.load("en_ner_bc5cdr_md")
-            _multi_backend.add_backend("scispacy", scispacy_lex)
-            _available_backends["scispacy"] = "loaded (en_ner_bc5cdr_md)"
+            try:
+                scispacy_lex.load("en_ner_bc5cdr_md")
+                _multi_backend.add_backend("scispacy", scispacy_lex)
+                _available_backends["scispacy"] = "loaded (en_ner_bc5cdr_md)"
+            except OSError:
+                # Fall back to standard spacy model
+                try:
+                    scispacy_lex.load("en_core_web_sm")
+                    _multi_backend.add_backend("spacy", scispacy_lex)
+                    _available_backends["spacy"] = "loaded (en_core_web_sm)"
+                except OSError:
+                    logger.warning("No spacy models available for multi-backend")
 
         return _multi_backend
 
