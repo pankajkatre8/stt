@@ -744,12 +744,15 @@ document.addEventListener('DOMContentLoaded', () => {
         evaluateBtn.classList.add('loading');
 
         try {
+            // Always run the base evaluation for TER/NER/CRS
+            const baseResults = await runSingleEvaluation(groundTruth, predicted);
+
+            // Additionally run multi-model comparisons if enabled
             if (multiNlpToggle.checked) {
-                await runMultiNLPEvaluation(groundTruth, predicted);
-            } else if (multiBackendToggle.checked) {
-                await runMultiBackendEvaluation(groundTruth, predicted);
-            } else {
-                await runSingleEvaluation(groundTruth, predicted);
+                await runMultiNLPEvaluation(groundTruth, predicted, baseResults);
+            }
+            if (multiBackendToggle.checked) {
+                await runMultiBackendEvaluation(groundTruth, predicted, baseResults);
             }
         } catch (error) {
             console.error('Evaluation error:', error);
@@ -780,12 +783,14 @@ document.addEventListener('DOMContentLoaded', () => {
             lastResults = results;
             displayResults(results);
             displayDiff(groundTruth, predicted);
+            return results;
         } else {
             alert('Evaluation failed: ' + (results.error || 'Unknown error'));
+            throw new Error(results.error || 'Evaluation failed');
         }
     }
 
-    async function runMultiBackendEvaluation(groundTruth, predicted) {
+    async function runMultiBackendEvaluation(groundTruth, predicted, baseResults) {
         const response = await fetch('/api/evaluate/multi-backend', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -798,15 +803,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const results = await response.json();
 
         if (results.status === 'success') {
-            lastResults = results;
+            // Merge with base results
+            lastResults = { ...baseResults, multiBackend: results };
             displayMultiBackendResults(results);
-            displayDiff(groundTruth, predicted);
+            // Don't call displayDiff again - already shown by base evaluation
         } else {
-            alert('Evaluation failed: ' + (results.error || 'Unknown error'));
+            console.error('Multi-backend evaluation failed:', results.error);
         }
     }
 
-    async function runMultiNLPEvaluation(groundTruth, predicted) {
+    async function runMultiNLPEvaluation(groundTruth, predicted, baseResults) {
         // Get selected models
         const modelCheckboxes = document.querySelectorAll('#nlp-model-grid input:checked');
         const models = Array.from(modelCheckboxes).map(cb => cb.value);
@@ -824,11 +830,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const results = await response.json();
 
         if (results.status === 'success') {
-            lastResults = results;
+            // Merge with base results
+            lastResults = { ...baseResults, multiNLP: results };
             displayMultiNLPResults(results);
-            displayDiff(groundTruth, predicted);
+            // Don't call displayDiff again - already shown by base evaluation
         } else {
-            alert('Evaluation failed: ' + (results.error || 'Unknown error'));
+            console.error('Multi-NLP evaluation failed:', results.error);
         }
     }
 
@@ -839,10 +846,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayResults(results) {
         resultsSection.classList.remove('hidden');
 
-        // Hide multi-sections
-        document.getElementById('multi-nlp-section')?.classList.add('hidden');
-        document.getElementById('multi-backend-section')?.classList.add('hidden');
-        document.getElementById('chart-container')?.classList.add('hidden');
+        // Hide multi-sections initially (they'll be shown if multi-evaluation runs)
+        if (!multiNlpToggle.checked) {
+            document.getElementById('multi-nlp-section')?.classList.add('hidden');
+        }
+        if (!multiBackendToggle.checked) {
+            document.getElementById('multi-backend-section')?.classList.add('hidden');
+        }
+        if (!multiNlpToggle.checked && !multiBackendToggle.checked) {
+            document.getElementById('chart-container')?.classList.add('hidden');
+        }
 
         // Overall score
         const overallScoreValue = document.getElementById('overall-score-value');
