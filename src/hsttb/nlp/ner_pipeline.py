@@ -228,13 +228,42 @@ class MockNERPipeline(NERPipeline):
         """
         pipeline = cls()
 
-        # Drug patterns
+        # Drug patterns - comprehensive list including commonly confused drugs
         drugs = [
-            "metformin", "aspirin", "lisinopril", "atorvastatin",
-            "omeprazole", "amlodipine", "metoprolol", "losartan",
-            "gabapentin", "hydrochlorothiazide", "warfarin", "prednisone",
-            "amoxicillin", "ibuprofen", "acetaminophen", "insulin",
-            "levothyroxine", "simvastatin", "pantoprazole", "clopidogrel",
+            # Diabetes medications
+            "metformin", "glipizide", "glyburide", "insulin", "ozempic",
+            "jardiance", "farxiga", "trulicity", "victoza",
+            # Cardiovascular medications
+            "aspirin", "lisinopril", "atorvastatin", "amlodipine", "metoprolol",
+            "losartan", "hydrochlorothiazide", "warfarin", "clopidogrel",
+            "simvastatin", "pravastatin", "rosuvastatin", "carvedilol",
+            "furosemide", "spironolactone", "digoxin", "diltiazem", "verapamil",
+            # Pain/Anti-inflammatory
+            "ibuprofen", "acetaminophen", "naproxen", "celecoxib", "tramadol",
+            "oxycodone", "hydrocodone", "morphine", "fentanyl", "gabapentin",
+            "pregabalin", "meloxicam", "prednisone", "methylprednisolone",
+            # Antibiotics
+            "amoxicillin", "azithromycin", "ciprofloxacin", "levofloxacin",
+            "doxycycline", "metronidazole", "clindamycin", "cephalexin",
+            "sulfamethoxazole", "trimethoprim", "nitrofurantoin", "penicillin",
+            # GI medications
+            "omeprazole", "pantoprazole", "esomeprazole", "famotidine",
+            "ranitidine", "ondansetron", "metoclopramide", "dicyclomine",
+            # Psych medications
+            "sertraline", "fluoxetine", "escitalopram", "citalopram",
+            "duloxetine", "venlafaxine", "bupropion", "trazodone",
+            "alprazolam", "lorazepam", "diazepam", "clonazepam",
+            "quetiapine", "risperidone", "olanzapine", "aripiprazole",
+            # Thyroid
+            "levothyroxine", "synthroid", "armour thyroid",
+            # Commonly confused/misheard drugs (critical for STT evaluation)
+            "methotrexate", "hydroxychloroquine", "sulfasalazine",  # RA drugs
+            "lisinopril", "losartan",  # Sound-alike
+            "clonidine", "klonopin",   # Sound-alike
+            "lamotrigine", "lamictal",
+            "labetalol", "levetiracetam",
+            # Urinary/Antibiotics from the example
+            "ciprofloxacin", "phenazopyridine", "nitrofurantoin",
         ]
         for drug in drugs:
             pipeline.add_pattern(drug, EntityLabel.DRUG)

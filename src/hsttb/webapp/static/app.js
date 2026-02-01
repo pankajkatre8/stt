@@ -1148,27 +1148,77 @@ document.addEventListener('DOMContentLoaded', () => {
         const diffGt = document.getElementById('diff-gt');
         const diffPred = document.getElementById('diff-pred');
 
-        // Simple word-based diff
-        const gtWords = groundTruth.split(/\s+/);
-        const predWords = predicted.split(/\s+/);
+        // Word-level diff using LCS (Longest Common Subsequence) approach
+        const gtWords = groundTruth.split(/\s+/).filter(w => w.length > 0);
+        const predWords = predicted.split(/\s+/).filter(w => w.length > 0);
 
-        // Find differences
-        const gtHighlighted = highlightDifferences(gtWords, predWords, 'deleted');
-        const predHighlighted = highlightDifferences(predWords, gtWords, 'inserted');
+        const diff = computeWordDiff(gtWords, predWords);
 
-        diffGt.innerHTML = gtHighlighted;
-        diffPred.innerHTML = predHighlighted;
+        diffGt.innerHTML = diff.gtHtml;
+        diffPred.innerHTML = diff.predHtml;
     }
 
-    function highlightDifferences(words1, words2, diffClass) {
-        const words2Lower = words2.map(w => w.toLowerCase());
+    function computeWordDiff(gtWords, predWords) {
+        // Build LCS table
+        const m = gtWords.length;
+        const n = predWords.length;
+        const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
 
-        return words1.map(word => {
-            if (!words2Lower.includes(word.toLowerCase())) {
-                return `<span class="diff-${diffClass}">${escapeHtml(word)}</span>`;
+        for (let i = 1; i <= m; i++) {
+            for (let j = 1; j <= n; j++) {
+                if (gtWords[i-1].toLowerCase() === predWords[j-1].toLowerCase()) {
+                    dp[i][j] = dp[i-1][j-1] + 1;
+                } else {
+                    dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+                }
             }
-            return escapeHtml(word);
+        }
+
+        // Backtrack to find the diff
+        const gtResult = [];
+        const predResult = [];
+        let i = m, j = n;
+
+        while (i > 0 || j > 0) {
+            if (i > 0 && j > 0 && gtWords[i-1].toLowerCase() === predWords[j-1].toLowerCase()) {
+                // Words match
+                gtResult.unshift({ word: gtWords[i-1], type: 'same' });
+                predResult.unshift({ word: predWords[j-1], type: 'same' });
+                i--; j--;
+            } else if (i > 0 && j > 0 && dp[i-1][j-1] >= dp[i-1][j] && dp[i-1][j-1] >= dp[i][j-1]) {
+                // Substitution - words are different at same position
+                gtResult.unshift({ word: gtWords[i-1], type: 'deleted', substitute: predWords[j-1] });
+                predResult.unshift({ word: predWords[j-1], type: 'inserted', substitute: gtWords[i-1] });
+                i--; j--;
+            } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) {
+                // Insertion in predicted
+                predResult.unshift({ word: predWords[j-1], type: 'inserted' });
+                j--;
+            } else {
+                // Deletion from ground truth
+                gtResult.unshift({ word: gtWords[i-1], type: 'deleted' });
+                i--;
+            }
+        }
+
+        // Render HTML
+        const gtHtml = gtResult.map(item => {
+            if (item.type === 'deleted') {
+                const title = item.substitute ? `Changed to: "${item.substitute}"` : 'Deleted';
+                return `<span class="diff-deleted" title="${title}">${escapeHtml(item.word)}</span>`;
+            }
+            return escapeHtml(item.word);
         }).join(' ');
+
+        const predHtml = predResult.map(item => {
+            if (item.type === 'inserted') {
+                const title = item.substitute ? `Was: "${item.substitute}"` : 'Inserted';
+                return `<span class="diff-inserted" title="${title}">${escapeHtml(item.word)}</span>`;
+            }
+            return escapeHtml(item.word);
+        }).join(' ');
+
+        return { gtHtml, predHtml };
     }
 
     // ========================================================================
