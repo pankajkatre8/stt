@@ -48,79 +48,10 @@ class DosagePlausibilityChecker:
 
     Uses known typical dosage ranges for common medications.
     Flags unusual dosages without needing ground truth.
+    Dosage ranges are loaded dynamically from the medical terms provider.
     """
 
-    # Typical dosage ranges: drug -> {min, max, common, unit, typical_freq}
-    # Based on standard clinical guidelines
-    TYPICAL_DOSAGES = {
-        "amlodipine": {
-            "min": 2.5, "max": 10, "common": [5, 10],
-            "unit": "mg", "typical_freq": ["once daily", "daily"],
-            "unusual_freq": ["twice daily", "three times", "bid", "tid"],
-        },
-        "metformin": {
-            "min": 250, "max": 2550, "common": [500, 850, 1000],
-            "unit": "mg", "typical_freq": ["once daily", "twice daily", "bid"],
-        },
-        "lisinopril": {
-            "min": 2.5, "max": 40, "common": [5, 10, 20],
-            "unit": "mg", "typical_freq": ["once daily", "daily"],
-        },
-        "atorvastatin": {
-            "min": 10, "max": 80, "common": [10, 20, 40],
-            "unit": "mg", "typical_freq": ["once daily", "at night", "daily"],
-        },
-        "aspirin": {
-            "min": 75, "max": 325, "common": [81, 100, 325],
-            "unit": "mg", "typical_freq": ["once daily", "daily", "as needed"],
-        },
-        "omeprazole": {
-            "min": 10, "max": 40, "common": [20, 40],
-            "unit": "mg", "typical_freq": ["once daily", "twice daily", "daily"],
-        },
-        "metoprolol": {
-            "min": 12.5, "max": 400, "common": [25, 50, 100],
-            "unit": "mg", "typical_freq": ["once daily", "twice daily", "bid"],
-        },
-        "losartan": {
-            "min": 25, "max": 100, "common": [25, 50, 100],
-            "unit": "mg", "typical_freq": ["once daily", "twice daily"],
-        },
-        "gabapentin": {
-            "min": 100, "max": 3600, "common": [100, 300, 600],
-            "unit": "mg", "typical_freq": ["three times daily", "tid", "twice daily"],
-        },
-        "sertraline": {
-            "min": 25, "max": 200, "common": [50, 100],
-            "unit": "mg", "typical_freq": ["once daily", "daily"],
-        },
-        "prednisone": {
-            "min": 1, "max": 80, "common": [5, 10, 20, 40],
-            "unit": "mg", "typical_freq": ["once daily", "daily", "taper"],
-        },
-        "warfarin": {
-            "min": 1, "max": 15, "common": [2, 2.5, 5],
-            "unit": "mg", "typical_freq": ["once daily", "daily"],
-        },
-        "levothyroxine": {
-            "min": 12.5, "max": 300, "common": [25, 50, 75, 100, 125],
-            "unit": "mcg", "typical_freq": ["once daily", "daily"],
-        },
-        "hydrochlorothiazide": {
-            "min": 12.5, "max": 50, "common": [12.5, 25],
-            "unit": "mg", "typical_freq": ["once daily", "daily"],
-        },
-        "furosemide": {
-            "min": 20, "max": 600, "common": [20, 40, 80],
-            "unit": "mg", "typical_freq": ["once daily", "twice daily"],
-        },
-        "insulin": {
-            "min": 1, "max": 200, "common": [10, 20, 30, 40],
-            "unit": "units", "typical_freq": ["daily", "twice daily", "with meals"],
-        },
-    }
-
-    # Frequency patterns
+    # Frequency patterns for detecting dosing frequency
     FREQUENCY_PATTERNS = {
         "once daily": [r"once\s+daily", r"once\s+a\s+day", r"qd", r"daily"],
         "twice daily": [r"twice\s+daily", r"twice\s+a\s+day", r"bid", r"two\s+times", r"2x"],
@@ -134,12 +65,40 @@ class DosagePlausibilityChecker:
 
     def __init__(self) -> None:
         """Initialize checker."""
+        self._dosage_ranges: dict | None = None
         # Compile frequency patterns
         self._freq_patterns = {}
         for freq_name, patterns in self.FREQUENCY_PATTERNS.items():
             self._freq_patterns[freq_name] = re.compile(
                 "|".join(patterns), re.IGNORECASE
             )
+
+    def _get_dosage_ranges(self) -> dict:
+        """Get dosage ranges dynamically from provider."""
+        if self._dosage_ranges is not None:
+            return self._dosage_ranges
+
+        ranges = {}
+
+        try:
+            from hsttb.metrics.medical_terms import get_medical_terms
+            provider = get_medical_terms()
+
+            for drug, dosage in provider.get_all_dosage_ranges().items():
+                ranges[drug] = {
+                    "min": dosage.min_dose,
+                    "max": dosage.max_dose,
+                    "common": dosage.common_doses,
+                    "unit": dosage.unit,
+                    "typical_freq": dosage.typical_frequencies,
+                    "unusual_freq": dosage.unusual_frequencies,
+                }
+        except Exception as e:
+            logger.warning(f"Could not load dosage ranges from provider: {e}")
+
+        # Always store result (even if empty)
+        self._dosage_ranges = ranges
+        return self._dosage_ranges
 
     def check(self, text: str) -> DosagePlausibilityResult:
         """
@@ -157,8 +116,11 @@ class DosagePlausibilityChecker:
 
         text_lower = text.lower()
 
+        # Get dosage ranges dynamically
+        dosage_ranges = self._get_dosage_ranges()
+
         # Find all drug mentions with dosages
-        for drug, ranges in self.TYPICAL_DOSAGES.items():
+        for drug, ranges in dosage_ranges.items():
             if drug not in text_lower:
                 continue
 
@@ -281,13 +243,6 @@ class DosagePlausibilityChecker:
         for n1, n2 in space_numbers:
             if n2 == "00" or n2 == "0":
                 warnings.append(f"Possible transcription error: '{n1} {n2}mg'")
-
-        # Check for missing doses (drug mentioned but no dose)
-        for drug in self.TYPICAL_DOSAGES:
-            if drug in text:
-                if not re.search(rf"{drug}\s*\d+", text):
-                    # Drug mentioned but no numeric dose nearby
-                    pass  # This might be intentional, not flagging
 
         return warnings
 

@@ -86,6 +86,15 @@ from hsttb.metrics.confidence_variance import (
     analyze_confidence_variance,
 )
 
+# Dynamic medical terminology provider
+from hsttb.metrics.medical_terms import (
+    DosageRange,
+    DrugConditionPair,
+    MedicalTermsProvider,
+    get_medical_terms,
+    reset_medical_terms,
+)
+
 # Clinical risk scoring (NEW - prioritizes clinical safety)
 from hsttb.metrics.clinical_risk import (
     ClinicalRiskResult,
@@ -164,6 +173,12 @@ __all__ = [
     "ConfidenceDropPoint",
     "ConfidenceVarianceResult",
     "analyze_confidence_variance",
+    # Medical terminology provider
+    "DosageRange",
+    "DrugConditionPair",
+    "MedicalTermsProvider",
+    "get_medical_terms",
+    "reset_medical_terms",
     # Clinical risk scoring
     "ClinicalRiskResult",
     "ClinicalRiskScorer",

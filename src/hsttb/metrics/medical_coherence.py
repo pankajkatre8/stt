@@ -48,8 +48,9 @@ class MedicalCoherenceChecker:
     """
     Check medical coherence of transcriptions.
 
-    Validates entities using the MockMedicalLexicon and checks
+    Validates entities using the medical lexicon and checks
     drug-condition relationships for clinical plausibility.
+    Drug-condition pairs are loaded dynamically from the lexicon.
 
     Example:
         >>> checker = MedicalCoherenceChecker()
@@ -57,85 +58,11 @@ class MedicalCoherenceChecker:
         >>> print(f"Invalid pairs: {result.invalid_pairs}")
     """
 
-    # Drug-condition pairs that are clinically valid
-    VALID_DRUG_CONDITION_PAIRS = {
-        # Diabetes medications
-        ("metformin", "diabetes"),
-        ("metformin", "type 2 diabetes"),
-        ("metformin", "diabetes mellitus"),
-        ("insulin", "diabetes"),
-        ("glipizide", "diabetes"),
-        ("glyburide", "diabetes"),
-        # Cardiovascular
-        ("lisinopril", "hypertension"),
-        ("lisinopril", "high blood pressure"),
-        ("lisinopril", "heart failure"),
-        ("losartan", "hypertension"),
-        ("amlodipine", "hypertension"),
-        ("metoprolol", "hypertension"),
-        ("metoprolol", "heart failure"),
-        ("metoprolol", "atrial fibrillation"),
-        ("atorvastatin", "hyperlipidemia"),
-        ("atorvastatin", "high cholesterol"),
-        ("warfarin", "atrial fibrillation"),
-        ("warfarin", "deep vein thrombosis"),
-        ("aspirin", "coronary artery disease"),
-        ("aspirin", "heart disease"),
-        # Pain/inflammation
-        ("ibuprofen", "pain"),
-        ("ibuprofen", "headache"),
-        ("ibuprofen", "arthritis"),
-        ("acetaminophen", "pain"),
-        ("acetaminophen", "headache"),
-        ("acetaminophen", "fever"),
-        ("prednisone", "arthritis"),
-        ("prednisone", "asthma"),
-        ("prednisone", "copd"),
-        # GI
-        ("omeprazole", "gerd"),
-        ("omeprazole", "acid reflux"),
-        ("omeprazole", "gastroesophageal reflux"),
-        ("pantoprazole", "gerd"),
-        # Psychiatric
-        ("sertraline", "depression"),
-        ("sertraline", "anxiety"),
-        ("fluoxetine", "depression"),
-        ("escitalopram", "depression"),
-        ("escitalopram", "anxiety"),
-        ("alprazolam", "anxiety"),
-        ("lorazepam", "anxiety"),
-        # Neurological
-        ("gabapentin", "neuropathy"),
-        ("gabapentin", "seizures"),
-        ("gabapentin", "pain"),
-        # Thyroid
-        ("levothyroxine", "hypothyroidism"),
-        # Antibiotics
-        ("amoxicillin", "infection"),
-        ("amoxicillin", "pneumonia"),
-        ("azithromycin", "infection"),
-        ("azithromycin", "pneumonia"),
-        ("ciprofloxacin", "urinary tract infection"),
-        ("ciprofloxacin", "uti"),
-        # Rheumatology
-        ("methotrexate", "rheumatoid arthritis"),
-        ("methotrexate", "psoriasis"),
-        ("hydroxychloroquine", "lupus"),
-        ("hydroxychloroquine", "rheumatoid arthritis"),
-    }
-
-    # Known invalid pairs (for testing)
-    INVALID_DRUG_CONDITION_PAIRS = {
-        ("metformin", "migraine"),
-        ("metformin", "headache"),
-        ("insulin", "hypertension"),
-        ("lisinopril", "diabetes"),
-        ("warfarin", "diabetes"),
-    }
-
     def __init__(self) -> None:
         """Initialize medical coherence checker."""
         self._lexicon = None
+        self._valid_pairs: set[tuple[str, str]] | None = None
+        self._medical_terms = None
 
     def _get_lexicon(self):
         """Get or create lexicon."""
@@ -147,6 +74,65 @@ class MedicalCoherenceChecker:
             except ImportError:
                 logger.warning("MockMedicalLexicon not available")
                 self._lexicon = None
+
+    def _get_medical_terms(self):
+        """Get medical terms provider."""
+        if self._medical_terms is None:
+            try:
+                from hsttb.metrics.medical_terms import get_medical_terms
+                self._medical_terms = get_medical_terms()
+            except Exception as e:
+                logger.warning(f"Could not load medical terms: {e}")
+        return self._medical_terms
+
+    def _get_valid_drug_condition_pairs(self) -> set[tuple[str, str]]:
+        """Get valid drug-condition pairs dynamically from lexicon."""
+        if self._valid_pairs is not None:
+            return self._valid_pairs
+
+        self._valid_pairs = set()
+
+        try:
+            # Try to get from medical terms provider (which loads from SQLite)
+            provider = self._get_medical_terms()
+            if provider:
+                # Build pairs from drug indications
+                for drug in provider.get_drugs():
+                    indications = provider.get_drug_indications(drug)
+                    for indication in indications:
+                        self._valid_pairs.add((drug.lower(), indication.lower()))
+
+            if self._valid_pairs:
+                logger.info(f"Loaded {len(self._valid_pairs)} drug-condition pairs from lexicon")
+                return self._valid_pairs
+        except Exception as e:
+            logger.warning(f"Could not load drug-condition pairs: {e}")
+
+        # Empty set if no data - coherence checking will be skipped
+        return self._valid_pairs
+
+    def is_valid_pair(self, drug: str, condition: str) -> bool | None:
+        """
+        Check if drug-condition pair is valid.
+
+        Returns:
+            True if valid pair, False if known invalid, None if unknown.
+        """
+        valid_pairs = self._get_valid_drug_condition_pairs()
+        drug_lower = drug.lower()
+        condition_lower = condition.lower()
+
+        # Direct match
+        if (drug_lower, condition_lower) in valid_pairs:
+            return True
+
+        # Check for partial matches (e.g., "type 2 diabetes" contains "diabetes")
+        for d, c in valid_pairs:
+            if d == drug_lower and (c in condition_lower or condition_lower in c):
+                return True
+
+        # If we have pairs loaded but no match, it's unknown (not invalid)
+        return None
         return self._lexicon
 
     def check(self, text: str) -> CoherenceResult:
@@ -189,12 +175,12 @@ class MedicalCoherenceChecker:
 
         for drug in drugs:
             for condition in conditions:
-                pair = (drug.text.lower(), condition.text.lower())
-                if pair in self.VALID_DRUG_CONDITION_PAIRS:
+                is_valid = self.is_valid_pair(drug.text, condition.text)
+                if is_valid is True:
                     valid_pairs.append((drug.text, condition.text))
-                elif pair in self.INVALID_DRUG_CONDITION_PAIRS:
+                elif is_valid is False:
                     invalid_pairs.append((drug.text, condition.text))
-                # Unknown pairs are not penalized
+                # Unknown pairs (None) are not penalized
 
         # Calculate coherence score
         total_pairs = len(valid_pairs) + len(invalid_pairs)

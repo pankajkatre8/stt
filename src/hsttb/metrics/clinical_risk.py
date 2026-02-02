@@ -84,30 +84,54 @@ class ClinicalRiskScorer:
         "coherence": 0.05,  # Drug-condition pairs
     }
 
-    # Clinical tokens that matter more
-    CLINICAL_TOKEN_CATEGORIES = {
-        "critical": [  # Highest weight
-            "mg", "milligram", "mcg", "microgram", "units",
-            "daily", "twice", "three", "times", "bid", "tid",
-            "metformin", "insulin", "warfarin", "methotrexate",
-            "allergic", "allergy", "anaphylaxis",
-        ],
-        "high": [  # High weight
-            "diabetes", "hypertension", "heart", "stroke",
-            "cancer", "renal", "hepatic", "failure",
-            "pain", "chest", "breathing", "pressure",
-            "blood", "sugar", "glucose", "a1c",
-        ],
-        "medium": [  # Medium weight
-            "aspirin", "lisinopril", "amlodipine", "atorvastatin",
-            "fatigue", "dizziness", "nausea", "swelling",
-            "history", "family", "previous", "diagnosed",
-        ],
-        "low": [  # Low weight (can be wrong without danger)
-            "okay", "alright", "doctor", "patient",
-            "yes", "no", "good", "morning",
-        ],
-    }
+    # Critical token patterns (not medical terms, but dosage/frequency indicators)
+    _CRITICAL_PATTERNS = [
+        "mg", "milligram", "mcg", "microgram", "units",
+        "daily", "twice", "three", "times", "bid", "tid",
+        "allergic", "allergy", "anaphylaxis",
+    ]
+
+    # Low importance tokens (can be wrong without danger)
+    _LOW_IMPORTANCE = [
+        "okay", "alright", "doctor", "patient",
+        "yes", "no", "good", "morning",
+    ]
+
+    def _get_clinical_token_categories(self) -> dict[str, list[str]]:
+        """Get clinical token categories dynamically."""
+        try:
+            from hsttb.metrics.medical_terms import get_medical_terms
+            provider = get_medical_terms()
+
+            drugs = list(provider.get_drugs())
+            conditions = list(provider.get_conditions())
+
+            # Build categories dynamically
+            # Critical: dosage patterns + high-risk drugs (insulin, warfarin, methotrexate)
+            high_risk_drugs = [d for d in drugs if d in ["insulin", "warfarin", "methotrexate", "metformin"]]
+            critical = self._CRITICAL_PATTERNS + high_risk_drugs
+
+            # High: conditions that are clinically important
+            high = conditions[:50] if conditions else []  # Top conditions
+
+            # Medium: other drugs and symptoms
+            medium_drugs = [d for d in drugs if d not in high_risk_drugs][:20]
+            medium = medium_drugs + ["history", "family", "previous", "diagnosed"]
+
+            return {
+                "critical": critical,
+                "high": high,
+                "medium": medium,
+                "low": self._LOW_IMPORTANCE,
+            }
+        except Exception as e:
+            logger.warning(f"Could not load clinical tokens: {e}")
+            return {
+                "critical": self._CRITICAL_PATTERNS,
+                "high": [],
+                "medium": [],
+                "low": self._LOW_IMPORTANCE,
+            }
 
     def __init__(self) -> None:
         """Initialize scorer."""
@@ -319,6 +343,9 @@ class ClinicalRiskScorer:
         # Get low-confidence tokens
         low_conf_tokens = quality_result.get("confidence_drops", [])
 
+        # Get clinical token categories dynamically
+        token_categories = self._get_clinical_token_categories()
+
         # Weight by clinical importance
         critical_low_conf = 0
         high_low_conf = 0
@@ -327,13 +354,13 @@ class ClinicalRiskScorer:
         for token_info in low_conf_tokens:
             token = token_info.get("token", "").lower().strip()
 
-            if any(t in token for t in self.CLINICAL_TOKEN_CATEGORIES["critical"]):
+            if any(t in token for t in token_categories["critical"]):
                 critical_low_conf += 1
                 details.append(f"CRITICAL: Low confidence on '{token}'")
-            elif any(t in token for t in self.CLINICAL_TOKEN_CATEGORIES["high"]):
+            elif any(t in token for t in token_categories["high"]):
                 high_low_conf += 1
                 details.append(f"HIGH: Low confidence on '{token}'")
-            elif any(t in token for t in self.CLINICAL_TOKEN_CATEGORIES["medium"]):
+            elif any(t in token for t in token_categories["medium"]):
                 medium_low_conf += 1
 
         # Calculate score with weighted penalties

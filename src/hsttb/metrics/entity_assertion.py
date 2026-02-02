@@ -186,29 +186,41 @@ class EntityAssertionAnalyzer:
         r"\bconfirmed\s+",
     ]
 
-    # Medical entities to look for
-    MEDICAL_ENTITIES = {
-        "diagnosis": [
-            "diabetes", "hypertension", "heart disease", "heart attack",
-            "heart failure", "heart problem", "chest pain", "chest pressure",
-            "shortness of breath", "breathless", "dyspnea", "fatigue",
-            "dizziness", "nausea", "sweating", "swelling", "edema",
-            "cholesterol", "blood pressure", "sugar", "stroke", "copd",
-            "asthma", "anxiety", "depression", "cancer", "infection",
-            "pain", "headache", "migraine",
-        ],
-        "drug": [
-            "metformin", "lisinopril", "amlodipine", "atorvastatin",
-            "aspirin", "omeprazole", "metoprolol", "losartan", "warfarin",
-            "insulin", "gabapentin", "prednisone", "ibuprofen",
-        ],
-        "symptom": [
-            "chest pain", "chest pressure", "shortness of breath",
-            "breathless", "breathlessness", "fatigue", "tired",
-            "dizziness", "dizzy", "nausea", "sweating", "swelling",
-            "palpitations", "weakness", "pain",
-        ],
+    # Medical entities loaded dynamically from lexicon
+    # Fallback minimal set only used if lexicon unavailable
+    _FALLBACK_SYMPTOMS = {
+        "chest pain", "chest pressure", "shortness of breath",
+        "breathless", "breathlessness", "fatigue", "tired",
+        "dizziness", "dizzy", "nausea", "sweating", "swelling",
+        "palpitations", "weakness", "pain", "headache", "fever",
     }
+
+    def _get_medical_entities(self) -> dict[str, list[str]]:
+        """Get medical entities dynamically from lexicon."""
+        drugs = []
+        conditions = []
+        symptoms = list(self._FALLBACK_SYMPTOMS)
+
+        try:
+            from hsttb.metrics.medical_terms import get_medical_terms
+            provider = get_medical_terms()
+
+            drugs = list(provider.get_drugs())
+            loaded_conditions = list(provider.get_conditions())
+            loaded_symptoms = list(provider.get_symptoms())
+
+            if loaded_conditions:
+                conditions = loaded_conditions
+            if loaded_symptoms:
+                symptoms = loaded_symptoms
+        except Exception as e:
+            logger.warning(f"Could not load medical entities from provider: {e}")
+
+        return {
+            "diagnosis": conditions,
+            "drug": drugs,
+            "symptom": symptoms,
+        }
 
     def __init__(self) -> None:
         """Initialize analyzer."""
@@ -237,7 +249,8 @@ class EntityAssertionAnalyzer:
         text_lower = text.lower()
 
         # Find all medical entities and their assertion status
-        for entity_type, entity_list in self.MEDICAL_ENTITIES.items():
+        medical_entities = self._get_medical_entities()
+        for entity_type, entity_list in medical_entities.items():
             for entity_text in entity_list:
                 # Find all occurrences
                 for match in re.finditer(

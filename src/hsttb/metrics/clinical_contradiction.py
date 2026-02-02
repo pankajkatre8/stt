@@ -183,6 +183,26 @@ class ClinicalContradictionDetector:
         sentences = re.split(r'[\n.?!]+|(?=\b(?:Doctor|Patient|Dr|Pt):\s*)', text)
         return [s.strip() for s in sentences if s.strip()]
 
+    def _get_trackable_entities(self) -> list[str]:
+        """Get medical entities to track for contradictions."""
+        try:
+            from hsttb.metrics.medical_terms import get_medical_terms
+            provider = get_medical_terms()
+
+            # Combine symptoms and conditions
+            entities = list(provider.get_symptoms() | provider.get_conditions())
+            if entities:
+                return entities
+        except Exception as e:
+            logger.warning(f"Could not load medical terms: {e}")
+
+        # Minimal fallback
+        return [
+            "shortness of breath", "breathless", "chest pain",
+            "fatigue", "dizziness", "nausea", "swelling",
+            "diabetes", "hypertension", "heart disease", "heart failure",
+        ]
+
     def _extract_entity_states(
         self,
         sentence: str,
@@ -192,21 +212,10 @@ class ClinicalContradictionDetector:
         """Extract entity states from a sentence."""
         sentence_lower = sentence.lower()
 
-        # Key symptoms to track
-        symptoms = [
-            "shortness of breath", "breathless", "breathlessness",
-            "chest pain", "chest pressure", "fatigue", "tired",
-            "dizziness", "dizzy", "nausea", "sweating",
-            "swelling", "palpitations",
-        ]
+        # Get entities dynamically
+        entities = self._get_trackable_entities()
 
-        # Key conditions
-        conditions = [
-            "diabetes", "hypertension", "heart disease",
-            "heart attack", "heart failure", "cholesterol",
-        ]
-
-        for entity in symptoms + conditions:
+        for entity in entities:
             if entity in sentence_lower:
                 # Determine state
                 state = self._determine_state(sentence_lower, entity)
@@ -351,6 +360,20 @@ class ClinicalContradictionDetector:
 
         return False
 
+    def _get_medication_list(self) -> list[str]:
+        """Get medication names dynamically."""
+        try:
+            from hsttb.metrics.medical_terms import get_medical_terms
+            provider = get_medical_terms()
+            drugs = list(provider.get_drugs())
+            if drugs:
+                return drugs
+        except Exception as e:
+            logger.warning(f"Could not load drug list: {e}")
+
+        # Minimal fallback
+        return []
+
     def _check_medication_contradictions(
         self,
         text: str,
@@ -360,11 +383,8 @@ class ClinicalContradictionDetector:
         contradictions = []
         text_lower = text.lower()
 
-        # Medication patterns
-        medications = [
-            "aspirin", "metformin", "amlodipine", "atorvastatin",
-            "lisinopril", "omeprazole", "metoprolol",
-        ]
+        # Get medications dynamically
+        medications = self._get_medication_list()
 
         for med in medications:
             if med not in text_lower:

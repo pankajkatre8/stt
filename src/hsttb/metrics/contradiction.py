@@ -72,31 +72,6 @@ class ContradictionDetector:
         r"\b(isn'?t|aren'?t|wasn'?t|weren'?t|haven'?t|hasn'?t|won'?t|can'?t|couldn'?t)\b",
     ]
 
-    # Medical entities to track
-    MEDICAL_ENTITIES = [
-        # Conditions
-        r"\b(diabetes|diabetic)\b",
-        r"\b(hypertension|high blood pressure|htn)\b",
-        r"\b(chest pain|angina)\b",
-        r"\b(shortness of breath|dyspnea|sob)\b",
-        r"\b(nausea|vomiting)\b",
-        r"\b(dizziness|dizzy|vertigo)\b",
-        r"\b(headache|migraine)\b",
-        r"\b(fever|febrile)\b",
-        r"\b(cough|coughing)\b",
-        r"\b(pain|painful)\b",
-        r"\b(swelling|edema)\b",
-        r"\b(bleeding|hemorrhage)\b",
-        r"\b(infection|infected)\b",
-        r"\b(allergy|allergic|allergies)\b",
-        r"\b(pregnant|pregnancy)\b",
-        # Medications
-        r"\b(medication|medicine|drug|prescription)\b",
-        r"\b(insulin)\b",
-        r"\b(metformin)\b",
-        r"\b(aspirin)\b",
-    ]
-
     # Value patterns (for detecting value conflicts)
     VALUE_PATTERNS = [
         # Blood pressure
@@ -116,12 +91,54 @@ class ContradictionDetector:
         self._negation_pattern = re.compile(
             "|".join(self.NEGATION_PATTERNS), re.IGNORECASE
         )
-        self._entity_patterns = [
-            (re.compile(p, re.IGNORECASE), p) for p in self.MEDICAL_ENTITIES
-        ]
+        self._entity_patterns: list | None = None
         self._value_patterns = [
             (re.compile(p, re.IGNORECASE), name) for p, name in self.VALUE_PATTERNS
         ]
+
+    def _get_entity_patterns(self) -> list:
+        """Get entity patterns dynamically from lexicon."""
+        if self._entity_patterns is not None:
+            return self._entity_patterns
+
+        patterns = []
+
+        try:
+            from hsttb.metrics.medical_terms import get_medical_terms
+            provider = get_medical_terms()
+
+            # Build patterns from drugs and conditions
+            drugs = provider.get_drugs()
+            conditions = provider.get_conditions()
+
+            # Add drug patterns
+            for drug in drugs:
+                if len(drug) > 2:  # Skip very short terms
+                    pattern = rf"\b({re.escape(drug)})\b"
+                    patterns.append((re.compile(pattern, re.IGNORECASE), pattern))
+
+            # Add condition patterns
+            for condition in conditions:
+                if len(condition) > 2:
+                    pattern = rf"\b({re.escape(condition)})\b"
+                    patterns.append((re.compile(pattern, re.IGNORECASE), pattern))
+
+            if patterns:
+                self._entity_patterns = patterns
+                return patterns
+        except Exception as e:
+            logger.warning(f"Could not load entity patterns: {e}")
+
+        # Minimal fallback patterns
+        fallback = [
+            r"\b(diabetes|diabetic)\b",
+            r"\b(hypertension)\b",
+            r"\b(chest pain)\b",
+            r"\b(shortness of breath)\b",
+            r"\b(pain)\b",
+        ]
+        self._entity_patterns = [(re.compile(p, re.IGNORECASE), p) for p in fallback]
+        return self._entity_patterns
 
     def detect(self, text: str) -> ContradictionResult:
         """
@@ -158,7 +175,8 @@ class ContradictionDetector:
             is_negated = bool(self._negation_pattern.search(sentence_lower))
 
             # Check each entity pattern
-            for pattern, pattern_str in self._entity_patterns:
+            entity_patterns = self._get_entity_patterns()
+            for pattern, pattern_str in entity_patterns:
                 if pattern.search(sentence_lower):
                     entity_name = self._extract_entity_name(pattern_str)
 
