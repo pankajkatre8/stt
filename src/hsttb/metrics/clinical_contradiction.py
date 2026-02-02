@@ -16,8 +16,58 @@ import logging
 import re
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
+
+# Config file path
+CONFIG_PATH = Path(__file__).parent.parent.parent.parent / "configs" / "clinical_patterns.yaml"
+
+
+def _load_clinical_config() -> dict[str, Any]:
+    """Load clinical patterns from YAML config file."""
+    try:
+        import yaml
+    except ImportError:
+        logger.warning("PyYAML not installed, using empty config")
+        return {}
+
+    if not CONFIG_PATH.exists():
+        logger.warning(f"Clinical config not found at {CONFIG_PATH}")
+        return {}
+
+    try:
+        with open(CONFIG_PATH) as f:
+            config = yaml.safe_load(f)
+            return config or {}
+    except Exception as e:
+        logger.warning(f"Failed to load clinical config: {e}")
+        return {}
+
+
+def _parse_conditional_pairs(config: dict) -> dict[tuple[str, str], list[str]]:
+    """Parse conditional symptom pairs from config format to internal format."""
+    pairs = {}
+    raw = config.get("conditional_symptom_pairs", {})
+
+    for symptom, contexts in raw.items():
+        if isinstance(contexts, dict):
+            for context, compatible in contexts.items():
+                if isinstance(compatible, list):
+                    pairs[(symptom, context)] = compatible
+
+    return pairs
+
+
+def _parse_complementary_contexts(config: dict) -> list[tuple[str, str]]:
+    """Parse complementary context pairs from config."""
+    raw = config.get("complementary_contexts", [])
+    pairs = []
+    for item in raw:
+        if isinstance(item, list) and len(item) == 2:
+            pairs.append((item[0], item[1]))
+    return pairs
 
 
 class ContradictionSeverity(Enum):
@@ -62,40 +112,48 @@ class ClinicalContradictionDetector:
     - Soft contradictions: "no SOB at rest" vs "SOB on exertion"
     - Temporal contradictions: "had heart attack" vs "no heart attack"
     - Medication contradictions: "takes aspirin" vs "stopped aspirin"
+
+    Configuration is loaded from configs/clinical_patterns.yaml
     """
 
-    # Symptom pairs that are commonly conditionally related
-    CONDITIONAL_SYMPTOM_PAIRS = {
-        # (symptom, modifier_context) -> can coexist with negated form
-        ("shortness of breath", "at rest"): ["on exertion", "when walking", "climbing stairs"],
-        ("breathless", "at rest"): ["on exertion", "when walking", "climbing stairs"],
-        ("chest pain", "at rest"): ["on exertion", "with activity"],
-        ("pain", "at rest"): ["on movement", "with activity"],
-        ("dizziness", "usually"): ["sometimes", "occasionally"],
-        ("nausea", "usually"): ["sometimes", "occasionally"],
-    }
-
-    # Hedging words that indicate soft assertions
-    HEDGING_WORDS = [
-        "usually", "sometimes", "occasionally", "rarely",
-        "often", "mostly", "typically", "generally",
-        "not always", "not every time",
-    ]
-
-    # Negation patterns
+    # Negation patterns - these are standard English, unlikely to change
     NEGATION_PATTERNS = [
         r"\bno\b", r"\bnot\b", r"\bdenies?\b", r"\bwithout\b",
         r"\babsent\b", r"\bnegative\b", r"\bdoesn'?t\b", r"\bdon'?t\b",
     ]
 
-    # Affirmation patterns
+    # Affirmation patterns - these are standard English, unlikely to change
     AFFIRMATION_PATTERNS = [
         r"\bhas\b", r"\bhave\b", r"\bfeel\b", r"\bfeels?\b",
         r"\breports?\b", r"\bexperiencing\b", r"\bnoticed?\b",
     ]
 
-    def __init__(self) -> None:
-        """Initialize detector."""
+    def __init__(self, config_path: Path | None = None) -> None:
+        """
+        Initialize detector.
+
+        Args:
+            config_path: Optional path to config file. Uses default if not specified.
+        """
+        # Load config
+        if config_path:
+            self._config_path = config_path
+        else:
+            self._config_path = CONFIG_PATH
+
+        self._config = _load_clinical_config()
+
+        # Load dynamic patterns from config
+        self._hedging_words = self._config.get("hedging_words", [])
+        self._conditional_pairs = _parse_conditional_pairs(self._config)
+        self._complementary_contexts = _parse_complementary_contexts(self._config)
+
+        if not self._hedging_words:
+            logger.warning("No hedging words loaded from config")
+        if not self._conditional_pairs:
+            logger.warning("No conditional symptom pairs loaded from config")
+
+        # Compile regex patterns
         self._negation_re = re.compile(
             "|".join(self.NEGATION_PATTERNS), re.IGNORECASE
         )
@@ -196,12 +254,9 @@ class ClinicalContradictionDetector:
         except Exception as e:
             logger.warning(f"Could not load medical terms: {e}")
 
-        # Minimal fallback
-        return [
-            "shortness of breath", "breathless", "chest pain",
-            "fatigue", "dizziness", "nausea", "swelling",
-            "diabetes", "hypertension", "heart disease", "heart failure",
-        ]
+        # No fallback - return empty list if database unavailable
+        logger.warning("No medical entities available for contradiction detection")
+        return []
 
     def _extract_entity_states(
         self,
@@ -237,7 +292,7 @@ class ClinicalContradictionDetector:
         prefix = sentence[max(0, entity_pos - 50):entity_pos]
 
         # Check for hedging
-        for hedge in self.HEDGING_WORDS:
+        for hedge in self._hedging_words:
             if hedge in prefix or hedge in sentence[entity_pos:entity_pos + 50]:
                 if self._negation_re.search(prefix):
                     return "negated_conditional"
@@ -370,13 +425,8 @@ class ClinicalContradictionDetector:
 
     def _contexts_complementary(self, ctx1: str, ctx2: str) -> bool:
         """Check if two contexts are complementary (not contradictory)."""
-        # "at_rest" and "on_exertion" are complementary
-        complementary_pairs = [
-            ("at_rest", "on_exertion"),
-            ("usually", "sometimes"),
-        ]
-
-        for c1, c2 in complementary_pairs:
+        # Use complementary contexts from config
+        for c1, c2 in self._complementary_contexts:
             if (c1 in ctx1 and c2 in ctx2) or (c2 in ctx1 and c1 in ctx2):
                 return True
 

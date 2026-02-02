@@ -98,13 +98,6 @@ class MedicalTermMatcher:
         r"\b\w+mycin\b",  # antibiotics: azithromycin
     ]
 
-    # Common drug name prefixes
-    DRUG_PREFIXES = [
-        "met", "lis", "ator", "omep", "amlo", "gaba", "hydro",
-        "pant", "sertr", "losar", "pred", "warfa", "aspir",
-        "ibupro", "aceta", "amoxi", "azith", "cipro",
-    ]
-
     def __init__(self, db_path: Path | None = None, similarity_threshold: float = 0.75):
         """
         Initialize matcher.
@@ -116,6 +109,56 @@ class MedicalTermMatcher:
         self._db_path = db_path or DB_PATH
         self._similarity_threshold = similarity_threshold
         self._compiled_patterns = [re.compile(p, re.IGNORECASE) for p in self.MEDICAL_PATTERNS]
+        self._drug_prefixes: list[str] | None = None  # Lazy loaded
+
+    def _get_drug_prefixes(self) -> list[str]:
+        """
+        Get common drug name prefixes derived from database.
+
+        Extracts the first 3-5 characters from drug names and returns
+        the most common prefixes (appearing in 2+ drugs).
+
+        Returns:
+            List of common drug prefixes.
+        """
+        if self._drug_prefixes is not None:
+            return self._drug_prefixes
+
+        prefix_counts: dict[str, int] = {}
+
+        try:
+            conn = self._get_connection()
+            try:
+                cursor = conn.execute(
+                    "SELECT DISTINCT normalized FROM terms WHERE category = 'drug'"
+                )
+                for row in cursor.fetchall():
+                    drug = row["normalized"]
+                    if drug and len(drug) >= 4:
+                        # Extract prefixes of length 3, 4, 5
+                        for length in [3, 4, 5]:
+                            if len(drug) >= length:
+                                prefix = drug[:length]
+                                prefix_counts[prefix] = prefix_counts.get(prefix, 0) + 1
+            finally:
+                conn.close()
+        except Exception as e:
+            logger.warning(f"Could not derive drug prefixes from database: {e}")
+            self._drug_prefixes = []
+            return self._drug_prefixes
+
+        # Keep prefixes that appear in multiple drugs (more likely to be useful)
+        common_prefixes = [
+            prefix for prefix, count in prefix_counts.items()
+            if count >= 2 and len(prefix) >= 3
+        ]
+
+        # Sort by frequency (most common first) and limit to top 50
+        common_prefixes.sort(key=lambda p: prefix_counts[p], reverse=True)
+        self._drug_prefixes = common_prefixes[:50]
+
+        logger.debug(f"Derived {len(self._drug_prefixes)} drug prefixes from database")
+        return self._drug_prefixes
 
     def _get_connection(self) -> sqlite3.Connection:
         """Get database connection."""
@@ -357,8 +400,8 @@ class MedicalTermMatcher:
         # Extract medical-like words
         medical_words = self.extract_medical_like_words(text)
 
-        # Also extract words near drug-like prefixes
-        for prefix in self.DRUG_PREFIXES:
+        # Also extract words near drug-like prefixes (derived from database)
+        for prefix in self._get_drug_prefixes():
             pattern = re.compile(rf"\b({prefix}\w+)\b", re.IGNORECASE)
             for match in pattern.finditer(text):
                 word = match.group(1)

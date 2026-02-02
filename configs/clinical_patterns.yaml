@@ -1,0 +1,76 @@
+# Clinical Pattern Configuration
+# These patterns are used for clinical contradiction detection and NLP analysis.
+# Edit this file to customize patterns for your healthcare domain.
+
+# Hedging words indicate uncertainty or conditional statements
+# Used to detect soft assertions vs hard assertions
+hedging_words:
+  - usually
+  - sometimes
+  - occasionally
+  - rarely
+  - often
+  - mostly
+  - typically
+  - generally
+  - not always
+  - not every time
+  - frequently
+  - seldom
+  - periodically
+  - intermittently
+
+# Conditional symptom pairs define symptoms that can validly coexist
+# in different contexts (e.g., "no chest pain at rest" + "chest pain on exertion")
+# Format: symptom -> list of (context1, compatible_contexts)
+conditional_symptom_pairs:
+  shortness of breath:
+    at rest:
+      - on exertion
+      - when walking
+      - climbing stairs
+      - with activity
+  breathless:
+    at rest:
+      - on exertion
+      - when walking
+      - climbing stairs
+      - with activity
+  chest pain:
+    at rest:
+      - on exertion
+      - with activity
+      - during exercise
+  pain:
+    at rest:
+      - on movement
+      - with activity
+      - during exercise
+  dizziness:
+    usually:
+      - sometimes
+      - occasionally
+      - when standing
+  nausea:
+    usually:
+      - sometimes
+      - occasionally
+      - after eating
+  fatigue:
+    at rest:
+      - with activity
+      - after exertion
+  headache:
+    usually:
+      - sometimes
+      - occasionally
+      - in the morning
+      - at night
+
+# Complementary context pairs - contexts that are NOT contradictory
+# when found with the same symptom in negated/affirmed states
+complementary_contexts:
+  - [at_rest, on_exertion]
+  - [usually, sometimes]
+  - [morning, evening]
+  - [before_meals, after_meals]
