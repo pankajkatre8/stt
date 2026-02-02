@@ -8,6 +8,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Refactored - Dynamic Medical Terminology (2026-02-02)
+
+Removed hardcoded medical terms from all quality metrics modules.
+
+- **MedicalTermsProvider** (`src/hsttb/metrics/medical_terms.py`)
+  - Central provider for drugs, conditions, symptoms, dosage ranges
+  - Loads from SQLite lexicon when available
+  - Falls back to embedded data when lexicon unavailable
+  - Drug-condition pair validation from lexicon
+
+- **Refactored Modules**:
+  - `entity_assertion.py` - uses provider for drug/condition/symptom lists
+  - `clinical_contradiction.py` - uses provider for trackable entities
+  - `dosage_plausibility.py` - uses provider for medication dosage ranges
+  - `clinical_risk.py` - uses provider for clinical token categories
+  - `medical_coherence.py` - uses provider for drug-condition pairs
+  - `contradiction.py` - uses provider for entity patterns
+
+- **Benefits**:
+  - No hardcoded drug lists scattered across modules
+  - Terms updated via SQLite lexicon without code changes
+  - API-fetched terms (RxNorm, ICD-10) automatically available
+  - Graceful fallback when lexicon unavailable
+
 ### Added - Clinical Risk Scoring (2026-02-02)
 
 #### Clinical Risk Analysis (Risk-Adjusted Quality Scoring)

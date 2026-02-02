@@ -163,6 +163,12 @@ Healthcare Streaming STT Benchmarking Framework - a model-agnostic evaluation sy
 - [x] `src/hsttb/metrics/clinical_contradiction.py` - Soft/hard contradiction detection
 - [x] `src/hsttb/metrics/dosage_plausibility.py` - Medication dosage validation
 
+**Dynamic Medical Terminology (Complete):**
+- [x] `src/hsttb/metrics/medical_terms.py` - Central medical terms provider
+  - Loads from SQLite lexicon or embedded fallback
+  - Provides drugs, conditions, symptoms, dosage ranges
+  - All quality metrics now use this provider instead of hardcoded lists
+
 **Medical Terminology APIs (Complete):**
 - [x] `src/hsttb/lexicons/api_fetcher.py` - RxNorm/OpenFDA/ICD-10 API client
 - [x] `src/hsttb/lexicons/sqlite_lexicon.py` - SQLite-backed lexicon storage
