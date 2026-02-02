@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const computeTer = document.getElementById('compute-ter');
     const computeNer = document.getElementById('compute-ner');
     const computeCrs = document.getElementById('compute-crs');
+    const computeQuality = document.getElementById('compute-quality');
     const multiBackendToggle = document.getElementById('multi-backend');
     const multiNlpToggle = document.getElementById('multi-nlp');
     const nlpModelSection = document.getElementById('nlp-model-section');
@@ -77,6 +78,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let ttsGeneratedFileId = null;
     let ttsHistoryEntries = [];
 
+    // Additional elements
+    const resultsPlaceholder = document.getElementById('results-placeholder');
+    const headerStatus = document.getElementById('header-status');
+    const scoreDescription = document.getElementById('score-description');
+
     // ========================================================================
     // Initialization
     // ========================================================================
@@ -85,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadBackends();
     loadTTSHistory();
     setupEventListeners();
+    setupCheckboxLabels();
 
     // ========================================================================
     // Event Listeners
@@ -155,6 +162,31 @@ document.addEventListener('DOMContentLoaded', () => {
         // Export buttons
         document.getElementById('export-json')?.addEventListener('click', exportJSON);
         document.getElementById('export-csv')?.addEventListener('click', exportCSV);
+    }
+
+    function setupCheckboxLabels() {
+        // Add checked class to checkbox labels based on their state
+        const checkboxLabels = document.querySelectorAll('.checkbox-label input[type="checkbox"]');
+        checkboxLabels.forEach(checkbox => {
+            const label = checkbox.closest('.checkbox-label');
+            // Set initial state
+            if (checkbox.checked) {
+                label.classList.add('checked');
+            }
+            // Listen for changes
+            checkbox.addEventListener('change', () => {
+                label.classList.toggle('checked', checkbox.checked);
+            });
+        });
+    }
+
+    function updateHeaderStatus(status, text) {
+        if (!headerStatus) return;
+        headerStatus.className = 'header-status ' + status;
+        const statusText = headerStatus.querySelector('.status-text');
+        if (statusText) {
+            statusText.textContent = text;
+        }
     }
 
     // ========================================================================
@@ -733,48 +765,65 @@ document.addEventListener('DOMContentLoaded', () => {
     async function runEvaluation() {
         const groundTruth = groundTruthInput.value.trim();
         const predicted = predictedInput.value.trim();
+        const qualityEnabled = computeQuality && computeQuality.checked;
 
-        if (!groundTruth || !predicted) {
-            alert('Please enter both ground truth and predicted text.');
+        // Predicted text is always required
+        if (!predicted) {
+            alert('Please enter the transcription text to evaluate.');
+            return;
+        }
+
+        // If no ground truth and quality is not enabled, prompt user
+        if (!groundTruth && !qualityEnabled) {
+            alert('Please enter ground truth text, or enable "Quality Score" for reference-free evaluation.');
             return;
         }
 
         evaluateBtn.disabled = true;
         evaluateBtn.textContent = 'Evaluating...';
         evaluateBtn.classList.add('loading');
+        updateHeaderStatus('processing', 'Evaluating...');
 
         try {
-            // Always run the base evaluation for TER/NER/CRS
-            const baseResults = await runSingleEvaluation(groundTruth, predicted);
+            // Run the base evaluation
+            const baseResults = await runSingleEvaluation(groundTruth, predicted, qualityEnabled);
 
-            // Additionally run multi-model comparisons if enabled
-            if (multiNlpToggle.checked) {
+            // Additionally run multi-model comparisons if enabled (requires ground truth)
+            if (groundTruth && multiNlpToggle.checked) {
                 await runMultiNLPEvaluation(groundTruth, predicted, baseResults);
             }
-            if (multiBackendToggle.checked) {
+            if (groundTruth && multiBackendToggle.checked) {
                 await runMultiBackendEvaluation(groundTruth, predicted, baseResults);
             }
         } catch (error) {
             console.error('Evaluation error:', error);
             alert('Failed to run evaluation. Please try again.');
+            updateHeaderStatus('error', 'Error');
         } finally {
             evaluateBtn.disabled = false;
-            evaluateBtn.textContent = 'Evaluate';
+            evaluateBtn.textContent = 'Evaluate Transcription';
             evaluateBtn.classList.remove('loading');
         }
     }
 
-    async function runSingleEvaluation(groundTruth, predicted) {
+    async function runSingleEvaluation(groundTruth, predicted, qualityEnabled) {
+        const requestBody = {
+            predicted: predicted,
+            compute_ter: groundTruth ? computeTer.checked : false,
+            compute_ner: groundTruth ? computeNer.checked : false,
+            compute_crs: groundTruth ? computeCrs.checked : false,
+            compute_quality: qualityEnabled || false,
+        };
+
+        // Only include ground_truth if provided
+        if (groundTruth) {
+            requestBody.ground_truth = groundTruth;
+        }
+
         const response = await fetch('/api/evaluate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                ground_truth: groundTruth,
-                predicted: predicted,
-                compute_ter: computeTer.checked,
-                compute_ner: computeNer.checked,
-                compute_crs: computeCrs.checked,
-            }),
+            body: JSON.stringify(requestBody),
         });
 
         const results = await response.json();
@@ -782,7 +831,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (results.status === 'success') {
             lastResults = results;
             displayResults(results);
-            displayDiff(groundTruth, predicted);
+            if (groundTruth) {
+                displayDiff(groundTruth, predicted);
+            } else {
+                // Hide diff section when no ground truth
+                const diffSection = document.getElementById('diff-section');
+                if (diffSection) diffSection.classList.add('hidden');
+            }
             return results;
         } else {
             alert('Evaluation failed: ' + (results.error || 'Unknown error'));
@@ -844,7 +899,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // ========================================================================
 
     function displayResults(results) {
+        // Hide placeholder, show results
+        if (resultsPlaceholder) {
+            resultsPlaceholder.classList.add('hidden');
+        }
         resultsSection.classList.remove('hidden');
+
+        // Determine evaluation mode
+        const hasGroundTruth = results.ter || results.ner || results.crs;
+        const hasQuality = results.quality;
+        const isQualityOnly = results.mode === 'quality_only';
 
         // Hide multi-sections initially (they'll be shown if multi-evaluation runs)
         if (!multiNlpToggle.checked) {
@@ -857,6 +921,12 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('chart-container')?.classList.add('hidden');
         }
 
+        // Show/hide diff section based on whether we have ground truth
+        const diffSection = document.getElementById('diff-section');
+        if (diffSection) {
+            diffSection.classList.toggle('hidden', isQualityOnly);
+        }
+
         // Overall score
         const overallScoreValue = document.getElementById('overall-score-value');
         const overallScoreCircle = document.getElementById('overall-score-circle');
@@ -865,24 +935,62 @@ document.addEventListener('DOMContentLoaded', () => {
             const score = results.overall_score;
             overallScoreValue.textContent = formatPercent(score);
             overallScoreCircle.className = 'score-circle ' + getScoreClass(score);
+
+            // Update score description for non-technical users
+            if (scoreDescription) {
+                if (isQualityOnly) {
+                    // Quality-only mode descriptions
+                    if (score >= 0.85) {
+                        scoreDescription.textContent = 'Good transcription quality. Text appears fluent and medical terms are valid.';
+                    } else if (score >= 0.6) {
+                        scoreDescription.textContent = 'Moderate quality. Some issues detected. Review recommended.';
+                    } else {
+                        scoreDescription.textContent = 'Poor quality. Significant issues with fluency or medical terms.';
+                    }
+                } else {
+                    // Reference-based mode descriptions
+                    if (score >= 0.95) {
+                        scoreDescription.textContent = 'Excellent! The transcription is highly accurate with minimal errors. Safe for clinical use.';
+                    } else if (score >= 0.85) {
+                        scoreDescription.textContent = 'Good accuracy. Minor errors detected. Review recommended before clinical use.';
+                    } else if (score >= 0.7) {
+                        scoreDescription.textContent = 'Moderate accuracy. Some medical terms may be incorrect. Manual review required.';
+                    } else {
+                        scoreDescription.textContent = 'Poor accuracy. Significant errors detected. Not suitable for clinical use without correction.';
+                    }
+                }
+            }
         } else {
             overallScoreValue.textContent = '--';
             overallScoreCircle.className = 'score-circle';
+            if (scoreDescription) {
+                scoreDescription.textContent = 'This score represents how accurately the speech-to-text system transcribed medical content.';
+            }
         }
 
-        // TER Results
+        // Update header status
+        updateHeaderStatus('', 'Ready');
+
+        // TER Results (hide if quality-only mode)
         displayTERResults(results);
 
-        // NER Results
+        // NER Results (hide if quality-only mode)
         displayNERResults(results);
 
-        // CRS Results
+        // CRS Results (hide if quality-only mode)
         displayCRSResults(results);
+
+        // Quality Results
+        displayQualityResults(results);
 
         // Errors
         displayErrors(results);
 
-        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Scroll to results - on desktop, results panel is already visible
+        // On mobile, scroll to the results section
+        if (window.innerWidth <= 1200) {
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 
     function displayTERResults(results) {
@@ -946,7 +1054,153 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function displayQualityResults(results) {
+        const qualitySection = document.getElementById('quality-section');
+
+        if (!qualitySection) return;
+
+        if (!results.quality) {
+            qualitySection.classList.add('hidden');
+            return;
+        }
+
+        qualitySection.classList.remove('hidden');
+        const quality = results.quality;
+
+        // Update recommendation badge
+        const recommendationEl = document.getElementById('quality-recommendation');
+        if (recommendationEl) {
+            recommendationEl.textContent = quality.recommendation;
+            recommendationEl.className = 'quality-recommendation ' + quality.recommendation.toLowerCase();
+        }
+
+        // Update composite score
+        const compositeValue = document.getElementById('quality-composite-value');
+        if (compositeValue) {
+            compositeValue.textContent = formatPercent(quality.composite_score);
+            compositeValue.className = 'quality-score-value ' + getScoreClass(quality.composite_score);
+        }
+
+        // Update component scores
+        updateQualityComponent('perplexity', quality.perplexity_score, quality.perplexity_available !== false);
+        updateQualityComponent('grammar', quality.grammar_score, quality.grammar_available !== false);
+        updateQualityComponent('entity', quality.entity_validity_score, true);
+        updateQualityComponent('coherence', quality.coherence_score, true);
+
+        // Display entities found
+        displayQualityEntities(quality.entities_found || []);
+
+        // Display grammar issues
+        displayGrammarIssues(quality.grammar_errors || []);
+
+        // Display invalid entities
+        displayInvalidEntities(quality.invalid_entities || []);
+    }
+
+    function updateQualityComponent(name, score, available) {
+        const valueEl = document.getElementById(`quality-${name}-value`);
+        const barEl = document.getElementById(`quality-${name}-bar`);
+
+        if (valueEl) {
+            if (available && score !== undefined) {
+                valueEl.textContent = formatPercent(score);
+                valueEl.className = 'component-value ' + getScoreClass(score);
+            } else {
+                valueEl.textContent = 'N/A';
+                valueEl.className = 'component-value';
+            }
+        }
+
+        if (barEl) {
+            if (available && score !== undefined) {
+                barEl.style.width = `${score * 100}%`;
+                barEl.className = 'component-bar-fill ' + getScoreClass(score);
+            } else {
+                barEl.style.width = '0%';
+                barEl.className = 'component-bar-fill';
+            }
+        }
+    }
+
+    function displayQualityEntities(entities) {
+        const entitiesSection = document.getElementById('quality-entities-section');
+        const entitiesList = document.getElementById('quality-entities-list');
+
+        if (!entitiesSection || !entitiesList) return;
+
+        if (!entities || entities.length === 0) {
+            entitiesSection.classList.add('hidden');
+            return;
+        }
+
+        entitiesSection.classList.remove('hidden');
+
+        entitiesList.innerHTML = entities.map(entity => {
+            const validClass = entity.valid ? 'valid' : 'invalid';
+            const typeClass = (entity.type || 'unknown').toLowerCase();
+            return `
+                <span class="entity-tag ${validClass}">
+                    <span class="entity-text">${escapeHtml(entity.text)}</span>
+                    <span class="entity-type ${typeClass}">${entity.type || 'unknown'}</span>
+                </span>
+            `;
+        }).join('');
+    }
+
+    function displayGrammarIssues(errors) {
+        const grammarSection = document.getElementById('quality-grammar-section');
+        const grammarList = document.getElementById('quality-grammar-list');
+
+        if (!grammarSection || !grammarList) return;
+
+        if (!errors || errors.length === 0) {
+            grammarSection.classList.add('hidden');
+            return;
+        }
+
+        grammarSection.classList.remove('hidden');
+
+        grammarList.innerHTML = errors.map(error => {
+            const suggestions = error.suggestions && error.suggestions.length > 0
+                ? `<div class="issue-suggestions">Suggestions: ${error.suggestions.join(', ')}</div>`
+                : '';
+            return `
+                <div class="grammar-issue-item">
+                    <div class="issue-message">${escapeHtml(error.message)}</div>
+                    <span class="issue-text">${escapeHtml(error.text)}</span>
+                    ${suggestions}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function displayInvalidEntities(invalidEntities) {
+        const invalidSection = document.getElementById('quality-invalid-section');
+        const invalidList = document.getElementById('quality-invalid-list');
+
+        if (!invalidSection || !invalidList) return;
+
+        if (!invalidEntities || invalidEntities.length === 0) {
+            invalidSection.classList.add('hidden');
+            return;
+        }
+
+        invalidSection.classList.remove('hidden');
+
+        invalidList.innerHTML = invalidEntities.map(entity => {
+            return `
+                <div class="invalid-entity-item">
+                    <span class="entity-name">${escapeHtml(entity)}</span>
+                    <div class="entity-suggestion">This term was not found in the medical lexicon. It may be misspelled.</div>
+                </div>
+            `;
+        }).join('');
+    }
+
     function displayMultiNLPResults(results) {
+        if (resultsPlaceholder) {
+            resultsPlaceholder.classList.add('hidden');
+        }
         resultsSection.classList.remove('hidden');
 
         // Show multi-NLP section
@@ -1013,10 +1267,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Show radar chart
         displayRadarChart(results);
 
-        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Scroll to results on mobile
+        if (window.innerWidth <= 1200) {
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 
     function displayMultiBackendResults(results) {
+        if (resultsPlaceholder) {
+            resultsPlaceholder.classList.add('hidden');
+        }
         resultsSection.classList.remove('hidden');
 
         // Hide single-backend TER card
@@ -1095,14 +1355,19 @@ document.addEventListener('DOMContentLoaded', () => {
             overallScoreCircle.className = 'score-circle ' + getScoreClass(score);
         }
 
-        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Scroll to results on mobile
+        if (window.innerWidth <= 1200) {
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 
     function displayErrors(results) {
         const errorsSection = document.getElementById('errors-section');
         const errorsList = document.getElementById('errors-list');
 
-        if (!results.ter || results.ter.errors.length === 0) {
+        if (!errorsSection || !errorsList) return;
+
+        if (!results.ter || !results.ter.errors || results.ter.errors.length === 0) {
             errorsSection.classList.add('hidden');
             return;
         }
@@ -1315,6 +1580,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let csv = 'Metric,Value\n';
 
+        // Evaluation mode
+        csv += `Mode,${lastResults.mode || 'unknown'}\n`;
+
         if (lastResults.ter) {
             csv += `TER Overall,${lastResults.ter.overall_ter}\n`;
             csv += `TER Substitutions,${lastResults.ter.substitutions}\n`;
@@ -1332,6 +1600,18 @@ document.addEventListener('DOMContentLoaded', () => {
             csv += `CRS Composite,${lastResults.crs.composite_score}\n`;
             csv += `CRS Semantic Similarity,${lastResults.crs.semantic_similarity}\n`;
             csv += `CRS Entity Continuity,${lastResults.crs.entity_continuity}\n`;
+        }
+
+        if (lastResults.quality) {
+            csv += `Quality Composite,${lastResults.quality.composite_score}\n`;
+            csv += `Quality Perplexity,${lastResults.quality.perplexity}\n`;
+            csv += `Quality Perplexity Score,${lastResults.quality.perplexity_score}\n`;
+            csv += `Quality Grammar Score,${lastResults.quality.grammar_score}\n`;
+            csv += `Quality Entity Validity,${lastResults.quality.entity_validity_score}\n`;
+            csv += `Quality Coherence,${lastResults.quality.coherence_score}\n`;
+            csv += `Quality Recommendation,${lastResults.quality.recommendation}\n`;
+            csv += `Quality Word Count,${lastResults.quality.word_count}\n`;
+            csv += `Quality Medical Entity Count,${lastResults.quality.medical_entity_count}\n`;
         }
 
         if (lastResults.overall_score !== undefined) {
@@ -1405,6 +1685,9 @@ document.addEventListener('DOMContentLoaded', () => {
         groundTruthInput.value = '';
         predictedInput.value = '';
         resultsSection.classList.add('hidden');
+        if (resultsPlaceholder) {
+            resultsPlaceholder.classList.remove('hidden');
+        }
         removeAudio();
         groundTruthInput.focus();
     }

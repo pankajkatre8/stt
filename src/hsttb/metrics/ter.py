@@ -133,7 +133,7 @@ class TEREngine:
         self,
         lexicon: MedicalLexicon,
         normalizer: MedicalTextNormalizer | None = None,
-        fuzzy_threshold: float = 0.85,
+        fuzzy_threshold: float = 0.6,  # Lower threshold to catch drug name confusions
     ) -> None:
         """
         Initialize the TER engine.
@@ -404,7 +404,7 @@ class TEREngine:
         """
         Compute similarity between two terms.
 
-        Uses character-level similarity on normalized forms.
+        Uses multiple similarity measures for robust matching.
 
         Args:
             term1: First term.
@@ -419,34 +419,37 @@ class TEREngine:
         if s1 == s2:
             return 1.0
 
-        # Levenshtein-based similarity
         len1, len2 = len(s1), len(s2)
         if len1 == 0 or len2 == 0:
             return 0.0
 
-        # Simple character overlap ratio
+        # 1. Character overlap (Jaccard)
         set1 = set(s1)
         set2 = set(s2)
         intersection = len(set1 & set2)
         union = len(set1 | set2)
+        jaccard = intersection / union if union > 0 else 0.0
 
-        if union == 0:
-            return 0.0
-
-        jaccard = intersection / union
-
-        # Also consider prefix match
+        # 2. Prefix match (important for catching metformin/methotrexate)
         common_prefix = 0
         for c1, c2 in zip(s1, s2):
             if c1 == c2:
                 common_prefix += 1
             else:
                 break
-
         prefix_ratio = common_prefix / max(len1, len2)
 
-        # Weighted combination
-        return 0.5 * jaccard + 0.5 * prefix_ratio
+        # 3. Same category boost - terms in same category are more likely substitutions
+        category_boost = 0.2 if term1.category == term2.category else 0.0
+
+        # 4. Length similarity - very different lengths are less likely substitutions
+        len_ratio = min(len1, len2) / max(len1, len2)
+
+        # Weighted combination - prioritize prefix match and category
+        base_sim = 0.3 * jaccard + 0.4 * prefix_ratio + 0.3 * len_ratio
+
+        # Apply category boost (if same category, boost similarity)
+        return min(1.0, base_sim + category_boost)
 
     def _compute_category_ter(
         self,

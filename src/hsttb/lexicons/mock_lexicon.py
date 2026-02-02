@@ -178,24 +178,56 @@ class MockMedicalLexicon(MedicalLexicon):
         """
         lexicon = cls(source=LexiconSource.RXNORM)
 
-        # Common drugs for testing
+        # Common drugs for testing - comprehensive list including commonly confused drugs
         drugs = [
+            # Diabetes medications
             ("metformin", "6809", ("Glucophage", "metformin hydrochloride")),
+            ("glipizide", "25789", ("Glucotrol",)),
+            ("glyburide", "25793", ("DiaBeta", "Micronase")),
+            ("insulin", "5856", ()),
+            # Cardiovascular
             ("aspirin", "1191", ("acetylsalicylic acid", "ASA")),
             ("lisinopril", "29046", ("Prinivil", "Zestril")),
             ("atorvastatin", "83367", ("Lipitor",)),
-            ("omeprazole", "7646", ("Prilosec",)),
             ("amlodipine", "17767", ("Norvasc",)),
             ("metoprolol", "6918", ("Lopressor", "Toprol")),
             ("atenolol", "1202", ("Tenormin",)),
             ("losartan", "52175", ("Cozaar",)),
-            ("gabapentin", "25480", ("Neurontin",)),
             ("hydrochlorothiazide", "5487", ("HCTZ", "Microzide")),
             ("warfarin", "11289", ("Coumadin",)),
+            ("clopidogrel", "32968", ("Plavix",)),
+            # GI medications
+            ("omeprazole", "7646", ("Prilosec",)),
+            ("pantoprazole", "40790", ("Protonix",)),
+            # Pain/neuro
+            ("gabapentin", "25480", ("Neurontin",)),
+            ("pregabalin", "187832", ("Lyrica",)),
             ("prednisone", "8640", ()),
-            ("amoxicillin", "723", ("Amoxil",)),
             ("ibuprofen", "5640", ("Advil", "Motrin")),
             ("acetaminophen", "161", ("Tylenol", "paracetamol")),
+            ("tramadol", "10689", ("Ultram",)),
+            ("oxycodone", "7804", ("OxyContin", "Percocet")),
+            # Antibiotics
+            ("amoxicillin", "723", ("Amoxil",)),
+            ("azithromycin", "18631", ("Zithromax", "Z-pack")),
+            ("ciprofloxacin", "2551", ("Cipro",)),
+            ("doxycycline", "3640", ()),
+            # Commonly confused/sound-alike drugs (critical for STT evaluation!)
+            ("methotrexate", "6851", ("Trexall", "Rheumatrex")),  # sounds like metformin
+            ("hydroxychloroquine", "5521", ("Plaquenil",)),
+            ("sulfasalazine", "9524", ("Azulfidine",)),
+            ("lamotrigine", "28439", ("Lamictal",)),
+            ("labetalol", "6135", ()),
+            ("levetiracetam", "39998", ("Keppra",)),
+            ("clonidine", "2599", ("Catapres",)),
+            ("clonazepam", "2598", ("Klonopin",)),  # sounds like clonidine
+            # Psych medications
+            ("sertraline", "36437", ("Zoloft",)),
+            ("fluoxetine", "4493", ("Prozac",)),
+            ("escitalopram", "321988", ("Lexapro",)),
+            ("duloxetine", "72625", ("Cymbalta",)),
+            ("alprazolam", "596", ("Xanax",)),
+            ("lorazepam", "6470", ("Ativan",)),
         ]
 
         for term, code, synonyms in drugs:

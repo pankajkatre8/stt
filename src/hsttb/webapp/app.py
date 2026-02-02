@@ -21,6 +21,7 @@ from hsttb.metrics.ter import TEREngine
 from hsttb.metrics.ner import NEREngine
 from hsttb.metrics.crs import CRSEngine
 from hsttb.metrics.multi_backend import MultiBackendEvaluator
+from hsttb.lexicons.base import MedicalLexicon
 from hsttb.lexicons.scispacy_lexicon import SciSpacyLexicon
 from hsttb.nlp.scispacy_ner import SciSpacyNERPipeline
 from hsttb.nlp.semantic_similarity import TransformerSimilarityEngine
@@ -41,11 +42,12 @@ STATIC_DIR = WEBAPP_DIR / "static"
 class EvaluationRequest(BaseModel):
     """Request model for evaluation endpoint."""
 
-    ground_truth: str
+    ground_truth: str | None = None  # Optional for quality-only mode
     predicted: str
     compute_ter: bool = True
     compute_ner: bool = True
     compute_crs: bool = True
+    compute_quality: bool = False  # Reference-free quality scoring
 
 
 class SegmentedEvaluationRequest(BaseModel):
@@ -124,28 +126,34 @@ def create_app() -> FastAPI:
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
     # Lazy-loaded engines and services
-    _lexicon: SciSpacyLexicon | None = None
+    _lexicon: MedicalLexicon | None = None
     _ter_engine: TEREngine | None = None
     _ner_engine: NEREngine | None = None
     _crs_engine: CRSEngine | None = None
     _similarity_engine: TransformerSimilarityEngine | None = None
     _multi_backend: MultiBackendEvaluator | None = None
+    _quality_engine: Any = None  # QualityEngine (optional dependency)
     _available_backends: dict[str, str] = {}  # name -> status
 
     # ========================================================================
     # Service Getters
     # ========================================================================
 
-    def get_lexicon() -> SciSpacyLexicon:
+    def get_lexicon() -> MedicalLexicon:
         nonlocal _lexicon
         if _lexicon is None:
-            _lexicon = SciSpacyLexicon()
-            # Try scispacy model first, fall back to standard spacy
+            # Try scispacy model first for best medical NER
             try:
-                _lexicon.load("en_ner_bc5cdr_md")
+                scispacy_lex = SciSpacyLexicon()
+                scispacy_lex.load("en_ner_bc5cdr_md")
+                _lexicon = scispacy_lex
+                logger.info("Using scispacy BC5CDR lexicon for TER")
             except OSError:
-                logger.warning("scispacy model not found, using en_core_web_sm")
-                _lexicon.load("en_core_web_sm")
+                # Fall back to MockMedicalLexicon which has comprehensive drug list
+                # This is better than en_core_web_sm which doesn't detect drugs
+                from hsttb.lexicons.mock_lexicon import MockMedicalLexicon
+                _lexicon = MockMedicalLexicon.with_common_terms()
+                logger.warning("scispacy not available, using MockMedicalLexicon for TER")
         return _lexicon
 
     def get_similarity_engine() -> TransformerSimilarityEngine:
@@ -196,6 +204,19 @@ def create_app() -> FastAPI:
             _crs_engine = CRSEngine(similarity_engine=get_similarity_engine())
         return _crs_engine
 
+    def get_quality_engine():
+        """Get quality engine (optional - returns None if unavailable)."""
+        nonlocal _quality_engine
+        if _quality_engine is None:
+            try:
+                from hsttb.metrics.quality import QualityEngine
+                _quality_engine = QualityEngine()
+                logger.info("Quality engine initialized")
+            except ImportError as e:
+                logger.warning(f"Quality engine unavailable: {e}")
+                _quality_engine = False  # Mark as unavailable
+        return _quality_engine if _quality_engine is not False else None
+
     # ========================================================================
     # Core Routes
     # ========================================================================
@@ -219,107 +240,154 @@ def create_app() -> FastAPI:
         """
         Run evaluation on ground truth vs predicted text.
 
-        Returns TER, NER, and CRS metrics based on request flags.
+        Returns TER, NER, CRS metrics (when ground truth provided)
+        and/or quality metrics (perplexity, grammar, entity validity).
+
+        Modes:
+        - Reference-based: ground_truth provided, returns TER/NER/CRS
+        - Quality-only: no ground_truth, returns quality metrics
+        - Combined: both ground_truth and compute_quality=True
         """
+        has_ground_truth = req.ground_truth and req.ground_truth.strip()
+
         results: dict[str, Any] = {
-            "ground_truth": req.ground_truth,
+            "ground_truth": req.ground_truth if has_ground_truth else None,
             "predicted": req.predicted,
+            "mode": "combined" if has_ground_truth and req.compute_quality else (
+                "reference_based" if has_ground_truth else "quality_only"
+            ),
         }
 
         try:
-            # Compute TER
-            if req.compute_ter:
-                ter_result = get_ter_engine().compute(req.ground_truth, req.predicted)
-                results["ter"] = {
-                    "overall_ter": round(ter_result.overall_ter, 4),
-                    "total_terms": ter_result.total_gt_terms,
-                    "substitutions": len(ter_result.substitutions),
-                    "deletions": len(ter_result.deletions),
-                    "insertions": len(ter_result.insertions),
-                    "category_ter": {
-                        k: round(v, 4) for k, v in ter_result.category_ter.items()
-                    },
-                    "errors": [
-                        {
-                            "type": "substitution",
-                            "ground_truth": e.ground_truth_term.text if e.ground_truth_term else None,
-                            "predicted": e.predicted_term.text if e.predicted_term else None,
-                            "category": e.category.value if e.category else None,
-                        }
-                        for e in ter_result.substitutions
-                    ]
-                    + [
-                        {
-                            "type": "deletion",
-                            "ground_truth": e.ground_truth_term.text if e.ground_truth_term else None,
-                            "predicted": None,
-                            "category": e.category.value if e.category else None,
-                        }
-                        for e in ter_result.deletions
-                    ]
-                    + [
-                        {
-                            "type": "insertion",
-                            "ground_truth": None,
-                            "predicted": e.predicted_term.text if e.predicted_term else None,
-                            "category": e.category.value if e.category else None,
-                        }
-                        for e in ter_result.insertions
-                    ],
-                }
+            # Reference-based metrics (require ground truth)
+            if has_ground_truth:
+                # Compute TER
+                if req.compute_ter:
+                    ter_result = get_ter_engine().compute(req.ground_truth, req.predicted)
+                    results["ter"] = {
+                        "overall_ter": round(ter_result.overall_ter, 4),
+                        "total_terms": ter_result.total_gt_terms,
+                        "substitutions": len(ter_result.substitutions),
+                        "deletions": len(ter_result.deletions),
+                        "insertions": len(ter_result.insertions),
+                        "category_ter": {
+                            k: round(v, 4) for k, v in ter_result.category_ter.items()
+                        },
+                        "errors": [
+                            {
+                                "type": "substitution",
+                                "ground_truth": e.ground_truth_term.text if e.ground_truth_term else None,
+                                "predicted": e.predicted_term.text if e.predicted_term else None,
+                                "category": e.category.value if e.category else None,
+                            }
+                            for e in ter_result.substitutions
+                        ]
+                        + [
+                            {
+                                "type": "deletion",
+                                "ground_truth": e.ground_truth_term.text if e.ground_truth_term else None,
+                                "predicted": None,
+                                "category": e.category.value if e.category else None,
+                            }
+                            for e in ter_result.deletions
+                        ]
+                        + [
+                            {
+                                "type": "insertion",
+                                "ground_truth": None,
+                                "predicted": e.predicted_term.text if e.predicted_term else None,
+                                "category": e.category.value if e.category else None,
+                            }
+                            for e in ter_result.insertions
+                        ],
+                    }
 
-            # Compute NER
-            if req.compute_ner:
-                ner_result = get_ner_engine().compute(req.ground_truth, req.predicted)
-                results["ner"] = {
-                    "precision": round(ner_result.precision, 4),
-                    "recall": round(ner_result.recall, 4),
-                    "f1_score": round(ner_result.f1_score, 4),
-                    "entity_distortion_rate": round(ner_result.entity_distortion_rate, 4),
-                    "entity_omission_rate": round(ner_result.entity_omission_rate, 4),
-                }
+                # Compute NER
+                if req.compute_ner:
+                    ner_result = get_ner_engine().compute(req.ground_truth, req.predicted)
+                    results["ner"] = {
+                        "precision": round(ner_result.precision, 4),
+                        "recall": round(ner_result.recall, 4),
+                        "f1_score": round(ner_result.f1_score, 4),
+                        "entity_distortion_rate": round(ner_result.entity_distortion_rate, 4),
+                        "entity_omission_rate": round(ner_result.entity_omission_rate, 4),
+                    }
 
-            # Compute CRS (using sentences as segments)
-            if req.compute_crs:
-                gt_segments = _split_into_segments(req.ground_truth)
-                pred_segments = _split_into_segments(req.predicted)
+                # Compute CRS (using sentences as segments)
+                if req.compute_crs:
+                    gt_segments = _split_into_segments(req.ground_truth)
+                    pred_segments = _split_into_segments(req.predicted)
 
-                # Ensure same number of segments
-                if len(gt_segments) != len(pred_segments):
-                    if len(gt_segments) == 0:
-                        gt_segments = [req.ground_truth]
-                    if len(pred_segments) == 0:
-                        pred_segments = [req.predicted]
-                    max_len = max(len(gt_segments), len(pred_segments))
-                    while len(gt_segments) < max_len:
-                        gt_segments.append("")
-                    while len(pred_segments) < max_len:
-                        pred_segments.append("")
+                    # Ensure same number of segments
+                    if len(gt_segments) != len(pred_segments):
+                        if len(gt_segments) == 0:
+                            gt_segments = [req.ground_truth]
+                        if len(pred_segments) == 0:
+                            pred_segments = [req.predicted]
+                        max_len = max(len(gt_segments), len(pred_segments))
+                        while len(gt_segments) < max_len:
+                            gt_segments.append("")
+                        while len(pred_segments) < max_len:
+                            pred_segments.append("")
 
-                crs_result = get_crs_engine().compute(gt_segments, pred_segments)
-                results["crs"] = {
-                    "composite_score": round(crs_result.composite_score, 4),
-                    "semantic_similarity": round(crs_result.semantic_similarity, 4),
-                    "entity_continuity": round(crs_result.entity_continuity, 4),
-                    "negation_consistency": round(crs_result.negation_consistency, 4),
-                    "context_drift_rate": round(crs_result.context_drift_rate, 4),
-                }
+                    crs_result = get_crs_engine().compute(gt_segments, pred_segments)
+                    results["crs"] = {
+                        "composite_score": round(crs_result.composite_score, 4),
+                        "semantic_similarity": round(crs_result.semantic_similarity, 4),
+                        "entity_continuity": round(crs_result.entity_continuity, 4),
+                        "negation_consistency": round(crs_result.negation_consistency, 4),
+                        "context_drift_rate": round(crs_result.context_drift_rate, 4),
+                    }
+
+            # Quality metrics (reference-free)
+            if req.compute_quality or not has_ground_truth:
+                quality_engine = get_quality_engine()
+                if quality_engine is not None:
+                    quality_result = quality_engine.compute(req.predicted)
+                    results["quality"] = {
+                        "composite_score": quality_result.composite_score,
+                        "perplexity": quality_result.perplexity,
+                        "perplexity_score": quality_result.perplexity_score,
+                        "grammar_score": quality_result.grammar_score,
+                        "grammar_errors": quality_result.grammar_errors,
+                        "entity_validity_score": quality_result.entity_validity_score,
+                        "invalid_entities": quality_result.invalid_entities,
+                        "coherence_score": quality_result.coherence_score,
+                        "entities_found": quality_result.entities_found,
+                        "word_count": quality_result.word_count,
+                        "medical_entity_count": quality_result.medical_entity_count,
+                        "recommendation": quality_result.recommendation,
+                        "perplexity_available": quality_result.perplexity_available,
+                        "grammar_available": quality_result.grammar_available,
+                    }
+                else:
+                    results["quality"] = {
+                        "error": "Quality engine not available",
+                        "composite_score": None,
+                    }
 
             # Compute overall score
             scores = []
             if "ter" in results:
-                scores.append(1 - results["ter"]["overall_ter"])
+                # TER is error rate, convert to accuracy and clamp to [0, 1]
+                ter_accuracy = max(0.0, 1 - results["ter"]["overall_ter"])
+                scores.append(ter_accuracy)
             if "ner" in results:
                 scores.append(results["ner"]["f1_score"])
             if "crs" in results:
                 scores.append(results["crs"]["composite_score"])
+            if "quality" in results and results["quality"].get("composite_score") is not None:
+                scores.append(results["quality"]["composite_score"])
 
             if scores:
-                results["overall_score"] = round(sum(scores) / len(scores), 4)
+                # Clamp overall score to [0, 1]
+                overall = sum(scores) / len(scores)
+                results["overall_score"] = round(max(0.0, min(1.0, overall)), 4)
 
             results["status"] = "success"
 
         except Exception as e:
+            logger.exception("Evaluation error")
             results["status"] = "error"
             results["error"] = str(e)
 

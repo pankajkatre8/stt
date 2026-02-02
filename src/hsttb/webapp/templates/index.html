@@ -5,445 +5,611 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HSTTB - Healthcare STT Benchmarking</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>HSTTB</h1>
-            <p class="subtitle">Healthcare Streaming STT Benchmarking</p>
+            <div style="display: flex; align-items: center;">
+                <h1>HSTTB</h1>
+                <p class="subtitle">Healthcare Speech-to-Text Benchmarking</p>
+            </div>
+            <div class="header-status" id="header-status">
+                <span class="status-dot"></span>
+                <span class="status-text">Ready</span>
+            </div>
         </header>
 
         <main>
-            <section class="intro">
-                <p>Evaluate speech-to-text transcriptions for healthcare applications.
-                   Measures medical terminology accuracy, entity preservation, and context retention.</p>
-            </section>
-
-            <!-- Audio Input Section -->
-            <section class="audio-section">
-                <h2>Audio Input</h2>
-
-                <div class="audio-tabs">
-                    <button class="tab-btn active" data-tab="upload">Upload File</button>
-                    <button class="tab-btn" data-tab="record">Record</button>
-                    <button class="tab-btn" data-tab="tts">Generate TTS</button>
-                    <button class="tab-btn" data-tab="history">TTS History</button>
-                    <button class="tab-btn" data-tab="text">Text Only</button>
-                </div>
-
-                <!-- File Upload -->
-                <div class="tab-content active" id="tab-upload">
-                    <div class="audio-dropzone" id="audio-dropzone">
-                        <div class="dropzone-content">
-                            <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="17 8 12 3 7 8"></polyline>
-                                <line x1="12" y1="3" x2="12" y2="15"></line>
-                            </svg>
-                            <p>Drag and drop audio file here</p>
-                            <p class="dropzone-hint">or click to browse</p>
-                            <p class="dropzone-formats">Supported: WAV, MP3, FLAC, OGG, M4A</p>
-                        </div>
-                        <input type="file" id="audio-file-input" accept=".wav,.mp3,.flac,.ogg,.m4a,.webm" hidden>
+            <!-- Left Panel - Input -->
+            <div class="input-panel">
+                <!-- Audio Input Section -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>Audio Input</h2>
+                        <span class="badge">Step 1</span>
                     </div>
 
-                    <div id="audio-preview" class="audio-preview hidden">
-                        <div class="audio-info">
-                            <span id="audio-filename"></span>
-                            <span id="audio-duration"></span>
-                        </div>
-                        <audio id="audio-player" controls></audio>
-                        <button id="remove-audio" class="btn-icon" title="Remove audio">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                        </button>
+                    <div class="audio-tabs">
+                        <button class="tab-btn active" data-tab="upload">Upload</button>
+                        <button class="tab-btn" data-tab="record">Record</button>
+                        <button class="tab-btn" data-tab="tts">Generate TTS</button>
+                        <button class="tab-btn" data-tab="history">History</button>
+                        <button class="tab-btn" data-tab="text">Text Only</button>
                     </div>
-                </div>
 
-                <!-- Recording -->
-                <div class="tab-content" id="tab-record">
-                    <div class="recording-controls">
-                        <button id="record-btn" class="record-btn">
-                            <span class="record-icon"></span>
-                            <span class="record-text">Start Recording</span>
-                        </button>
-                        <div id="recording-timer" class="recording-timer hidden">00:00</div>
-                        <div id="recording-status" class="recording-status"></div>
-                    </div>
-                </div>
-
-                <!-- TTS Generation -->
-                <div class="tab-content" id="tab-tts">
-                    <div class="tts-section">
-                        <p class="tts-hint">Generate test audio from ground truth text using ElevenLabs TTS.</p>
-
-                        <div class="tts-input-group">
-                            <label for="tts-text">Text to Convert</label>
-                            <textarea id="tts-text" rows="3" placeholder="Enter text to convert to speech (e.g., 'Patient takes metformin 500mg twice daily')"></textarea>
-                        </div>
-
-                        <div class="tts-options">
-                            <div class="tts-option">
-                                <label for="tts-voice">Voice</label>
-                                <select id="tts-voice">
-                                    <option value="professional">Professional (Female)</option>
-                                    <option value="clinical">Clinical (Male)</option>
-                                    <option value="rachel">Rachel (Female)</option>
-                                    <option value="adam">Adam (Male, Deep)</option>
-                                    <option value="sam">Sam (Male)</option>
-                                </select>
-                            </div>
-                            <div class="tts-option">
-                                <label for="tts-label">Label (optional)</label>
-                                <input type="text" id="tts-label" placeholder="e.g., 'Medication list test'" class="tts-label-input">
-                            </div>
-                        </div>
-
-                        <button id="tts-generate-btn" class="btn-primary btn-tts">
-                            <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                            </svg>
-                            <span class="btn-text">Generate Audio</span>
-                            <span class="btn-spinner"></span>
-                        </button>
-
-                        <div id="tts-result" class="tts-result hidden">
-                            <div class="tts-success">
-                                <svg class="success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    <!-- File Upload -->
+                    <div class="tab-content active" id="tab-upload">
+                        <div class="audio-dropzone" id="audio-dropzone">
+                            <div class="dropzone-content">
+                                <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
                                 </svg>
-                                <span>Audio generated successfully!</span>
+                                <p>Drag and drop audio file here</p>
+                                <p class="dropzone-hint">or click to browse</p>
+                                <p class="dropzone-formats">WAV, MP3, FLAC, OGG, M4A</p>
                             </div>
-                            <audio id="tts-audio-player" controls></audio>
-                            <button id="tts-use-audio" class="btn-secondary">
-                                Use This Audio for Evaluation
+                            <input type="file" id="audio-file-input" accept=".wav,.mp3,.flac,.ogg,.m4a,.webm" hidden>
+                        </div>
+
+                        <div id="audio-preview" class="audio-preview hidden">
+                            <div class="audio-info">
+                                <span id="audio-filename"></span>
+                                <span id="audio-duration"></span>
+                            </div>
+                            <audio id="audio-player" controls></audio>
+                            <button id="remove-audio" class="btn-icon" title="Remove audio">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
                             </button>
                         </div>
+                    </div>
 
-                        <div id="tts-error" class="tts-error hidden">
-                            <p id="tts-error-message"></p>
-                        </div>
-
-                        <div class="tts-note">
-                            <small>Requires ELEVENLABS_API_KEY environment variable to be set.</small>
+                    <!-- Recording -->
+                    <div class="tab-content" id="tab-record">
+                        <div class="recording-controls">
+                            <button id="record-btn" class="record-btn">
+                                <span class="record-icon"></span>
+                                <span class="record-text">Start Recording</span>
+                            </button>
+                            <div id="recording-timer" class="recording-timer hidden">00:00</div>
+                            <div id="recording-status" class="recording-status"></div>
                         </div>
                     </div>
-                </div>
 
-                <!-- TTS History -->
-                <div class="tab-content" id="tab-history">
-                    <div class="tts-history-section">
-                        <div class="tts-history-header">
-                            <h3>Saved TTS Audio</h3>
-                            <div class="tts-history-actions">
-                                <button id="refresh-history-btn" class="btn-icon-text" title="Refresh">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                                        <path d="M21 2v6h-6"></path>
-                                        <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
-                                        <path d="M3 22v-6h6"></path>
-                                        <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
-                                    </svg>
-                                    <span>Refresh</span>
-                                </button>
-                                <button id="clear-history-btn" class="btn-icon-text btn-danger" title="Clear All">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                    </svg>
-                                    <span>Clear All</span>
-                                </button>
+                    <!-- TTS Generation -->
+                    <div class="tab-content" id="tab-tts">
+                        <div class="tts-section">
+                            <p class="tts-hint">Generate test audio from text using ElevenLabs TTS.</p>
+
+                            <div class="tts-input-group">
+                                <label for="tts-text">Text to Convert</label>
+                                <textarea id="tts-text" rows="3" placeholder="Enter text to convert to speech (e.g., 'Patient takes metformin 500mg twice daily')"></textarea>
                             </div>
-                        </div>
 
-                        <div class="tts-history-stats" id="tts-history-stats">
-                            <span class="stat-item"><strong id="history-count">0</strong> entries</span>
-                            <span class="stat-item"><strong id="history-size">0</strong> MB</span>
-                        </div>
+                            <div class="tts-options">
+                                <div class="tts-option">
+                                    <label for="tts-voice">Voice</label>
+                                    <select id="tts-voice">
+                                        <option value="professional">Professional (Female)</option>
+                                        <option value="clinical">Clinical (Male)</option>
+                                        <option value="rachel">Rachel (Female)</option>
+                                        <option value="adam">Adam (Male, Deep)</option>
+                                        <option value="sam">Sam (Male)</option>
+                                    </select>
+                                </div>
+                                <div class="tts-option">
+                                    <label for="tts-label">Label (optional)</label>
+                                    <input type="text" id="tts-label" placeholder="e.g., 'Medication test'" class="tts-label-input">
+                                </div>
+                            </div>
 
-                        <div id="tts-history-list" class="tts-history-list">
-                            <div class="tts-history-empty" id="tts-history-empty">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
-                                    <path d="M9 18V5l12-2v13"></path>
-                                    <circle cx="6" cy="18" r="3"></circle>
-                                    <circle cx="18" cy="16" r="3"></circle>
+                            <button id="tts-generate-btn" class="btn-primary btn-tts">
+                                <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
                                 </svg>
-                                <p>No saved TTS audio yet</p>
-                                <p class="hint">Generate audio in the "Generate TTS" tab to save it here</p>
+                                <span class="btn-text">Generate Audio</span>
+                                <span class="btn-spinner"></span>
+                            </button>
+
+                            <div id="tts-result" class="tts-result hidden">
+                                <div class="tts-success">
+                                    <svg class="success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                    </svg>
+                                    <span>Audio generated!</span>
+                                </div>
+                                <audio id="tts-audio-player" controls></audio>
+                                <button id="tts-use-audio" class="btn-secondary">
+                                    Use for Evaluation
+                                </button>
                             </div>
-                            <!-- History entries will be dynamically inserted here -->
+
+                            <div id="tts-error" class="tts-error hidden">
+                                <p id="tts-error-message"></p>
+                            </div>
+
+                            <div class="tts-note">
+                                <small>Requires ELEVENLABS_API_KEY environment variable.</small>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Text Only -->
-                <div class="tab-content" id="tab-text">
-                    <p class="text-hint">Enter text directly below for evaluation without audio.</p>
-                </div>
-            </section>
+                    <!-- TTS History -->
+                    <div class="tab-content" id="tab-history">
+                        <div class="tts-history-section">
+                            <div class="tts-history-header">
+                                <h3>Saved TTS Audio</h3>
+                                <div class="tts-history-actions">
+                                    <button id="refresh-history-btn" class="btn-icon-text" title="Refresh">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                            <path d="M21 2v6h-6"></path>
+                                            <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                                            <path d="M3 22v-6h6"></path>
+                                            <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                                        </svg>
+                                        <span>Refresh</span>
+                                    </button>
+                                    <button id="clear-history-btn" class="btn-icon-text btn-danger" title="Clear All">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        </svg>
+                                        <span>Clear</span>
+                                    </button>
+                                </div>
+                            </div>
 
-            <!-- STT Adapter Selection -->
-            <section class="adapter-section" id="adapter-section">
-                <h2>STT Adapter</h2>
-                <div class="adapter-grid" id="adapter-grid">
-                    <div class="adapter-card selected" data-adapter="whisper">
-                        <div class="adapter-icon">🎙️</div>
-                        <div class="adapter-name">Whisper</div>
-                        <div class="adapter-desc">Local, offline</div>
-                        <select class="adapter-model" id="whisper-model">
-                            <option value="tiny">Tiny (fastest)</option>
-                            <option value="base" selected>Base</option>
-                            <option value="small">Small</option>
-                            <option value="medium">Medium</option>
-                            <option value="large">Large (best)</option>
-                        </select>
+                            <div class="tts-history-stats" id="tts-history-stats">
+                                <span class="stat-item"><strong id="history-count">0</strong> entries</span>
+                                <span class="stat-item"><strong id="history-size">0</strong> MB</span>
+                            </div>
+
+                            <div id="tts-history-list" class="tts-history-list">
+                                <div class="tts-history-empty" id="tts-history-empty">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+                                        <path d="M9 18V5l12-2v13"></path>
+                                        <circle cx="6" cy="18" r="3"></circle>
+                                        <circle cx="18" cy="16" r="3"></circle>
+                                    </svg>
+                                    <p>No saved TTS audio yet</p>
+                                    <p class="hint">Generate audio in "Generate TTS" tab</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="adapter-card" data-adapter="deepgram">
-                        <div class="adapter-icon">🏥</div>
-                        <div class="adapter-name">Deepgram</div>
-                        <div class="adapter-desc">Medical vocabulary</div>
-                        <div class="adapter-badge">API Key Required</div>
+
+                    <!-- Text Only -->
+                    <div class="tab-content" id="tab-text">
+                        <p class="text-hint">Skip audio - enter text directly below for evaluation.</p>
                     </div>
-                    <div class="adapter-card" data-adapter="google-cloud-speech">
-                        <div class="adapter-icon">☁️</div>
-                        <div class="adapter-name">Google Cloud</div>
-                        <div class="adapter-desc">Cloud transcription</div>
-                        <div class="adapter-badge">API Key Required</div>
+                </section>
+
+                <!-- STT Adapter Selection -->
+                <section class="section adapter-section" id="adapter-section">
+                    <div class="section-header">
+                        <h2>STT Adapter</h2>
+                        <span class="badge">Step 2</span>
                     </div>
-                </div>
-                <button id="transcribe-btn" class="btn-primary btn-transcribe hidden">
-                    <span class="btn-text">Transcribe Audio</span>
-                    <span class="btn-spinner"></span>
-                </button>
-            </section>
+                    <div class="adapter-grid" id="adapter-grid">
+                        <div class="adapter-card selected" data-adapter="whisper">
+                            <div class="adapter-icon">🎙️</div>
+                            <div class="adapter-name">Whisper</div>
+                            <div class="adapter-desc">Local, offline</div>
+                            <select class="adapter-model" id="whisper-model">
+                                <option value="tiny">Tiny (fastest)</option>
+                                <option value="base" selected>Base</option>
+                                <option value="small">Small</option>
+                                <option value="medium">Medium</option>
+                                <option value="large">Large (best)</option>
+                            </select>
+                        </div>
+                        <div class="adapter-card" data-adapter="deepgram">
+                            <div class="adapter-icon">🏥</div>
+                            <div class="adapter-name">Deepgram</div>
+                            <div class="adapter-desc">Medical vocabulary</div>
+                            <div class="adapter-badge">API Key Required</div>
+                        </div>
+                        <div class="adapter-card" data-adapter="google-cloud-speech">
+                            <div class="adapter-icon">☁️</div>
+                            <div class="adapter-name">Google Cloud</div>
+                            <div class="adapter-desc">Cloud transcription</div>
+                            <div class="adapter-badge">API Key Required</div>
+                        </div>
+                    </div>
+                    <button id="transcribe-btn" class="btn-primary btn-transcribe hidden">
+                        <span class="btn-text">Transcribe Audio</span>
+                        <span class="btn-spinner"></span>
+                    </button>
+                </section>
 
-            <!-- Text Input Section -->
-            <section class="input-section">
-                <h2>Evaluation Input</h2>
+                <!-- Text Input Section -->
+                <section class="section input-section">
+                    <div class="section-header">
+                        <h2>Evaluation Input</h2>
+                        <span class="badge">Step 3</span>
+                    </div>
 
-                <div class="form-group">
-                    <label for="ground-truth">Ground Truth (Reference Text)</label>
-                    <textarea id="ground-truth" rows="4" placeholder="Enter the correct transcription..."></textarea>
-                </div>
+                    <div class="form-group">
+                        <label for="ground-truth">
+                            Ground Truth
+                            <span class="label-badge optional">Optional</span>
+                        </label>
+                        <textarea id="ground-truth" rows="3" placeholder="Leave empty for quality-only analysis, or enter the correct transcription..."></textarea>
+                        <small class="form-hint">Required for TER/NER/CRS metrics. Leave empty for quality-only mode.</small>
+                    </div>
 
-                <div class="form-group">
-                    <label for="predicted">Predicted (STT Output)</label>
-                    <textarea id="predicted" rows="4" placeholder="Enter the STT transcription to evaluate..."></textarea>
-                </div>
+                    <div class="form-group">
+                        <label for="predicted">
+                            Transcription to Evaluate
+                            <span class="label-badge required">Required</span>
+                        </label>
+                        <textarea id="predicted" rows="3" placeholder="The STT transcription to evaluate..."></textarea>
+                    </div>
 
-                <div class="metrics-selection">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="compute-ter" checked>
-                        <span>TER</span>
-                        <small>Term Error Rate</small>
-                    </label>
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="compute-ner" checked>
-                        <span>NER</span>
-                        <small>Entity Accuracy</small>
-                    </label>
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="compute-crs" checked>
-                        <span>CRS</span>
-                        <small>Context Retention</small>
-                    </label>
-                    <label class="checkbox-label highlight">
-                        <input type="checkbox" id="multi-backend">
-                        <span>Multi-Backend</span>
-                        <small>Compare NLP tools</small>
-                    </label>
-                    <label class="checkbox-label highlight">
-                        <input type="checkbox" id="multi-nlp">
-                        <span>Multi-NLP</span>
-                        <small>Compare NER models</small>
-                    </label>
-                </div>
+                    <div class="metrics-selection">
+                        <label class="checkbox-label" id="ter-check">
+                            <input type="checkbox" id="compute-ter" checked>
+                            <span>TER</span>
+                            <small>Medical Term Accuracy</small>
+                        </label>
+                        <label class="checkbox-label" id="ner-check">
+                            <input type="checkbox" id="compute-ner" checked>
+                            <span>NER</span>
+                            <small>Entity Recognition</small>
+                        </label>
+                        <label class="checkbox-label" id="crs-check">
+                            <input type="checkbox" id="compute-crs" checked>
+                            <span>CRS</span>
+                            <small>Context Retention</small>
+                        </label>
+                    </div>
 
-                <!-- Multi-Backend Description -->
-                <div class="feature-description hidden" id="multi-backend-description">
-                    <div class="feature-description-header">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="16" x2="12" y2="12"></line>
-                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    <div class="advanced-options-header">
+                        <span class="divider-line"></span>
+                        <span class="divider-text">Advanced Comparison</span>
+                        <span class="divider-line"></span>
+                    </div>
+
+                    <div class="metrics-selection advanced-metrics">
+                        <label class="checkbox-label highlight quality-check" id="quality-check">
+                            <input type="checkbox" id="compute-quality">
+                            <span>Quality Score</span>
+                            <small>Fluency & Grammar</small>
+                        </label>
+                        <label class="checkbox-label highlight" id="multi-backend-check">
+                            <input type="checkbox" id="multi-backend">
+                            <span>Multi-Backend</span>
+                            <small>Compare TER Algorithms</small>
+                        </label>
+                        <label class="checkbox-label highlight" id="multi-nlp-check">
+                            <input type="checkbox" id="multi-nlp">
+                            <span>Multi-NLP</span>
+                            <small>Compare NER Models</small>
+                        </label>
+                    </div>
+
+                    <!-- Multi-Backend Description -->
+                    <div class="feature-description hidden" id="multi-backend-description">
+                        <div class="feature-description-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            <strong>Multi-Backend Comparison</strong>
+                        </div>
+                        <p>Compare text matching algorithms for calculating Term Error Rate:</p>
+                        <ul class="feature-list">
+                            <li><strong>RapidFuzz</strong> - Fast fuzzy matching, best for typos</li>
+                            <li><strong>Difflib</strong> - Python sequence matcher</li>
+                            <li><strong>Basic</strong> - Simple word comparison</li>
+                        </ul>
+                    </div>
+
+                    <!-- NLP Model Selection -->
+                    <div class="nlp-model-section hidden" id="nlp-model-section">
+                        <div class="feature-description-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            <strong>Multi-NLP Model Comparison</strong>
+                        </div>
+                        <p>Compare how different AI models extract medical terms (drugs, conditions, procedures):</p>
+                        <h3>Select Models</h3>
+                        <div class="nlp-model-grid" id="nlp-model-grid">
+                            <label class="nlp-model-checkbox" title="Pattern-based extraction using rules. Fast but limited.">
+                                <input type="checkbox" value="mock" checked>
+                                <div class="model-info">
+                                    <span class="model-name">Mock (Pattern)</span>
+                                    <span class="model-desc">Rule-based, fast</span>
+                                </div>
+                            </label>
+                            <label class="nlp-model-checkbox" title="SciSpaCy BC5CDR model trained on biomedical literature.">
+                                <input type="checkbox" value="scispacy" checked>
+                                <div class="model-info">
+                                    <span class="model-name">scispaCy</span>
+                                    <span class="model-desc">Biomedical NER</span>
+                                </div>
+                            </label>
+                            <label class="nlp-model-checkbox" title="HuggingFace BioBERT-based model for biomedical text.">
+                                <input type="checkbox" value="biomedical" checked>
+                                <div class="model-info">
+                                    <span class="model-name">Biomedical</span>
+                                    <span class="model-desc">BioBERT model</span>
+                                </div>
+                            </label>
+                            <label class="nlp-model-checkbox" title="MedSpaCy with clinical context and negation detection.">
+                                <input type="checkbox" value="medspacy">
+                                <div class="model-info">
+                                    <span class="model-name">MedSpaCy</span>
+                                    <span class="model-desc">Clinical notes</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button id="evaluate-btn" class="btn-primary">Evaluate Transcription</button>
+                        <button id="clear-btn" class="btn-secondary">Clear</button>
+                    </div>
+                </section>
+
+                <!-- Examples Section -->
+                <section class="section examples-section">
+                    <h3>Quick Examples</h3>
+                    <div id="examples-container" class="examples-grid">
+                        <!-- Examples loaded dynamically -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Panel - Results -->
+            <div class="results-panel">
+                <div id="results-placeholder" class="results-placeholder">
+                    <div class="placeholder-content">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="64" height="64">
+                            <path d="M9 17V7m0 10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m0 10a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m0 10V7m0 10a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2"/>
                         </svg>
-                        <strong>Multi-Backend Comparison</strong>
-                    </div>
-                    <p>Compare different text matching algorithms for TER (Term Error Rate) calculation:</p>
-                    <ul class="feature-list">
-                        <li><strong>RapidFuzz</strong> - Fast fuzzy matching with Levenshtein distance, best for typo detection</li>
-                        <li><strong>Difflib</strong> - Python's sequence matcher, good for longer text comparisons</li>
-                        <li><strong>Basic</strong> - Simple word-level comparison, fastest but less nuanced</li>
-                    </ul>
-                    <p class="feature-hint">Results show a comparison table with each backend's scores to help you choose the best algorithm for your use case.</p>
-                </div>
-
-                <!-- NLP Model Selection -->
-                <div class="nlp-model-section hidden" id="nlp-model-section">
-                    <div class="feature-description-header">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="16" x2="12" y2="12"></line>
-                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                        </svg>
-                        <strong>Multi-NLP Comparison</strong>
-                    </div>
-                    <p>Compare different Named Entity Recognition (NER) models for extracting medical entities (drugs, conditions, procedures):</p>
-                    <h3>Select NLP Models to Compare</h3>
-                    <div class="nlp-model-grid" id="nlp-model-grid">
-                        <label class="nlp-model-checkbox" title="Pattern-based entity extraction using regex rules. Fast, no dependencies, but limited accuracy.">
-                            <input type="checkbox" value="mock" checked>
-                            <div class="model-info">
-                                <span class="model-name">Mock (Pattern-based)</span>
-                                <span class="model-desc">Regex rules, fast, no ML</span>
+                        <h3>Evaluation Results</h3>
+                        <p>Enter ground truth and predicted text, then click "Evaluate" to see detailed analysis of transcription quality.</p>
+                        <div class="placeholder-metrics">
+                            <div class="placeholder-metric">
+                                <strong>TER</strong>
+                                <span>Term Error Rate - Measures accuracy of medical terminology</span>
                             </div>
-                        </label>
-                        <label class="nlp-model-checkbox" title="SciSpaCy with BC5CDR model trained on biomedical literature. Good for drugs and diseases.">
-                            <input type="checkbox" value="scispacy" checked>
-                            <div class="model-info">
-                                <span class="model-name">scispaCy (BC5CDR)</span>
-                                <span class="model-desc">Biomedical NER, drugs & diseases</span>
+                            <div class="placeholder-metric">
+                                <strong>NER</strong>
+                                <span>Named Entity Recognition - Detects drugs, conditions, procedures</span>
                             </div>
-                        </label>
-                        <label class="nlp-model-checkbox" title="HuggingFace BioBERT-based model. Strong on biomedical literature and research text.">
-                            <input type="checkbox" value="biomedical" checked>
-                            <div class="model-info">
-                                <span class="model-name">Biomedical (HuggingFace)</span>
-                                <span class="model-desc">BioBERT, research literature</span>
+                            <div class="placeholder-metric">
+                                <strong>CRS</strong>
+                                <span>Context Retention Score - Measures semantic meaning preservation</span>
                             </div>
-                        </label>
-                        <label class="nlp-model-checkbox" title="MedSpaCy with clinical context detection. Handles negation (e.g., 'no chest pain') and clinical notes.">
-                            <input type="checkbox" value="medspacy">
-                            <div class="model-info">
-                                <span class="model-name">MedSpaCy (Clinical)</span>
-                                <span class="model-desc">Clinical notes, negation detection</span>
-                            </div>
-                        </label>
-                    </div>
-                    <p class="feature-hint">Results show a radar chart comparing NER accuracy, precision, and recall across selected models.</p>
-                </div>
-
-                <div class="button-group">
-                    <button id="evaluate-btn" class="btn-primary">Evaluate</button>
-                    <button id="clear-btn" class="btn-secondary">Clear</button>
-                </div>
-            </section>
-
-            <section class="examples-section">
-                <h3>Try an Example</h3>
-                <div id="examples-container" class="examples-grid">
-                    <!-- Examples loaded dynamically -->
-                </div>
-            </section>
-
-            <!-- Results Section -->
-            <section id="results-section" class="results-section hidden">
-                <h2>Results</h2>
-
-                <div class="overall-score">
-                    <div class="score-circle" id="overall-score-circle">
-                        <span id="overall-score-value">--</span>
-                    </div>
-                    <div class="score-label">Overall Score</div>
-                </div>
-
-                <!-- Radar Chart for Multi-Model Comparison -->
-                <div id="chart-container" class="chart-container hidden">
-                    <canvas id="metrics-radar-chart"></canvas>
-                </div>
-
-                <div class="metrics-grid">
-                    <div class="metric-card" id="ter-card">
-                        <h3>TER <span class="metric-badge">Term Error Rate</span></h3>
-                        <div class="metric-value" id="ter-value">--</div>
-                        <div class="metric-details" id="ter-details"></div>
-                    </div>
-
-                    <div class="metric-card" id="ner-card">
-                        <h3>NER <span class="metric-badge">Entity Accuracy</span></h3>
-                        <div class="metric-value" id="ner-value">--</div>
-                        <div class="metric-details" id="ner-details"></div>
-                    </div>
-
-                    <div class="metric-card" id="crs-card">
-                        <h3>CRS <span class="metric-badge">Context Retention</span></h3>
-                        <div class="metric-value" id="crs-value">--</div>
-                        <div class="metric-details" id="crs-details"></div>
-                    </div>
-                </div>
-
-                <!-- Multi-NLP Comparison -->
-                <div id="multi-nlp-section" class="multi-nlp-section hidden">
-                    <h3>NLP Model Comparison</h3>
-                    <div id="multi-nlp-results"></div>
-                </div>
-
-                <!-- Diff View -->
-                <div id="diff-section" class="diff-section">
-                    <h3>Text Comparison</h3>
-                    <div class="diff-container">
-                        <div class="diff-column">
-                            <div class="diff-header">Ground Truth</div>
-                            <div class="diff-content" id="diff-gt"></div>
-                        </div>
-                        <div class="diff-column">
-                            <div class="diff-header">Predicted</div>
-                            <div class="diff-content" id="diff-pred"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Errors Section -->
-                <div id="errors-section" class="errors-section hidden">
-                    <h3>Detected Errors</h3>
-                    <div id="errors-list" class="errors-list"></div>
-                </div>
-
-                <!-- Export Buttons -->
-                <div class="export-section">
-                    <h3>Export Results</h3>
-                    <div class="export-buttons">
-                        <button id="export-json" class="btn-export">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                            </svg>
-                            JSON
-                        </button>
-                        <button id="export-csv" class="btn-export">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                <line x1="3" y1="9" x2="21" y2="9"></line>
-                                <line x1="3" y1="15" x2="21" y2="15"></line>
-                                <line x1="9" y1="3" x2="9" y2="21"></line>
-                                <line x1="15" y1="3" x2="15" y2="21"></line>
-                            </svg>
-                            CSV
-                        </button>
-                        <button id="export-pdf" class="btn-export" disabled title="Coming soon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                                <line x1="16" y1="13" x2="8" y2="13"></line>
-                                <line x1="16" y1="17" x2="8" y2="17"></line>
-                            </svg>
-                            PDF
-                        </button>
+                <section id="results-section" class="results-section hidden">
+                    <!-- Overall Score -->
+                    <div class="overall-score">
+                        <div class="score-circle" id="overall-score-circle">
+                            <span id="overall-score-value">--</span>
+                        </div>
+                        <div class="score-label">Overall Quality Score</div>
+                        <div class="score-description" id="score-description">
+                            This score represents how accurately the speech-to-text system transcribed medical content.
+                        </div>
                     </div>
-                </div>
-            </section>
+
+                    <!-- Radar Chart -->
+                    <div id="chart-container" class="chart-container hidden">
+                        <canvas id="metrics-radar-chart"></canvas>
+                    </div>
+
+                    <!-- Metrics Grid -->
+                    <div class="metrics-grid">
+                        <div class="metric-card" id="ter-card">
+                            <h3>TER <span class="metric-badge">Term Error Rate</span></h3>
+                            <div class="metric-value" id="ter-value">--</div>
+                            <div class="metric-details" id="ter-details"></div>
+                            <div class="metric-explanation" id="ter-explanation">
+                                Measures how accurately medical terms were transcribed. Higher is better. A score below 85% may indicate dangerous drug name or dosage errors.
+                            </div>
+                        </div>
+
+                        <div class="metric-card" id="ner-card">
+                            <h3>NER <span class="metric-badge">Entity Accuracy</span></h3>
+                            <div class="metric-value" id="ner-value">--</div>
+                            <div class="metric-details" id="ner-details"></div>
+                            <div class="metric-explanation" id="ner-explanation">
+                                Checks if medical entities (drug names, conditions, procedures) were correctly identified. Missing or wrong entities can lead to clinical errors.
+                            </div>
+                        </div>
+
+                        <div class="metric-card" id="crs-card">
+                            <h3>CRS <span class="metric-badge">Context Retention</span></h3>
+                            <div class="metric-value" id="crs-value">--</div>
+                            <div class="metric-details" id="crs-details"></div>
+                            <div class="metric-explanation" id="crs-explanation">
+                                Measures if the overall meaning was preserved. Even if individual words are correct, context errors (like negation flips) can change the clinical meaning.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quality Analysis Section -->
+                    <div id="quality-section" class="quality-section hidden">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                            Quality Analysis
+                            <span class="quality-recommendation" id="quality-recommendation">REVIEW</span>
+                        </h3>
+                        <p class="section-desc">Reference-free quality evaluation based on fluency, grammar, and medical entity validation.</p>
+
+                        <div class="quality-composite">
+                            <div class="quality-score-display">
+                                <span class="quality-score-value" id="quality-composite-value">--</span>
+                                <span class="quality-score-label">Quality Score</span>
+                            </div>
+                        </div>
+
+                        <div class="quality-components">
+                            <div class="quality-component">
+                                <div class="component-header">
+                                    <span class="component-name">Fluency</span>
+                                    <span class="component-value" id="quality-perplexity-value">--</span>
+                                </div>
+                                <div class="component-bar">
+                                    <div class="component-bar-fill" id="quality-perplexity-bar" style="width: 0%"></div>
+                                </div>
+                                <small class="component-hint">Language model perplexity (lower = more natural)</small>
+                            </div>
+
+                            <div class="quality-component">
+                                <div class="component-header">
+                                    <span class="component-name">Grammar</span>
+                                    <span class="component-value" id="quality-grammar-value">--</span>
+                                </div>
+                                <div class="component-bar">
+                                    <div class="component-bar-fill" id="quality-grammar-bar" style="width: 0%"></div>
+                                </div>
+                                <small class="component-hint">Grammatical correctness</small>
+                            </div>
+
+                            <div class="quality-component">
+                                <div class="component-header">
+                                    <span class="component-name">Entity Validity</span>
+                                    <span class="component-value" id="quality-entity-value">--</span>
+                                </div>
+                                <div class="component-bar">
+                                    <div class="component-bar-fill" id="quality-entity-bar" style="width: 0%"></div>
+                                </div>
+                                <small class="component-hint">Medical terms are valid/spelled correctly</small>
+                            </div>
+
+                            <div class="quality-component">
+                                <div class="component-header">
+                                    <span class="component-name">Coherence</span>
+                                    <span class="component-value" id="quality-coherence-value">--</span>
+                                </div>
+                                <div class="component-bar">
+                                    <div class="component-bar-fill" id="quality-coherence-bar" style="width: 0%"></div>
+                                </div>
+                                <small class="component-hint">Drug-condition pairs make clinical sense</small>
+                            </div>
+                        </div>
+
+                        <!-- Entities Found -->
+                        <div class="quality-entities" id="quality-entities-section">
+                            <h4>Medical Entities Found</h4>
+                            <div class="entities-list" id="quality-entities-list"></div>
+                        </div>
+
+                        <!-- Grammar Issues -->
+                        <div class="quality-grammar-issues hidden" id="quality-grammar-section">
+                            <h4>Grammar Issues</h4>
+                            <div class="grammar-issues-list" id="quality-grammar-list"></div>
+                        </div>
+
+                        <!-- Invalid Entities -->
+                        <div class="quality-invalid-entities hidden" id="quality-invalid-section">
+                            <h4>Invalid/Misspelled Entities</h4>
+                            <div class="invalid-entities-list" id="quality-invalid-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- Multi-NLP Comparison -->
+                    <div id="multi-nlp-section" class="multi-nlp-section hidden">
+                        <h3>NLP Model Comparison</h3>
+                        <p class="section-desc">Different AI models may detect different medical entities. Compare their performance below:</p>
+                        <div id="multi-nlp-results"></div>
+                    </div>
+
+                    <!-- Diff View -->
+                    <div id="diff-section" class="diff-section">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>
+                            </svg>
+                            Text Comparison
+                        </h3>
+                        <p class="section-desc">Words highlighted in <span class="diff-deleted-inline">red</span> were in the original but missing/wrong in the transcription. Words in <span class="diff-inserted-inline">green</span> were added or changed.</p>
+                        <div class="diff-container">
+                            <div class="diff-column">
+                                <div class="diff-header">Ground Truth (What was said)</div>
+                                <div class="diff-content" id="diff-gt"></div>
+                            </div>
+                            <div class="diff-column">
+                                <div class="diff-header">Predicted (What STT heard)</div>
+                                <div class="diff-content" id="diff-pred"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Errors Section -->
+                    <div id="errors-section" class="errors-section hidden">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                            Critical Errors Detected
+                        </h3>
+                        <p class="section-desc">These errors may have clinical significance and should be reviewed carefully:</p>
+                        <div id="errors-list" class="errors-list"></div>
+                    </div>
+
+                    <!-- Export Section -->
+                    <div class="export-section">
+                        <h3>Export Results</h3>
+                        <div class="export-buttons">
+                            <button id="export-json" class="btn-export">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                                JSON
+                            </button>
+                            <button id="export-csv" class="btn-export">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                                    <line x1="3" y1="15" x2="21" y2="15"></line>
+                                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                                    <line x1="15" y1="3" x2="15" y2="21"></line>
+                                </svg>
+                                CSV
+                            </button>
+                            <button id="export-pdf" class="btn-export" disabled title="Coming soon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                </svg>
+                                PDF
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
         </main>
 
         <footer>
             <p>HSTTB - Healthcare Streaming STT Benchmarking Framework</p>
-            <p class="footer-links">
-                <span>TER: Medical Term Accuracy</span> |
-                <span>NER: Entity Preservation</span> |
-                <span>CRS: Context Continuity</span>
-            </p>
         </footer>
     </div>
 

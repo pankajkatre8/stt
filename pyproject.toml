@@ -77,6 +77,12 @@ metrics = [
     "scikit-learn>=1.3.0",
     "networkx>=3.2.0",
 ]
+# Reference-free quality scoring (perplexity, grammar)
+quality = [
+    "transformers>=4.34.0",
+    "torch>=2.0.0",
+    "language-tool-python>=2.9",
+]
 # API and reporting
 api = [
     "fastapi>=0.109.0",
@@ -103,7 +109,7 @@ dev = [
 ]
 # All dependencies
 all = [
-    "hsttb[nlp,embeddings,whisper,cloud-adapters,tts,metrics,api,tracking,dev]",
+    "hsttb[nlp,embeddings,whisper,cloud-adapters,tts,metrics,quality,api,tracking,dev]",
 ]
 
 [project.scripts]
@@ -178,6 +184,9 @@ module = [
     "google.cloud.*",
     "deepgram.*",
     "elevenlabs.*",
+    "transformers.*",
+    "torch.*",
+    "language_tool_python.*",
 ]
 ignore_missing_imports = true
 

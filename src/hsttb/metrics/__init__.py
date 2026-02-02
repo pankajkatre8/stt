@@ -53,6 +53,13 @@ from hsttb.metrics.semantic_similarity import (
 from hsttb.metrics.srs import SRSConfig, SRSEngine, compute_srs
 from hsttb.metrics.ter import TEREngine, TERResult, compute_ter
 
+# Quality metrics (optional - require transformers/language-tool-python)
+try:
+    from hsttb.metrics.quality import QualityConfig, QualityEngine, QualityResult, compute_quality
+    _QUALITY_AVAILABLE = True
+except ImportError:
+    _QUALITY_AVAILABLE = False
+
 __all__ = [
     "CRSConfig",
     "CRSEngine",
@@ -80,3 +87,12 @@ __all__ = [
     "compute_ter",
     "create_similarity_engine",
 ]
+
+# Add quality exports if available
+if _QUALITY_AVAILABLE:
+    __all__.extend([
+        "QualityConfig",
+        "QualityEngine",
+        "QualityResult",
+        "compute_quality",
+    ])
