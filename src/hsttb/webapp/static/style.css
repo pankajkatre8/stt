@@ -130,9 +130,7 @@ header .subtitle {
 /* Main Layout - Scrollable Page */
 main {
     flex: 1;
-    display: grid;
-    grid-template-columns: minmax(400px, 1fr) minmax(400px, 1.2fr);
-    gap: 1px;
+    display: flex;
     background: var(--border);
 }
 
@@ -147,6 +145,55 @@ main {
 
 .input-panel {
     background: var(--bg-secondary);
+    width: 45%;
+    min-width: 300px;
+    flex-shrink: 0;
+}
+
+.results-panel {
+    flex: 1;
+    min-width: 300px;
+}
+
+/* Resizable Divider */
+.resize-handle {
+    width: 6px;
+    background: var(--border);
+    cursor: col-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease;
+    flex-shrink: 0;
+}
+
+.resize-handle:hover,
+.resize-handle.resizing {
+    background: var(--primary);
+}
+
+.resize-handle-bar {
+    width: 2px;
+    height: 40px;
+    background: var(--text-muted);
+    border-radius: 2px;
+    transition: background 0.15s ease, height 0.15s ease;
+}
+
+.resize-handle:hover .resize-handle-bar,
+.resize-handle.resizing .resize-handle-bar {
+    background: white;
+    height: 60px;
+}
+
+/* Prevent text selection while resizing */
+body.resizing {
+    cursor: col-resize;
+    user-select: none;
+}
+
+body.resizing * {
+    cursor: col-resize !important;
 }
 
 /* Section styling */
@@ -2785,13 +2832,19 @@ footer {
 /* Responsive */
 @media (max-width: 1200px) {
     main {
-        grid-template-columns: 1fr;
+        flex-direction: column;
     }
 
     .input-panel,
     .results-panel {
+        width: 100% !important;
         height: auto;
         max-height: none;
+        min-width: 0;
+    }
+
+    .resize-handle {
+        display: none;
     }
 
     .metrics-grid {

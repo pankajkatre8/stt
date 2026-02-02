@@ -96,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     setupCheckboxLabels();
     setupInfoButtons();
+    setupResizablePanel();
 
     // ========================================================================
     // Event Listeners
@@ -407,6 +408,72 @@ F1 = 2 × (P × R) / (P + R)</div>
             if (e.key === 'Escape' && infoModal.classList.contains('active')) {
                 infoModal.classList.remove('active');
             }
+        });
+    }
+
+    // ========================================================================
+    // Resizable Panel Divider
+    // ========================================================================
+
+    function setupResizablePanel() {
+        const resizeHandle = document.getElementById('resize-handle');
+        const inputPanel = document.querySelector('.input-panel');
+        const main = document.querySelector('main');
+
+        if (!resizeHandle || !inputPanel || !main) return;
+
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+
+        // Load saved width from localStorage
+        const savedWidth = localStorage.getItem('hsttb-panel-width');
+        if (savedWidth) {
+            inputPanel.style.width = savedWidth;
+        }
+
+        resizeHandle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            startX = e.clientX;
+            startWidth = inputPanel.offsetWidth;
+
+            resizeHandle.classList.add('resizing');
+            document.body.classList.add('resizing');
+
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+
+            const deltaX = e.clientX - startX;
+            const newWidth = startWidth + deltaX;
+            const mainWidth = main.offsetWidth;
+
+            // Constrain between 250px and 70% of main width
+            const minWidth = 250;
+            const maxWidth = mainWidth * 0.7;
+
+            if (newWidth >= minWidth && newWidth <= maxWidth) {
+                inputPanel.style.width = newWidth + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!isResizing) return;
+
+            isResizing = false;
+            resizeHandle.classList.remove('resizing');
+            document.body.classList.remove('resizing');
+
+            // Save width to localStorage
+            localStorage.setItem('hsttb-panel-width', inputPanel.style.width);
+        });
+
+        // Double-click to reset to default width
+        resizeHandle.addEventListener('dblclick', () => {
+            inputPanel.style.width = '45%';
+            localStorage.removeItem('hsttb-panel-width');
         });
     }
 
