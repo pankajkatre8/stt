@@ -60,6 +60,32 @@ try:
 except ImportError:
     _QUALITY_AVAILABLE = False
 
+# New reference-free metrics
+from hsttb.metrics.contradiction import (
+    ContradictionDetector,
+    ContradictionPair,
+    ContradictionResult,
+    detect_contradictions,
+)
+from hsttb.metrics.speech_rate import (
+    SpeechRateCategory,
+    SpeechRateResult,
+    SpeechRateValidator,
+    validate_speech_rate,
+)
+from hsttb.metrics.embedding_drift import (
+    DriftPoint,
+    EmbeddingDriftDetector,
+    EmbeddingDriftResult,
+    analyze_embedding_drift,
+)
+from hsttb.metrics.confidence_variance import (
+    ConfidenceAnalyzer,
+    ConfidenceDropPoint,
+    ConfidenceVarianceResult,
+    analyze_confidence_variance,
+)
+
 __all__ = [
     "CRSConfig",
     "CRSEngine",
@@ -86,6 +112,23 @@ __all__ = [
     "compute_srs",
     "compute_ter",
     "create_similarity_engine",
+    # New reference-free metrics
+    "ContradictionDetector",
+    "ContradictionPair",
+    "ContradictionResult",
+    "detect_contradictions",
+    "SpeechRateCategory",
+    "SpeechRateResult",
+    "SpeechRateValidator",
+    "validate_speech_rate",
+    "DriftPoint",
+    "EmbeddingDriftDetector",
+    "EmbeddingDriftResult",
+    "analyze_embedding_drift",
+    "ConfidenceAnalyzer",
+    "ConfidenceDropPoint",
+    "ConfidenceVarianceResult",
+    "analyze_confidence_variance",
 ]
 
 # Add quality exports if available

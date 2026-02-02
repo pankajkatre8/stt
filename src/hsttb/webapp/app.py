@@ -25,6 +25,7 @@ from hsttb.lexicons.base import MedicalLexicon
 from hsttb.lexicons.scispacy_lexicon import SciSpacyLexicon
 from hsttb.nlp.scispacy_ner import SciSpacyNERPipeline
 from hsttb.nlp.semantic_similarity import TransformerSimilarityEngine
+from hsttb.metrics.speech_rate import SpeechRateValidator, SpeechRateResult
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,8 @@ class EvaluationRequest(BaseModel):
     compute_ter: bool = True
     compute_ner: bool = True
     compute_crs: bool = True
+    compute_wer: bool = True  # Word Error Rate
+    compute_cer: bool = True  # Character Error Rate
     compute_quality: bool = False  # Reference-free quality scoring
 
 
@@ -105,6 +108,13 @@ class TTSLabelUpdate(BaseModel):
     label: str
 
 
+class SpeechRateRequest(BaseModel):
+    """Request model for speech rate validation."""
+
+    text: str
+    audio_duration_seconds: float
+
+
 # ============================================================================
 # Application Factory
 # ============================================================================
@@ -133,6 +143,7 @@ def create_app() -> FastAPI:
     _similarity_engine: TransformerSimilarityEngine | None = None
     _multi_backend: MultiBackendEvaluator | None = None
     _quality_engine: Any = None  # QualityEngine (optional dependency)
+    _speech_rate_validator: SpeechRateValidator | None = None
     _available_backends: dict[str, str] = {}  # name -> status
 
     # ========================================================================
@@ -216,6 +227,97 @@ def create_app() -> FastAPI:
                 logger.warning(f"Quality engine unavailable: {e}")
                 _quality_engine = False  # Mark as unavailable
         return _quality_engine if _quality_engine is not False else None
+
+    def get_speech_rate_validator() -> SpeechRateValidator:
+        """Get speech rate validator."""
+        nonlocal _speech_rate_validator
+        if _speech_rate_validator is None:
+            _speech_rate_validator = SpeechRateValidator()
+        return _speech_rate_validator
+
+    def compute_wer_cer(reference: str, hypothesis: str, character_level: bool = False) -> dict[str, Any]:
+        """
+        Compute WER (Word Error Rate) or CER (Character Error Rate).
+
+        Uses Levenshtein distance with edit tracking.
+
+        Args:
+            reference: Ground truth text
+            hypothesis: Predicted text
+            character_level: If True, compute CER instead of WER
+
+        Returns:
+            Dictionary with error rate and detailed counts
+        """
+        if character_level:
+            ref_units = list(reference)
+            hyp_units = list(hypothesis)
+            key_prefix = "reference_chars", "hypothesis_chars", "cer"
+        else:
+            ref_units = reference.lower().split()
+            hyp_units = hypothesis.lower().split()
+            key_prefix = "reference_words", "hypothesis_words", "wer"
+
+        # Compute Levenshtein with edit tracking
+        error_rate, subs, dels, ins = levenshtein_with_edits(ref_units, hyp_units)
+
+        return {
+            key_prefix[2]: round(error_rate, 4),
+            "substitutions": subs,
+            "deletions": dels,
+            "insertions": ins,
+            key_prefix[0]: len(ref_units),
+            key_prefix[1]: len(hyp_units),
+        }
+
+    def levenshtein_with_edits(ref: list, hyp: list) -> tuple[float, int, int, int]:
+        """
+        Compute Levenshtein distance with edit type counts.
+
+        Returns:
+            Tuple of (error_rate, substitutions, deletions, insertions)
+        """
+        m, n = len(ref), len(hyp)
+        if m == 0:
+            return (1.0 if n > 0 else 0.0, 0, 0, n)
+        if n == 0:
+            return (1.0, 0, m, 0)
+
+        # DP table: each cell is (distance, subs, dels, ins)
+        dp = [[(0, 0, 0, 0) for _ in range(n + 1)] for _ in range(m + 1)]
+
+        # Initialize first column (deletions)
+        for i in range(1, m + 1):
+            dp[i][0] = (i, 0, i, 0)
+
+        # Initialize first row (insertions)
+        for j in range(1, n + 1):
+            dp[0][j] = (j, 0, 0, j)
+
+        # Fill the table
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                if ref[i-1] == hyp[j-1]:
+                    dp[i][j] = dp[i-1][j-1]
+                else:
+                    # Substitution
+                    sub_cost = dp[i-1][j-1]
+                    sub_option = (sub_cost[0] + 1, sub_cost[1] + 1, sub_cost[2], sub_cost[3])
+
+                    # Deletion (from reference)
+                    del_cost = dp[i-1][j]
+                    del_option = (del_cost[0] + 1, del_cost[1], del_cost[2] + 1, del_cost[3])
+
+                    # Insertion (in hypothesis)
+                    ins_cost = dp[i][j-1]
+                    ins_option = (ins_cost[0] + 1, ins_cost[1], ins_cost[2], ins_cost[3] + 1)
+
+                    # Choose minimum
+                    dp[i][j] = min(sub_option, del_option, ins_option, key=lambda x: x[0])
+
+        dist, subs, dels, ins = dp[m][n]
+        error_rate = dist / m if m > 0 else 0.0
+        return (error_rate, subs, dels, ins)
 
     # ========================================================================
     # Core Routes
@@ -302,6 +404,32 @@ def create_app() -> FastAPI:
                         ],
                     }
 
+                # Compute WER (Word Error Rate)
+                if req.compute_wer:
+                    wer_result = compute_wer_cer(req.ground_truth, req.predicted)
+                    results["wer"] = {
+                        "wer": round(wer_result["wer"], 4),
+                        "word_accuracy": round(1 - wer_result["wer"], 4),
+                        "substitutions": wer_result["substitutions"],
+                        "deletions": wer_result["deletions"],
+                        "insertions": wer_result["insertions"],
+                        "reference_words": wer_result["reference_words"],
+                        "hypothesis_words": wer_result["hypothesis_words"],
+                    }
+
+                # Compute CER (Character Error Rate)
+                if req.compute_cer:
+                    cer_result = compute_wer_cer(req.ground_truth, req.predicted, character_level=True)
+                    results["cer"] = {
+                        "cer": round(cer_result["cer"], 4),
+                        "char_accuracy": round(1 - cer_result["cer"], 4),
+                        "substitutions": cer_result["substitutions"],
+                        "deletions": cer_result["deletions"],
+                        "insertions": cer_result["insertions"],
+                        "reference_chars": cer_result["reference_chars"],
+                        "hypothesis_chars": cer_result["hypothesis_chars"],
+                    }
+
                 # Compute NER
                 if req.compute_ner:
                     ner_result = get_ner_engine().compute(req.ground_truth, req.predicted)
@@ -359,6 +487,16 @@ def create_app() -> FastAPI:
                         "recommendation": quality_result.recommendation,
                         "perplexity_available": quality_result.perplexity_available,
                         "grammar_available": quality_result.grammar_available,
+                        # New metrics
+                        "contradiction_score": quality_result.contradiction_score,
+                        "contradictions": quality_result.contradictions,
+                        "embedding_drift_score": quality_result.embedding_drift_score,
+                        "drift_points": quality_result.drift_points,
+                        "segment_similarities": quality_result.segment_similarities,
+                        "embedding_drift_available": quality_result.embedding_drift_available,
+                        "confidence_variance_score": quality_result.confidence_variance_score,
+                        "confidence_drop_points": quality_result.confidence_drop_points,
+                        "confidence_variance_available": quality_result.confidence_variance_available,
                     }
                 else:
                     results["quality"] = {
@@ -368,6 +506,10 @@ def create_app() -> FastAPI:
 
             # Compute overall score
             scores = []
+            if "wer" in results:
+                # WER is error rate, convert to accuracy
+                wer_accuracy = max(0.0, 1 - results["wer"]["wer"])
+                scores.append(wer_accuracy)
             if "ter" in results:
                 # TER is error rate, convert to accuracy and clamp to [0, 1]
                 ter_accuracy = max(0.0, 1 - results["ter"]["overall_ter"])
@@ -518,6 +660,36 @@ def create_app() -> FastAPI:
                 status_code=500,
             )
 
+    @application.post("/api/evaluate/speech-rate")
+    async def evaluate_speech_rate(req: SpeechRateRequest) -> JSONResponse:
+        """
+        Validate speech rate plausibility.
+
+        Checks if the word count is reasonable for the given audio duration.
+        Useful for detecting hallucinations or missing content.
+        """
+        try:
+            validator = get_speech_rate_validator()
+            result = validator.validate(req.text, req.audio_duration_seconds)
+
+            return JSONResponse(content={
+                "status": "success",
+                "plausibility_score": round(result.plausibility_score, 4),
+                "words_per_minute": round(result.words_per_minute, 1),
+                "word_count": result.word_count,
+                "audio_duration_seconds": round(result.audio_duration_seconds, 1),
+                "category": result.category.value,
+                "is_plausible": result.is_plausible,
+                "warning": result.warning,
+            })
+
+        except Exception as e:
+            logger.error(f"Speech rate validation error: {e}")
+            return JSONResponse(
+                content={"status": "error", "error": str(e)},
+                status_code=500,
+            )
+
     @application.post("/api/evaluate/multi-adapter")
     async def evaluate_multi_adapter(req: MultiAdapterRequest) -> JSONResponse:
         """Run STT evaluation with multiple adapters."""
@@ -624,11 +796,33 @@ def create_app() -> FastAPI:
             transcript = await adapter.transcribe_file(audio_path)
             await adapter.cleanup()
 
+            # Get audio duration and validate speech rate
+            speech_rate_result = None
+            try:
+                # Extract audio duration from the file
+                audio_info = handler._get_audio_info(audio_path)
+                duration_seconds = audio_info.get("duration")
+                if duration_seconds:
+                    validator = get_speech_rate_validator()
+                    sr_result = validator.validate(transcript, duration_seconds)
+                    speech_rate_result = {
+                        "plausibility_score": round(sr_result.plausibility_score, 4),
+                        "words_per_minute": round(sr_result.words_per_minute, 1),
+                        "word_count": sr_result.word_count,
+                        "audio_duration_seconds": round(sr_result.audio_duration_seconds, 1),
+                        "category": sr_result.category.value,
+                        "is_plausible": sr_result.is_plausible,
+                        "warning": sr_result.warning,
+                    }
+            except Exception as e:
+                logger.warning(f"Could not compute speech rate: {e}")
+
             return JSONResponse(content={
                 "status": "success",
                 "audio_file_id": req.audio_file_id,
                 "adapter": req.adapter,
                 "transcript": transcript,
+                "speech_rate": speech_rate_result,
             })
 
         except Exception as e:
@@ -958,9 +1152,6 @@ def create_app() -> FastAPI:
                 info["description"] = "Deepgram API with medical vocabulary"
                 info["models"] = ["nova-2", "nova-2-medical", "nova-2-phonecall"]
                 info["requires_api_key"] = True
-            elif name == "mock":
-                info["description"] = "Mock adapter for testing"
-                info["requires_api_key"] = False
 
             adapter_info.append(info)
 
@@ -972,21 +1163,35 @@ def create_app() -> FastAPI:
     @application.get("/api/nlp-models")
     async def list_nlp_models() -> JSONResponse:
         """List available NLP models for entity extraction."""
-        from hsttb.nlp.registry import list_nlp_pipelines, get_pipeline_info
+        from hsttb.nlp.registry import list_nlp_pipelines, get_nlp_pipeline
 
         models = list_nlp_pipelines()
 
         model_info = []
         for name in models:
+            info = {
+                "name": name,
+                "available": False,
+                "error": None,
+            }
             try:
-                info = get_pipeline_info(name)
+                # Actually try to load and test the model
+                pipeline = get_nlp_pipeline(name)
+                # Test the pipeline with a simple extraction to trigger lazy loading
+                _ = pipeline.extract_entities("test medication")
                 info["available"] = True
-                model_info.append(info)
-            except Exception:
-                model_info.append({
-                    "name": name,
-                    "available": False,
-                })
+                info["description"] = getattr(pipeline, '__doc__', '') or ''
+            except ImportError as e:
+                # Extract the meaningful part of the error message
+                error_msg = str(e)
+                if "pip install" in error_msg:
+                    info["error"] = error_msg
+                else:
+                    info["error"] = f"Not installed: {error_msg.split(':')[-1].strip()}"
+            except Exception as e:
+                info["error"] = str(e)
+
+            model_info.append(info)
 
         return JSONResponse(content={
             "status": "success",

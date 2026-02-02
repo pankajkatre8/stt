@@ -268,12 +268,12 @@ class MedSpacyNERPipeline(NERPipeline):
 
             # Check for negation using ConText
             negated = False
-            if self._detect_negation and hasattr(ent, "_.is_negated"):
+            if self._detect_negation and hasattr(ent._, "is_negated"):
                 negated = bool(ent._.is_negated)
 
             # Check for uncertainty (if available)
             uncertain = False
-            if self._detect_uncertainty and hasattr(ent, "_.is_uncertain"):
+            if self._detect_uncertainty and hasattr(ent._, "is_uncertain"):
                 uncertain = bool(ent._.is_uncertain)
 
             # Skip if it's just whitespace

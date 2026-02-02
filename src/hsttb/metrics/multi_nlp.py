@@ -492,14 +492,14 @@ def create_default_evaluator() -> MultiNLPEvaluator:
     Create evaluator with default NLP models.
 
     Returns:
-        MultiNLPEvaluator with mock, scispacy, biomedical, and medspacy models.
+        MultiNLPEvaluator with scispacy, biomedical, and medspacy models.
     """
     from hsttb.nlp.registry import get_nlp_pipeline
 
     evaluator = MultiNLPEvaluator()
 
-    # Add available models
-    for model_name in ["mock", "scispacy", "biomedical", "medspacy"]:
+    # Add available models (production models only)
+    for model_name in ["scispacy", "biomedical", "medspacy"]:
         try:
             pipeline = get_nlp_pipeline(model_name)
             evaluator.add_model(model_name, pipeline)

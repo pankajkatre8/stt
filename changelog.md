@@ -8,6 +8,78 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added - Phase 8: Reference-Free Quality Metrics (2026-02-02)
+
+#### Quality Engine Enhancements
+- **QualityEngine** (`src/hsttb/metrics/quality.py`)
+  - Comprehensive reference-free transcription quality scoring
+  - Composite score from multiple quality dimensions
+  - Configurable weights for each metric component
+  - Recommendation output: ACCEPT, REVIEW, REJECT
+
+- **Perplexity Scorer** (`src/hsttb/metrics/perplexity.py`)
+  - GPT-2 based fluency scoring
+  - Lower perplexity = more natural text
+  - Graceful fallback if transformers not installed
+
+- **Grammar Checker** (`src/hsttb/metrics/grammar.py`)
+  - Language-tool-python integration for grammar analysis
+  - Medical term filtering to avoid false positives
+  - Error categorization and counting
+
+- **Medical Coherence** (`src/hsttb/metrics/medical_coherence.py`)
+  - Drug-condition pair validation
+  - Entity validity checking against lexicons
+  - Dosage reasonableness checks
+
+- **Contradiction Detection** (`src/hsttb/metrics/contradiction.py`)
+  - Internal contradiction detection within transcripts
+  - Entity state tracking (affirmed vs negated)
+  - Question sentence filtering to avoid false positives
+
+- **Embedding Drift** (`src/hsttb/metrics/embedding_drift.py`)
+  - Semantic stability measurement across transcript segments
+  - Sentence-transformers based similarity computation
+  - Drift point detection for anomalous transitions
+
+- **Confidence Variance** (`src/hsttb/metrics/confidence_variance.py`)
+  - Token-level confidence analysis using GPT-2 log probabilities
+  - Low-confidence token detection
+  - Sudden confidence drop identification
+
+- **Speech Rate Validation** (`src/hsttb/metrics/speech_rate.py`)
+  - Word count vs audio duration plausibility checking
+  - Hallucination detection (too many words for duration)
+  - Missing content detection (too few words for duration)
+  - Category classification: slow, normal, fast, implausibly_low/high
+
+#### API Enhancements
+- `POST /api/evaluate/speech-rate` - Manual speech rate validation endpoint
+- Updated `/api/audio/transcribe` - Returns speech rate analysis with transcription
+- Updated `/api/evaluate` - Returns all quality metrics including new ones
+- Updated `/api/nlp-models` - Tests actual model loading for availability status
+
+#### UI Enhancements
+- Quality Analysis section with 7 component metrics
+- Progress bars for each quality dimension
+- Contradiction display with entity state tracking
+- Semantic drift points visualization
+- Low-confidence token highlighting
+- Speech Rate Analysis section after transcription
+- WPM display with plausibility scoring
+- Category badges (Normal/Slow/Fast/Implausible)
+- Warning messages for suspicious speech rates
+- NLP model availability indicators in UI
+
+#### Bug Fixes
+- Fixed MedSpaCy negation detection: `hasattr(ent, "_.is_negated")` → `hasattr(ent._, "is_negated")`
+- Fixed contradiction detector flagging questions as contradictions
+- Tuned embedding drift thresholds for dialogue text
+- Tuned confidence variance thresholds for natural language
+- Removed mock NLP model from production code
+
+---
+
 ### Added - Phase 7: Multi-Adapter & Enhanced UI (2026-01-31)
 
 #### STT Adapters (Batch 1, 2, 3)

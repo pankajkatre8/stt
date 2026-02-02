@@ -208,13 +208,6 @@ def get_pipeline_info(name: str) -> dict[str, Any]:
 # ============================================================================
 
 
-def _create_mock_pipeline(**kwargs: Any) -> NERPipeline:
-    """Create a mock NER pipeline with common patterns."""
-    from hsttb.nlp.ner_pipeline import MockNERPipeline
-
-    return MockNERPipeline.with_common_patterns()
-
-
 def _create_scispacy_pipeline(**kwargs: Any) -> NERPipeline:
     """Create a scispaCy NER pipeline."""
     from hsttb.nlp.scispacy_ner import SciSpacyNERPipeline
@@ -236,8 +229,7 @@ def _create_medspacy_pipeline(**kwargs: Any) -> NERPipeline:
     return MedSpacyNERPipeline()
 
 
-# Register built-in pipelines
-register_nlp_pipeline_factory("mock", _create_mock_pipeline)
+# Register built-in pipelines (no mock - production only)
 register_nlp_pipeline_factory("scispacy", _create_scispacy_pipeline)
 register_nlp_pipeline_factory("biomedical", _create_biomedical_pipeline)
 register_nlp_pipeline_factory("medspacy", _create_medspacy_pipeline)

@@ -64,7 +64,7 @@ class NegationDetector:
         ['chest pain', 'shortness of breath']
     """
 
-    # Common negation cues
+    # Common negation cues (including contractions)
     PRE_NEGATION_CUES = [
         r"\bno\b",
         r"\bnot\b",
@@ -82,6 +82,20 @@ class NegationDetector:
         r"\babsence\s+of\b",
         r"\bfree\s+of\b",
         r"\bunremarkable\b",
+        # Contractions
+        r"\bdon'?t\b",
+        r"\bdoesn'?t\b",
+        r"\bdidn'?t\b",
+        r"\bwon'?t\b",
+        r"\bcan'?t\b",
+        r"\bcouldn'?t\b",
+        r"\bwouldn'?t\b",
+        r"\bhasn'?t\b",
+        r"\bhaven'?t\b",
+        r"\bisn'?t\b",
+        r"\baren'?t\b",
+        r"\bwasn'?t\b",
+        r"\bweren'?t\b",
     ]
 
     POST_NEGATION_CUES = [

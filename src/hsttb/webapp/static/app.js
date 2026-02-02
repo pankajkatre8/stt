@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const examplesContainer = document.getElementById('examples-container');
 
     // Metric checkboxes
+    const computeWer = document.getElementById('compute-wer');
+    const computeCer = document.getElementById('compute-cer');
     const computeTer = document.getElementById('compute-ter');
     const computeNer = document.getElementById('compute-ner');
     const computeCrs = document.getElementById('compute-crs');
@@ -90,8 +92,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadExamples();
     loadBackends();
     loadTTSHistory();
+    loadNLPModels();
     setupEventListeners();
     setupCheckboxLabels();
+    setupInfoButtons();
 
     // ========================================================================
     // Event Listeners
@@ -177,6 +181,232 @@ document.addEventListener('DOMContentLoaded', () => {
             checkbox.addEventListener('change', () => {
                 label.classList.toggle('checked', checkbox.checked);
             });
+        });
+    }
+
+    // Metric information for info buttons
+    const metricInfo = {
+        wer: {
+            title: 'Word Error Rate (WER)',
+            content: `
+                <h4>What it measures</h4>
+                <p>WER measures the edit distance between the reference (ground truth) and hypothesis (predicted) transcriptions at the <strong>word level</strong>.</p>
+
+                <h4>Formula</h4>
+                <div class="formula">WER = (S + D + I) / N</div>
+                <ul>
+                    <li><strong>S</strong> = Number of word substitutions</li>
+                    <li><strong>D</strong> = Number of word deletions</li>
+                    <li><strong>I</strong> = Number of word insertions</li>
+                    <li><strong>N</strong> = Total words in reference</li>
+                </ul>
+
+                <h4>Interpretation</h4>
+                <p>Lower WER is better. A WER of 0% means perfect transcription. WER can exceed 100% if there are many insertions.</p>
+                <ul>
+                    <li><strong>0-5%</strong>: Excellent</li>
+                    <li><strong>5-10%</strong>: Good</li>
+                    <li><strong>10-20%</strong>: Acceptable</li>
+                    <li><strong>&gt;20%</strong>: Poor</li>
+                </ul>
+            `
+        },
+        cer: {
+            title: 'Character Error Rate (CER)',
+            content: `
+                <h4>What it measures</h4>
+                <p>CER measures the edit distance at the <strong>character level</strong>. More granular than WER, it's useful for detecting spelling errors and typos.</p>
+
+                <h4>Formula</h4>
+                <div class="formula">CER = (S + D + I) / N</div>
+                <ul>
+                    <li><strong>S</strong> = Number of character substitutions</li>
+                    <li><strong>D</strong> = Number of character deletions</li>
+                    <li><strong>I</strong> = Number of character insertions</li>
+                    <li><strong>N</strong> = Total characters in reference</li>
+                </ul>
+
+                <h4>When to use</h4>
+                <p>CER is particularly useful for:</p>
+                <ul>
+                    <li>Detecting minor spelling errors (e.g., "metformin" vs "metforman")</li>
+                    <li>Languages without clear word boundaries</li>
+                    <li>Evaluating character-level accuracy of drug names and dosages</li>
+                </ul>
+            `
+        },
+        ter: {
+            title: 'Term Error Rate (TER)',
+            content: `
+                <h4>What it measures</h4>
+                <p>TER is a <strong>healthcare-specific metric</strong> that measures the accuracy of medical term transcription. Unlike WER, it focuses only on clinically important terms.</p>
+
+                <h4>How it works</h4>
+                <ul>
+                    <li>Extracts medical terms (drugs, conditions, procedures, dosages) from both texts</li>
+                    <li>Compares extracted terms using fuzzy matching</li>
+                    <li>Calculates error rate based on term-level substitutions, deletions, and insertions</li>
+                </ul>
+
+                <h4>Formula</h4>
+                <div class="formula">TER = (S + D + I) / Total Medical Terms</div>
+
+                <h4>Why it matters</h4>
+                <p>In healthcare, some errors are more critical than others:</p>
+                <ul>
+                    <li><strong>Drug name errors</strong>: "metformin" → "methotrexate" (critical!)</li>
+                    <li><strong>Dosage errors</strong>: "500mg" → "50mg" (dangerous)</li>
+                    <li><strong>Common word errors</strong>: "the" → "a" (less important)</li>
+                </ul>
+                <p>TER weights medical terms appropriately for clinical safety.</p>
+            `
+        },
+        ner: {
+            title: 'Named Entity Recognition (NER)',
+            content: `
+                <h4>What it measures</h4>
+                <p>NER evaluates how well medical entities (drugs, conditions, procedures) are preserved in the transcription.</p>
+
+                <h4>Metrics</h4>
+                <ul>
+                    <li><strong>Precision</strong>: Of entities in prediction, how many are correct?</li>
+                    <li><strong>Recall</strong>: Of entities in ground truth, how many were found?</li>
+                    <li><strong>F1 Score</strong>: Harmonic mean of precision and recall</li>
+                </ul>
+
+                <h4>Formulas</h4>
+                <div class="formula">Precision = TP / (TP + FP)
+Recall = TP / (TP + FN)
+F1 = 2 × (P × R) / (P + R)</div>
+
+                <h4>Additional metrics</h4>
+                <ul>
+                    <li><strong>Entity Distortion Rate</strong>: Entities that were incorrectly transcribed</li>
+                    <li><strong>Entity Omission Rate</strong>: Entities that were completely missed</li>
+                </ul>
+            `
+        },
+        crs: {
+            title: 'Context Retention Score (CRS)',
+            content: `
+                <h4>What it measures</h4>
+                <p>CRS evaluates whether the <strong>overall meaning and context</strong> is preserved, even if individual words differ.</p>
+
+                <h4>Components</h4>
+                <ul>
+                    <li><strong>Semantic Similarity</strong>: How similar is the meaning? (using sentence embeddings)</li>
+                    <li><strong>Entity Continuity</strong>: Are medical entities consistently mentioned?</li>
+                    <li><strong>Negation Consistency</strong>: Are negations preserved? ("no pain" vs "pain")</li>
+                    <li><strong>Context Drift</strong>: Does meaning shift across segments?</li>
+                </ul>
+
+                <h4>Why it matters</h4>
+                <p>Some transcription errors change meaning completely:</p>
+                <ul>
+                    <li>"Patient has <strong>no</strong> chest pain" → "Patient has chest pain" (negation flip!)</li>
+                    <li>"Discontinue medication" → "Continue medication" (critical error)</li>
+                </ul>
+                <p>CRS catches these context-changing errors that WER might miss.</p>
+            `
+        },
+        quality: {
+            title: 'Quality Score (Reference-Free)',
+            content: `
+                <h4>What it measures</h4>
+                <p>Quality Score evaluates transcription quality <strong>without needing ground truth</strong>. Useful when you only have the transcription.</p>
+
+                <h4>Core Components</h4>
+                <ul>
+                    <li><strong>Perplexity</strong>: Language model fluency (GPT-2). Lower = more natural text.</li>
+                    <li><strong>Grammar</strong>: Grammatical correctness (rule-based checker)</li>
+                    <li><strong>Entity Validity</strong>: Are medical terms spelled correctly and valid?</li>
+                    <li><strong>Coherence</strong>: Do drug-condition pairs make clinical sense?</li>
+                </ul>
+
+                <h4>Advanced Components</h4>
+                <ul>
+                    <li><strong>Contradiction Detection</strong>: Finds internal contradictions (e.g., "denies diabetes" then "diabetes medication")</li>
+                    <li><strong>Semantic Stability</strong>: Measures meaning consistency across transcript segments using embeddings</li>
+                    <li><strong>Confidence Variance</strong>: Analyzes next-word probability stability to detect garbled text</li>
+                </ul>
+
+                <h4>Recommendation</h4>
+                <ul>
+                    <li><strong>ACCEPT</strong> (≥75%): Good quality, likely accurate</li>
+                    <li><strong>REVIEW</strong> (50-75%): Manual review recommended</li>
+                    <li><strong>REJECT</strong> (&lt;50%): Poor quality, likely contains errors</li>
+                </ul>
+
+                <h4>Limitations</h4>
+                <p>Quality score can't detect factual errors - a fluent, grammatical sentence with wrong drug names will still score high. Always use with reference-based metrics when ground truth is available.</p>
+            `
+        },
+        'multi-backend': {
+            title: 'Multi-Backend Comparison',
+            content: `
+                <h4>What it does</h4>
+                <p>Compares different text matching algorithms for calculating Term Error Rate (TER).</p>
+
+                <h4>Available backends</h4>
+                <ul>
+                    <li><strong>RapidFuzz</strong>: Fast fuzzy string matching, good for handling typos</li>
+                    <li><strong>Difflib</strong>: Python's built-in sequence matcher</li>
+                    <li><strong>Basic</strong>: Simple word-by-word exact comparison</li>
+                </ul>
+
+                <h4>Why compare?</h4>
+                <p>Different algorithms may yield slightly different TER scores:</p>
+                <ul>
+                    <li>Fuzzy matching may be more forgiving of minor spelling differences</li>
+                    <li>Exact matching is stricter but may overcount errors</li>
+                </ul>
+                <p>Comparing backends helps understand the robustness of your TER measurement.</p>
+            `
+        }
+    };
+
+    function setupInfoButtons() {
+        const infoModal = document.getElementById('info-modal');
+        const infoModalTitle = document.getElementById('info-modal-title');
+        const infoModalBody = document.getElementById('info-modal-body');
+        const infoModalClose = document.getElementById('info-modal-close');
+
+        if (!infoModal) return;
+
+        // Handle info button clicks
+        document.querySelectorAll('.info-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const metric = btn.dataset.metric;
+                const info = metricInfo[metric];
+
+                if (info) {
+                    infoModalTitle.textContent = info.title;
+                    infoModalBody.innerHTML = info.content;
+                    infoModal.classList.add('active');
+                }
+            });
+        });
+
+        // Close modal
+        infoModalClose.addEventListener('click', () => {
+            infoModal.classList.remove('active');
+        });
+
+        // Close on overlay click
+        infoModal.addEventListener('click', (e) => {
+            if (e.target === infoModal) {
+                infoModal.classList.remove('active');
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && infoModal.classList.contains('active')) {
+                infoModal.classList.remove('active');
+            }
         });
     }
 
@@ -746,6 +976,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.status === 'success') {
                 predictedInput.value = data.transcript;
                 predictedInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Display speech rate analysis if available
+                if (data.speech_rate) {
+                    displaySpeechRate(data.speech_rate);
+                }
             } else {
                 throw new Error(data.error || 'Transcription failed');
             }
@@ -756,6 +991,60 @@ document.addEventListener('DOMContentLoaded', () => {
             transcribeBtn.disabled = false;
             transcribeBtn.classList.remove('loading');
         }
+    }
+
+    function displaySpeechRate(speechRate) {
+        const section = document.getElementById('speech-rate-section');
+        if (!section) return;
+
+        section.classList.remove('hidden');
+
+        // Update WPM
+        const wpmEl = document.getElementById('speech-rate-wpm');
+        if (wpmEl) wpmEl.textContent = Math.round(speechRate.words_per_minute);
+
+        // Update category
+        const categoryEl = document.getElementById('speech-rate-category');
+        if (categoryEl) {
+            const categoryLabels = {
+                'implausibly_low': 'Missing Content',
+                'slow': 'Slow',
+                'normal': 'Normal',
+                'fast': 'Fast',
+                'implausibly_high': 'Possible Hallucination'
+            };
+            categoryEl.textContent = categoryLabels[speechRate.category] || speechRate.category;
+            categoryEl.className = 'speech-rate-category ' + speechRate.category;
+        }
+
+        // Update bar
+        const barEl = document.getElementById('speech-rate-bar');
+        if (barEl) barEl.style.width = (speechRate.plausibility_score * 100) + '%';
+
+        // Update score
+        const scoreEl = document.getElementById('speech-rate-score');
+        if (scoreEl) scoreEl.textContent = Math.round(speechRate.plausibility_score * 100) + '%';
+
+        // Update stats
+        const wordsEl = document.getElementById('speech-rate-words');
+        if (wordsEl) wordsEl.textContent = speechRate.word_count;
+
+        const durationEl = document.getElementById('speech-rate-duration');
+        if (durationEl) durationEl.textContent = Math.round(speechRate.audio_duration_seconds);
+
+        // Show warning if any
+        const warningEl = document.getElementById('speech-rate-warning');
+        const warningTextEl = document.getElementById('speech-rate-warning-text');
+        if (speechRate.warning) {
+            warningEl.classList.remove('hidden');
+            warningTextEl.textContent = speechRate.warning;
+        } else {
+            warningEl.classList.add('hidden');
+        }
+
+        // Show results section
+        document.getElementById('results-placeholder').classList.add('hidden');
+        document.getElementById('results-section').classList.remove('hidden');
     }
 
     // ========================================================================
@@ -809,11 +1098,15 @@ document.addEventListener('DOMContentLoaded', () => {
     async function runSingleEvaluation(groundTruth, predicted, qualityEnabled) {
         const requestBody = {
             predicted: predicted,
+            compute_wer: groundTruth ? computeWer.checked : false,
+            compute_cer: groundTruth ? computeCer.checked : false,
             compute_ter: groundTruth ? computeTer.checked : false,
             compute_ner: groundTruth ? computeNer.checked : false,
             compute_crs: groundTruth ? computeCrs.checked : false,
             compute_quality: qualityEnabled || false,
         };
+
+        console.log('Evaluation request:', requestBody);
 
         // Only include ground_truth if provided
         if (groundTruth) {
@@ -971,6 +1264,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update header status
         updateHeaderStatus('', 'Ready');
 
+        // WER Results
+        displayWERResults(results);
+
+        // CER Results
+        displayCERResults(results);
+
         // TER Results (hide if quality-only mode)
         displayTERResults(results);
 
@@ -990,6 +1289,50 @@ document.addEventListener('DOMContentLoaded', () => {
         // On mobile, scroll to the results section
         if (window.innerWidth <= 1200) {
             resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function displayWERResults(results) {
+        const werCard = document.getElementById('wer-card');
+        const werValue = document.getElementById('wer-value');
+        const werDetails = document.getElementById('wer-details');
+
+        if (results.wer) {
+            werCard.classList.remove('hidden');
+            const werAccuracy = results.wer.word_accuracy;
+            werValue.textContent = formatPercent(results.wer.wer);
+            werValue.className = 'metric-value ' + getScoreClass(werAccuracy);
+            werDetails.innerHTML = `
+                <p><strong>Word Accuracy:</strong> ${formatPercent(werAccuracy)}</p>
+                <p><strong>Reference Words:</strong> ${results.wer.reference_words}</p>
+                <p><strong>Substitutions:</strong> ${results.wer.substitutions}</p>
+                <p><strong>Deletions:</strong> ${results.wer.deletions}</p>
+                <p><strong>Insertions:</strong> ${results.wer.insertions}</p>
+            `;
+        } else {
+            werCard.classList.add('hidden');
+        }
+    }
+
+    function displayCERResults(results) {
+        const cerCard = document.getElementById('cer-card');
+        const cerValue = document.getElementById('cer-value');
+        const cerDetails = document.getElementById('cer-details');
+
+        if (results.cer) {
+            cerCard.classList.remove('hidden');
+            const cerAccuracy = results.cer.char_accuracy;
+            cerValue.textContent = formatPercent(results.cer.cer);
+            cerValue.className = 'metric-value ' + getScoreClass(cerAccuracy);
+            cerDetails.innerHTML = `
+                <p><strong>Char Accuracy:</strong> ${formatPercent(cerAccuracy)}</p>
+                <p><strong>Reference Chars:</strong> ${results.cer.reference_chars}</p>
+                <p><strong>Substitutions:</strong> ${results.cer.substitutions}</p>
+                <p><strong>Deletions:</strong> ${results.cer.deletions}</p>
+                <p><strong>Insertions:</strong> ${results.cer.insertions}</p>
+            `;
+        } else {
+            cerCard.classList.add('hidden');
         }
     }
 
@@ -1087,6 +1430,11 @@ document.addEventListener('DOMContentLoaded', () => {
         updateQualityComponent('entity', quality.entity_validity_score, true);
         updateQualityComponent('coherence', quality.coherence_score, true);
 
+        // Update new metric scores
+        updateQualityComponent('contradiction', quality.contradiction_score, true);
+        updateQualityComponent('embedding-drift', quality.embedding_drift_score, quality.embedding_drift_available !== false);
+        updateQualityComponent('confidence', quality.confidence_variance_score, quality.confidence_variance_available !== false);
+
         // Display entities found
         displayQualityEntities(quality.entities_found || []);
 
@@ -1095,6 +1443,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Display invalid entities
         displayInvalidEntities(quality.invalid_entities || []);
+
+        // Display contradictions
+        displayContradictions(quality.contradictions || []);
+
+        // Display embedding drift points
+        displayDriftPoints(quality.drift_points || []);
+
+        // Display confidence drop points
+        displayConfidenceDrops(quality.confidence_drop_points || []);
     }
 
     function updateQualityComponent(name, score, available) {
@@ -1192,6 +1549,100 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="invalid-entity-item">
                     <span class="entity-name">${escapeHtml(entity)}</span>
                     <div class="entity-suggestion">This term was not found in the medical lexicon. It may be misspelled.</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function displayContradictions(contradictions) {
+        const contradictionSection = document.getElementById('quality-contradiction-section');
+        const contradictionList = document.getElementById('quality-contradiction-list');
+
+        if (!contradictionSection || !contradictionList) return;
+
+        if (!contradictions || contradictions.length === 0) {
+            contradictionSection.classList.add('hidden');
+            return;
+        }
+
+        contradictionSection.classList.remove('hidden');
+
+        contradictionList.innerHTML = contradictions.map(c => {
+            const severityClass = c.severity === 'critical' ? 'critical' : (c.severity === 'high' ? 'high' : 'medium');
+            return `
+                <div class="contradiction-item ${severityClass}">
+                    <div class="contradiction-header">
+                        <span class="contradiction-type">${c.type.replace('_', ' ')}</span>
+                        <span class="contradiction-severity ${severityClass}">${c.severity}</span>
+                    </div>
+                    <div class="contradiction-statements">
+                        <div class="statement-1">"${escapeHtml(c.statement1.substring(0, 100))}${c.statement1.length > 100 ? '...' : ''}"</div>
+                        <div class="vs">vs</div>
+                        <div class="statement-2">"${escapeHtml(c.statement2.substring(0, 100))}${c.statement2.length > 100 ? '...' : ''}"</div>
+                    </div>
+                    <div class="contradiction-entity">Entity: <strong>${escapeHtml(c.entity)}</strong></div>
+                    <div class="contradiction-explanation">${escapeHtml(c.explanation)}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function displayDriftPoints(driftPoints) {
+        const driftSection = document.getElementById('quality-drift-section');
+        const driftList = document.getElementById('quality-drift-list');
+
+        if (!driftSection || !driftList) return;
+
+        if (!driftPoints || driftPoints.length === 0) {
+            driftSection.classList.add('hidden');
+            return;
+        }
+
+        driftSection.classList.remove('hidden');
+
+        driftList.innerHTML = driftPoints.map(dp => {
+            const anomalyClass = dp.is_anomaly ? 'anomaly' : '';
+            return `
+                <div class="drift-item ${anomalyClass}">
+                    <div class="drift-header">
+                        <span class="drift-segment">Segment ${dp.segment_index}</span>
+                        <span class="drift-similarity">${(dp.similarity * 100).toFixed(1)}% similarity</span>
+                        ${dp.is_anomaly ? '<span class="drift-anomaly-badge">Anomaly</span>' : ''}
+                    </div>
+                    <div class="drift-segments">
+                        <div class="drift-from">From: "${escapeHtml(dp.from_segment)}"</div>
+                        <div class="drift-to">To: "${escapeHtml(dp.to_segment)}"</div>
+                    </div>
+                    ${dp.drop_magnitude > 0 ? `<div class="drift-magnitude">Similarity drop: ${(dp.drop_magnitude * 100).toFixed(1)}%</div>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function displayConfidenceDrops(dropPoints) {
+        const confidenceSection = document.getElementById('quality-confidence-section');
+        const confidenceList = document.getElementById('quality-confidence-list');
+
+        if (!confidenceSection || !confidenceList) return;
+
+        if (!dropPoints || dropPoints.length === 0) {
+            confidenceSection.classList.add('hidden');
+            return;
+        }
+
+        confidenceSection.classList.remove('hidden');
+
+        confidenceList.innerHTML = dropPoints.map(dp => {
+            const anomalyClass = dp.is_anomaly ? 'anomaly' : '';
+            return `
+                <div class="confidence-item ${anomalyClass}">
+                    <div class="confidence-header">
+                        <span class="confidence-token">"${escapeHtml(dp.token)}"</span>
+                        <span class="confidence-prob">Log prob: ${dp.log_prob.toFixed(2)}</span>
+                        ${dp.is_anomaly ? '<span class="confidence-anomaly-badge">Anomaly</span>' : ''}
+                    </div>
+                    <div class="confidence-context">Context: "${escapeHtml(dp.context)}"</div>
+                    ${dp.drop_magnitude > 0 ? `<div class="confidence-magnitude">Probability drop: ${dp.drop_magnitude.toFixed(2)}</div>` : ''}
                 </div>
             `;
         }).join('');
@@ -1583,6 +2034,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // Evaluation mode
         csv += `Mode,${lastResults.mode || 'unknown'}\n`;
 
+        if (lastResults.wer) {
+            csv += `WER,${lastResults.wer.wer}\n`;
+            csv += `WER Word Accuracy,${lastResults.wer.word_accuracy}\n`;
+            csv += `WER Substitutions,${lastResults.wer.substitutions}\n`;
+            csv += `WER Deletions,${lastResults.wer.deletions}\n`;
+            csv += `WER Insertions,${lastResults.wer.insertions}\n`;
+        }
+
+        if (lastResults.cer) {
+            csv += `CER,${lastResults.cer.cer}\n`;
+            csv += `CER Char Accuracy,${lastResults.cer.char_accuracy}\n`;
+            csv += `CER Substitutions,${lastResults.cer.substitutions}\n`;
+            csv += `CER Deletions,${lastResults.cer.deletions}\n`;
+            csv += `CER Insertions,${lastResults.cer.insertions}\n`;
+        }
+
         if (lastResults.ter) {
             csv += `TER Overall,${lastResults.ter.overall_ter}\n`;
             csv += `TER Substitutions,${lastResults.ter.substitutions}\n`;
@@ -1609,9 +2076,15 @@ document.addEventListener('DOMContentLoaded', () => {
             csv += `Quality Grammar Score,${lastResults.quality.grammar_score}\n`;
             csv += `Quality Entity Validity,${lastResults.quality.entity_validity_score}\n`;
             csv += `Quality Coherence,${lastResults.quality.coherence_score}\n`;
+            csv += `Quality Contradiction Score,${lastResults.quality.contradiction_score}\n`;
+            csv += `Quality Semantic Stability,${lastResults.quality.embedding_drift_score}\n`;
+            csv += `Quality Confidence Score,${lastResults.quality.confidence_variance_score}\n`;
             csv += `Quality Recommendation,${lastResults.quality.recommendation}\n`;
             csv += `Quality Word Count,${lastResults.quality.word_count}\n`;
             csv += `Quality Medical Entity Count,${lastResults.quality.medical_entity_count}\n`;
+            csv += `Quality Contradictions Found,${lastResults.quality.contradictions ? lastResults.quality.contradictions.length : 0}\n`;
+            csv += `Quality Drift Points,${lastResults.quality.drift_points ? lastResults.quality.drift_points.length : 0}\n`;
+            csv += `Quality Confidence Drops,${lastResults.quality.confidence_drop_points ? lastResults.quality.confidence_drop_points.length : 0}\n`;
         }
 
         if (lastResults.overall_score !== undefined) {
@@ -1677,6 +2150,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function loadNLPModels() {
+        try {
+            const response = await fetch('/api/nlp-models');
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                const availableModels = [];
+                const unavailableModels = [];
+
+                data.models.forEach(model => {
+                    const statusEl = document.getElementById(`status-${model.name}`);
+                    const checkbox = document.querySelector(`input[value="${model.name}"]`);
+
+                    if (model.available) {
+                        availableModels.push(model.name);
+                        if (statusEl) {
+                            statusEl.textContent = '✓';
+                            statusEl.className = 'model-status available';
+                        }
+                    } else {
+                        unavailableModels.push({ name: model.name, error: model.error });
+                        if (statusEl) {
+                            statusEl.textContent = '✗';
+                            statusEl.className = 'model-status unavailable';
+                            statusEl.title = model.error || 'Not installed';
+                        }
+                        if (checkbox) {
+                            checkbox.disabled = true;
+                            checkbox.checked = false;
+                            checkbox.parentElement.classList.add('disabled');
+                            checkbox.parentElement.title = model.error || 'Not installed';
+                        }
+                    }
+                });
+
+                // Update note
+                const noteEl = document.getElementById('model-availability-note');
+                if (noteEl && unavailableModels.length > 0) {
+                    const names = unavailableModels.map(m => m.name).join(', ');
+                    noteEl.innerHTML = `<small>⚠️ Some models not installed: ${names}. Install with <code>pip install medspacy</code></small>`;
+                }
+
+                console.log('Available NLP models:', availableModels);
+                if (unavailableModels.length > 0) {
+                    console.warn('Unavailable NLP models:', unavailableModels);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load NLP models:', error);
+        }
+    }
+
     // ========================================================================
     // Utilities
     // ========================================================================
@@ -1687,6 +2212,11 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsSection.classList.add('hidden');
         if (resultsPlaceholder) {
             resultsPlaceholder.classList.remove('hidden');
+        }
+        // Hide speech rate section
+        const speechRateSection = document.getElementById('speech-rate-section');
+        if (speechRateSection) {
+            speechRateSection.classList.add('hidden');
         }
         removeAudio();
         groundTruthInput.focus();

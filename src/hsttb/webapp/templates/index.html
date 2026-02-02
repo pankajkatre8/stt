@@ -256,20 +256,35 @@
                     </div>
 
                     <div class="metrics-selection">
+                        <label class="checkbox-label" id="wer-check">
+                            <input type="checkbox" id="compute-wer" checked>
+                            <span>WER</span>
+                            <small>Word Error Rate</small>
+                            <button type="button" class="info-btn" data-metric="wer">i</button>
+                        </label>
+                        <label class="checkbox-label" id="cer-check">
+                            <input type="checkbox" id="compute-cer" checked>
+                            <span>CER</span>
+                            <small>Character Error Rate</small>
+                            <button type="button" class="info-btn" data-metric="cer">i</button>
+                        </label>
                         <label class="checkbox-label" id="ter-check">
                             <input type="checkbox" id="compute-ter" checked>
                             <span>TER</span>
                             <small>Medical Term Accuracy</small>
+                            <button type="button" class="info-btn" data-metric="ter">i</button>
                         </label>
                         <label class="checkbox-label" id="ner-check">
                             <input type="checkbox" id="compute-ner" checked>
                             <span>NER</span>
                             <small>Entity Recognition</small>
+                            <button type="button" class="info-btn" data-metric="ner">i</button>
                         </label>
                         <label class="checkbox-label" id="crs-check">
                             <input type="checkbox" id="compute-crs" checked>
                             <span>CRS</span>
                             <small>Context Retention</small>
+                            <button type="button" class="info-btn" data-metric="crs">i</button>
                         </label>
                     </div>
 
@@ -280,15 +295,17 @@
                     </div>
 
                     <div class="metrics-selection advanced-metrics">
-                        <label class="checkbox-label highlight quality-check" id="quality-check">
-                            <input type="checkbox" id="compute-quality">
+                        <label class="checkbox-label highlight quality-check checked" id="quality-check">
+                            <input type="checkbox" id="compute-quality" checked>
                             <span>Quality Score</span>
                             <small>Fluency & Grammar</small>
+                            <button type="button" class="info-btn" data-metric="quality">i</button>
                         </label>
                         <label class="checkbox-label highlight" id="multi-backend-check">
                             <input type="checkbox" id="multi-backend">
                             <span>Multi-Backend</span>
                             <small>Compare TER Algorithms</small>
+                            <button type="button" class="info-btn" data-metric="multi-backend">i</button>
                         </label>
                         <label class="checkbox-label highlight" id="multi-nlp-check">
                             <input type="checkbox" id="multi-nlp">
@@ -328,19 +345,13 @@
                         <p>Compare how different AI models extract medical terms (drugs, conditions, procedures):</p>
                         <h3>Select Models</h3>
                         <div class="nlp-model-grid" id="nlp-model-grid">
-                            <label class="nlp-model-checkbox" title="Pattern-based extraction using rules. Fast but limited.">
-                                <input type="checkbox" value="mock" checked>
-                                <div class="model-info">
-                                    <span class="model-name">Mock (Pattern)</span>
-                                    <span class="model-desc">Rule-based, fast</span>
-                                </div>
-                            </label>
                             <label class="nlp-model-checkbox" title="SciSpaCy BC5CDR model trained on biomedical literature.">
                                 <input type="checkbox" value="scispacy" checked>
                                 <div class="model-info">
                                     <span class="model-name">scispaCy</span>
                                     <span class="model-desc">Biomedical NER</span>
                                 </div>
+                                <span class="model-status" id="status-scispacy"></span>
                             </label>
                             <label class="nlp-model-checkbox" title="HuggingFace BioBERT-based model for biomedical text.">
                                 <input type="checkbox" value="biomedical" checked>
@@ -348,15 +359,18 @@
                                     <span class="model-name">Biomedical</span>
                                     <span class="model-desc">BioBERT model</span>
                                 </div>
+                                <span class="model-status" id="status-biomedical"></span>
                             </label>
                             <label class="nlp-model-checkbox" title="MedSpaCy with clinical context and negation detection.">
-                                <input type="checkbox" value="medspacy">
+                                <input type="checkbox" value="medspacy" checked>
                                 <div class="model-info">
                                     <span class="model-name">MedSpaCy</span>
-                                    <span class="model-desc">Clinical notes</span>
+                                    <span class="model-desc">Clinical NLP</span>
                                 </div>
+                                <span class="model-status" id="status-medspacy"></span>
                             </label>
                         </div>
+                        <p class="model-note" id="model-availability-note"></p>
                     </div>
 
                     <div class="button-group">
@@ -419,6 +433,24 @@
 
                     <!-- Metrics Grid -->
                     <div class="metrics-grid">
+                        <div class="metric-card" id="wer-card">
+                            <h3>WER <span class="metric-badge">Word Error Rate</span></h3>
+                            <div class="metric-value" id="wer-value">--</div>
+                            <div class="metric-details" id="wer-details"></div>
+                            <div class="metric-explanation">
+                                Standard word-level error rate. Measures word substitutions, deletions, and insertions compared to ground truth.
+                            </div>
+                        </div>
+
+                        <div class="metric-card" id="cer-card">
+                            <h3>CER <span class="metric-badge">Character Error Rate</span></h3>
+                            <div class="metric-value" id="cer-value">--</div>
+                            <div class="metric-details" id="cer-details"></div>
+                            <div class="metric-explanation">
+                                Character-level error rate. More granular than WER, useful for detecting spelling errors and minor typos.
+                            </div>
+                        </div>
+
                         <div class="metric-card" id="ter-card">
                             <h3>TER <span class="metric-badge">Term Error Rate</span></h3>
                             <div class="metric-value" id="ter-value">--</div>
@@ -444,6 +476,49 @@
                             <div class="metric-explanation" id="crs-explanation">
                                 Measures if the overall meaning was preserved. Even if individual words are correct, context errors (like negation flips) can change the clinical meaning.
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Speech Rate Section (shown after transcription) -->
+                    <div id="speech-rate-section" class="speech-rate-section hidden">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            Speech Rate Analysis
+                        </h3>
+                        <p class="section-desc">Validates that the transcript word count is plausible for the audio duration.</p>
+
+                        <div class="speech-rate-display">
+                            <div class="speech-rate-main">
+                                <span class="speech-rate-value" id="speech-rate-wpm">--</span>
+                                <span class="speech-rate-unit">words/min</span>
+                            </div>
+                            <div class="speech-rate-category" id="speech-rate-category">--</div>
+                        </div>
+
+                        <div class="speech-rate-details">
+                            <div class="speech-rate-detail">
+                                <span class="detail-label">Plausibility</span>
+                                <div class="speech-rate-bar">
+                                    <div class="speech-rate-bar-fill" id="speech-rate-bar" style="width: 0%"></div>
+                                </div>
+                                <span class="detail-value" id="speech-rate-score">--</span>
+                            </div>
+                            <div class="speech-rate-stats">
+                                <span><strong id="speech-rate-words">--</strong> words</span>
+                                <span><strong id="speech-rate-duration">--</strong> seconds</span>
+                            </div>
+                        </div>
+
+                        <div class="speech-rate-warning hidden" id="speech-rate-warning">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                            <span id="speech-rate-warning-text"></span>
                         </div>
                     </div>
 
@@ -509,6 +584,39 @@
                                 </div>
                                 <small class="component-hint">Drug-condition pairs make clinical sense</small>
                             </div>
+
+                            <div class="quality-component">
+                                <div class="component-header">
+                                    <span class="component-name">Contradiction</span>
+                                    <span class="component-value" id="quality-contradiction-value">--</span>
+                                </div>
+                                <div class="component-bar">
+                                    <div class="component-bar-fill" id="quality-contradiction-bar" style="width: 0%"></div>
+                                </div>
+                                <small class="component-hint">No internal contradictions detected</small>
+                            </div>
+
+                            <div class="quality-component">
+                                <div class="component-header">
+                                    <span class="component-name">Semantic Stability</span>
+                                    <span class="component-value" id="quality-embedding-drift-value">--</span>
+                                </div>
+                                <div class="component-bar">
+                                    <div class="component-bar-fill" id="quality-embedding-drift-bar" style="width: 0%"></div>
+                                </div>
+                                <small class="component-hint">Meaning consistency across segments</small>
+                            </div>
+
+                            <div class="quality-component">
+                                <div class="component-header">
+                                    <span class="component-name">Confidence</span>
+                                    <span class="component-value" id="quality-confidence-value">--</span>
+                                </div>
+                                <div class="component-bar">
+                                    <div class="component-bar-fill" id="quality-confidence-bar" style="width: 0%"></div>
+                                </div>
+                                <small class="component-hint">Next-word probability stability</small>
+                            </div>
                         </div>
 
                         <!-- Entities Found -->
@@ -527,6 +635,46 @@
                         <div class="quality-invalid-entities hidden" id="quality-invalid-section">
                             <h4>Invalid/Misspelled Entities</h4>
                             <div class="invalid-entities-list" id="quality-invalid-list"></div>
+                        </div>
+
+                        <!-- Contradictions -->
+                        <div class="quality-contradictions hidden" id="quality-contradiction-section">
+                            <h4>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                    <line x1="12" y1="9" x2="12" y2="13"/>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                </svg>
+                                Internal Contradictions
+                            </h4>
+                            <p class="section-hint">Conflicting statements detected within the transcript:</p>
+                            <div class="contradictions-list" id="quality-contradiction-list"></div>
+                        </div>
+
+                        <!-- Embedding Drift Points -->
+                        <div class="quality-drift hidden" id="quality-drift-section">
+                            <h4>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                                </svg>
+                                Semantic Drift Points
+                            </h4>
+                            <p class="section-hint">Locations where meaning significantly changed between segments:</p>
+                            <div class="drift-list" id="quality-drift-list"></div>
+                        </div>
+
+                        <!-- Confidence Drop Points -->
+                        <div class="quality-confidence hidden" id="quality-confidence-section">
+                            <h4>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <path d="M18 20V10"/>
+                                    <path d="M12 20V4"/>
+                                    <path d="M6 20v-6"/>
+                                </svg>
+                                Low-Confidence Tokens
+                            </h4>
+                            <p class="section-hint">Tokens with unusually low language model confidence:</p>
+                            <div class="confidence-list" id="quality-confidence-list"></div>
                         </div>
                     </div>
 
@@ -611,6 +759,18 @@
         <footer>
             <p>HSTTB - Healthcare Streaming STT Benchmarking Framework</p>
         </footer>
+    </div>
+
+    <!-- Info Modal -->
+    <div class="info-modal-overlay" id="info-modal">
+        <div class="info-modal">
+            <div class="info-modal-header">
+                <h3 id="info-modal-title">Metric Info</h3>
+                <button class="info-modal-close" id="info-modal-close">&times;</button>
+            </div>
+            <div class="info-modal-body" id="info-modal-body">
+            </div>
+        </div>
     </div>
 
     <script src="/static/app.js"></script>

@@ -247,10 +247,15 @@ class TEREngine:
         if hasattr(self.lexicon, "extract_terms"):
             entries = self.lexicon.extract_terms(text)
             terms = []
+            text_lower = text.lower()
             for entry in entries:
                 # Find span in text
-                start = text.lower().find(entry.term.lower())
-                end = start + len(entry.term) if start >= 0 else 0
+                term_lower = entry.term.lower()
+                start = text_lower.find(term_lower)
+                if start < 0:
+                    # Term not found in text, skip
+                    continue
+                end = start + len(entry.term)
                 terms.append(
                     MedicalTerm(
                         text=entry.term,

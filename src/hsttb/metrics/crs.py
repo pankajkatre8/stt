@@ -193,22 +193,35 @@ class CRSEngine:
         Returns:
             Tuple of (consistency_score, flip_count).
         """
+        import re
         from hsttb.nlp.negation import NegationDetector
 
         if not self.config.track_negation:
             return 1.0, 0
 
         detector = NegationDetector()
-        total_entities = 0
+        total_checks = 0
         consistent = 0
         flips = 0
 
+        # Negation cues to check (including contractions)
+        negation_cues = [
+            r'\bno\b', r'\bnot\b', r'\bdenies?\b', r'\bdenied\b',
+            r'\bwithout\b', r'\bnegative\b', r'\bnone\b', r'\bnever\b',
+            r'\babsence\b', r'\brule[ds]?\s*out\b',
+            r"\bdon'?t\b", r"\bdoesn'?t\b", r"\bdidn'?t\b", r"\bwon'?t\b",
+            r"\bcan'?t\b", r"\bcouldn'?t\b", r"\bwouldn'?t\b", r"\bhasn'?t\b",
+            r"\bhaven'?t\b", r"\bisn'?t\b", r"\baren'?t\b", r"\bwasn'?t\b"
+        ]
+        negation_pattern = re.compile('|'.join(negation_cues), re.IGNORECASE)
+
         for gt_text, pred_text, entities in zip(gt_segments, pred_segments, gt_entities):
+            # Check entity-based negation consistency
             for entity in entities:
                 if not isinstance(entity, Entity):
                     continue
 
-                total_entities += 1
+                total_checks += 1
                 result = detector.check_negation_consistency(
                     gt_text, pred_text, entity.text
                 )
@@ -218,7 +231,27 @@ class CRSEngine:
                 else:
                     flips += 1
 
-        score = consistent / total_entities if total_entities > 0 else 1.0
+            # Fallback: Check for negation pattern mismatches even without entities
+            # This catches cases like "denies chest pain" vs "has chest pain"
+            gt_has_negation = bool(negation_pattern.search(gt_text))
+            pred_has_negation = bool(negation_pattern.search(pred_text))
+
+            if gt_has_negation != pred_has_negation:
+                # Negation status changed between GT and prediction
+                total_checks += 1
+                flips += 1
+            elif gt_has_negation and pred_has_negation:
+                # Both have negation - check if they negate similar things
+                total_checks += 1
+                consistent += 1
+            elif not gt_has_negation and not pred_has_negation:
+                # Neither has negation - consistent
+                # Only count if we haven't checked entities
+                if len([e for e in entities if isinstance(e, Entity)]) == 0:
+                    total_checks += 1
+                    consistent += 1
+
+        score = consistent / total_checks if total_checks > 0 else 1.0
         return score, flips
 
     def _build_segment_scores(

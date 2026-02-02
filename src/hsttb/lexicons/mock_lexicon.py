@@ -125,6 +125,47 @@ class MockMedicalLexicon(MedicalLexicon):
         normalized = self.normalize_term(term)
         return self._entries.get(normalized)
 
+    def extract_terms(self, text: str) -> list[LexiconEntry]:
+        """
+        Extract all known medical terms from text.
+
+        Searches the text for all terms in the lexicon.
+
+        Args:
+            text: Text to search.
+
+        Returns:
+            List of LexiconEntry for all found terms.
+        """
+        found_entries: list[LexiconEntry] = []
+        text_lower = text.lower()
+        seen_terms: set[str] = set()
+
+        # Get unique entries (avoid duplicates from synonyms)
+        unique_entries: dict[str, LexiconEntry] = {}
+        for entry in self._entries.values():
+            if entry.normalized not in unique_entries:
+                unique_entries[entry.normalized] = entry
+
+        # Search for each term in the text
+        for entry in unique_entries.values():
+            # Check main term
+            term_lower = entry.term.lower()
+            if term_lower in text_lower and term_lower not in seen_terms:
+                found_entries.append(entry)
+                seen_terms.add(term_lower)
+                continue
+
+            # Check synonyms
+            for synonym in entry.synonyms:
+                syn_lower = synonym.lower()
+                if syn_lower in text_lower and entry.normalized not in seen_terms:
+                    found_entries.append(entry)
+                    seen_terms.add(entry.normalized)
+                    break
+
+        return found_entries
+
     def contains(self, term: str) -> bool:
         """
         Check if term exists in lexicon.
