@@ -54,7 +54,7 @@ class PerplexityScorer:
     # Singleton instances per model
     _instances: dict[str, PerplexityScorer] = {}
 
-    def __new__(cls, model_name: str = "gpt2") -> PerplexityScorer:
+    def __new__(cls, model_name: str = "gpt2", **kwargs: Any) -> PerplexityScorer:
         """Return singleton instance per model."""
         if model_name not in cls._instances:
             instance = super().__new__(cls)
