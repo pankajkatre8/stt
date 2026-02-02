@@ -93,6 +93,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Supports async and sync loading
   - Embedded fallback data for offline use
 
+#### Docker & Startup Configuration
+- **startup.py** (`scripts/startup.py`)
+  - Checks lexicon database status on boot
+  - Auto-initializes if database empty or stale
+  - Supports --refresh flag for forced API fetch
+  - Supports --check-only for status check without server start
+
+- **dev.sh** (`scripts/dev.sh`)
+  - Local development setup script
+  - Creates virtual environment if needed
+  - Installs dependencies including httpx
+  - Runs startup with auto-reload
+
+- **Dockerfile** - Updated
+  - Added httpx for API fetching
+  - Added curl for health checks
+  - Runs startup.py instead of direct uvicorn
+  - Persists lexicon in /home/hsttb/.hsttb
+
+- **docker-compose.yml** - Updated
+  - Added hsttb-lexicon volume for database persistence
+  - Added hsttb-init-lexicon service (profile: init)
+  - Added hsttb-refresh-lexicon service (profile: refresh)
+  - Increased health check start_period for lexicon init
+
 #### Documentation
 - **explanation.md** - Comprehensive metrics documentation
   - Detailed explanation of each metric (WER, CER, TER, NER, CRS)

@@ -155,6 +155,12 @@ Healthcare Streaming STT Benchmarking Framework - a model-agnostic evaluation sy
 - [x] `src/hsttb/lexicons/sqlite_lexicon.py` - SQLite-backed lexicon storage
 - [x] `src/hsttb/lexicons/dynamic_lexicon.py` - API-based lexicon with caching
 
+**Scripts & Docker (Complete):**
+- [x] `scripts/startup.py` - Startup script with lexicon initialization
+- [x] `scripts/dev.sh` - Local development setup script
+- [x] `Dockerfile` - Updated with httpx and startup script
+- [x] `docker-compose.yml` - Updated with lexicon volume persistence
+
 **Tests (Previous Phases):**
 - [x] `tests/unit/core/test_types.py` - 36 type tests
 - [x] `tests/test_adapters.py` - 30 adapter tests
