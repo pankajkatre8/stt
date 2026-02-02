@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HSTTB - Healthcare STT Benchmarking</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="/static/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -388,8 +389,28 @@
                 </section>
             </div>
 
-            <!-- Right Panel - Results -->
+            <!-- Right Panel - Results & History -->
             <div class="results-panel">
+                <!-- Tab Navigation -->
+                <div class="results-tabs">
+                    <button class="results-tab active" data-tab="results">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <path d="M9 17V7m0 10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m0 10a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m0 10V7"/>
+                        </svg>
+                        Results
+                    </button>
+                    <button class="results-tab" data-tab="history">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        History
+                        <span class="history-count" id="history-count"></span>
+                    </button>
+                </div>
+
+                <!-- Tab Content: Results -->
+                <div id="results-tab-content" class="tab-content active">
                 <div id="results-placeholder" class="results-placeholder">
                     <div class="placeholder-content">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="64" height="64">
@@ -799,6 +820,60 @@
                         </div>
                     </div>
 
+                    <!-- Transcription Error Detection (NEW) -->
+                    <div id="transcription-error-section" class="transcription-error-section hidden">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 8v4l2 2"/>
+                            </svg>
+                            Transcription Error Detection
+                            <span class="quality-badge" id="transcription-error-score">--</span>
+                        </h3>
+                        <p class="section-desc">Intelligent detection of potential transcription errors including misspelled medical terms and inconsistent spelling within the same text.</p>
+
+                        <!-- Potential Errors (Misspellings) -->
+                        <div class="potential-errors hidden" id="potential-errors-section">
+                            <h4>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                    <path d="M2 17l10 5 10-5"/>
+                                    <path d="M2 12l10 5 10-5"/>
+                                </svg>
+                                Potential Misspellings
+                            </h4>
+                            <p class="section-hint">Terms that may be misspelled medical words:</p>
+                            <div class="potential-errors-list" id="potential-errors-list"></div>
+                        </div>
+
+                        <!-- Spelling Inconsistencies -->
+                        <div class="inconsistencies hidden" id="inconsistencies-section">
+                            <h4>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                                    <line x1="12" y1="9" x2="12" y2="13"/>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                </svg>
+                                Spelling Inconsistencies
+                            </h4>
+                            <p class="section-hint">Same term spelled differently within the text:</p>
+                            <div class="inconsistencies-list" id="inconsistencies-list"></div>
+                        </div>
+
+                        <!-- Known Terms Found -->
+                        <div class="known-terms hidden" id="known-terms-section">
+                            <h4>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                                    <polyline points="22 4 12 14.01 9 11.01"/>
+                                </svg>
+                                Recognized Medical Terms
+                            </h4>
+                            <p class="section-hint">Valid medical terms found in the transcription:</p>
+                            <div class="known-terms-list" id="known-terms-list"></div>
+                        </div>
+                    </div>
+
                     <!-- Multi-NLP Comparison -->
                     <div id="multi-nlp-section" class="multi-nlp-section hidden">
                         <h3>NLP Model Comparison</h3>
@@ -874,6 +949,52 @@
                         </div>
                     </div>
                 </section>
+                </div>
+
+                <!-- Tab Content: History -->
+                <div id="history-tab-content" class="tab-content">
+                    <div class="history-header">
+                        <h3>Evaluation History</h3>
+                        <div class="history-controls">
+                            <input type="text" id="history-search" placeholder="Search evaluations..." class="history-search">
+                            <button id="history-refresh" class="btn-icon" title="Refresh">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <polyline points="23 4 23 10 17 10"/>
+                                    <polyline points="1 20 1 14 7 14"/>
+                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                                </svg>
+                            </button>
+                            <button id="history-clear" class="btn-icon btn-danger" title="Clear All">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="history-stats" id="history-stats">
+                        <div class="stat-item">
+                            <span class="stat-value" id="history-total">0</span>
+                            <span class="stat-label">Total</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="history-avg-score">--</span>
+                            <span class="stat-label">Avg Score</span>
+                        </div>
+                    </div>
+
+                    <div class="history-list" id="history-list">
+                        <div class="history-empty">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            <p>No evaluation history yet</p>
+                            <span>Evaluations will appear here after you run them</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
 

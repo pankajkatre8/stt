@@ -1285,6 +1285,9 @@ F1 = 2 × (P × R) / (P + R)</div>
         // Clinical Risk Results (NEW - prioritizes clinical safety)
         displayClinicalRiskResults(results);
 
+        // Transcription Error Detection (NEW - potential misspellings)
+        displayTranscriptionErrorResults(results);
+
         // Errors
         displayErrors(results);
 
@@ -1822,6 +1825,116 @@ F1 = 2 × (P × R) / (P + R)</div>
                 </div>
             `;
         }).join('');
+    }
+
+    function displayTranscriptionErrorResults(results) {
+        const errorSection = document.getElementById('transcription-error-section');
+
+        if (!errorSection) return;
+
+        if (!results.quality || results.quality.transcription_error_score === undefined) {
+            errorSection.classList.add('hidden');
+            return;
+        }
+
+        const quality = results.quality;
+        const hasErrors = (quality.potential_transcription_errors && quality.potential_transcription_errors.length > 0) ||
+                          (quality.spelling_inconsistencies && quality.spelling_inconsistencies.length > 0);
+
+        // Only show section if there are detected issues or terms found
+        if (!hasErrors && (!quality.known_terms_found || quality.known_terms_found.length === 0)) {
+            errorSection.classList.add('hidden');
+            return;
+        }
+
+        errorSection.classList.remove('hidden');
+
+        // Update error score
+        const scoreValue = document.getElementById('transcription-error-score');
+        if (scoreValue) {
+            scoreValue.textContent = formatPercent(quality.transcription_error_score);
+            scoreValue.className = 'transcription-error-score-value ' + getScoreClass(quality.transcription_error_score);
+        }
+
+        // Display potential transcription errors (misspellings)
+        const errorsSection = document.getElementById('potential-errors-section');
+        const errorsList = document.getElementById('potential-errors-list');
+
+        if (errorsSection && errorsList) {
+            if (quality.potential_transcription_errors && quality.potential_transcription_errors.length > 0) {
+                errorsSection.classList.remove('hidden');
+
+                errorsList.innerHTML = quality.potential_transcription_errors.map(err => {
+                    const confidence = err.confidence || err.similarity || 0;
+                    const confidenceClass = confidence >= 0.8 ? 'high' : (confidence >= 0.6 ? 'medium' : 'low');
+                    return `
+                        <div class="transcription-error-item">
+                            <div class="error-found">
+                                <span class="error-label">Found:</span>
+                                <span class="error-term found">"${escapeHtml(err.found_term)}"</span>
+                            </div>
+                            <span class="error-arrow">→</span>
+                            <div class="error-suggested">
+                                <span class="error-label">Suggested:</span>
+                                <span class="error-term suggested">"${escapeHtml(err.suggested_term)}"</span>
+                            </div>
+                            <span class="error-confidence ${confidenceClass}">${Math.round(confidence * 100)}%</span>
+                            <span class="error-type">${err.match_type || 'fuzzy'}</span>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                errorsSection.classList.add('hidden');
+            }
+        }
+
+        // Display spelling inconsistencies
+        const inconsistenciesSection = document.getElementById('inconsistencies-section');
+        const inconsistenciesList = document.getElementById('inconsistencies-list');
+
+        if (inconsistenciesSection && inconsistenciesList) {
+            if (quality.spelling_inconsistencies && quality.spelling_inconsistencies.length > 0) {
+                inconsistenciesSection.classList.remove('hidden');
+
+                inconsistenciesList.innerHTML = quality.spelling_inconsistencies.map(inc => {
+                    return `
+                        <div class="inconsistency-item">
+                            <span class="inconsistency-icon">⚠️</span>
+                            <span class="inconsistency-text">
+                                "<strong>${escapeHtml(inc.found)}</strong>" appears but
+                                "<strong>${escapeHtml(inc.expected)}</strong>" also found in text
+                                (${Math.round(inc.similarity * 100)}% similar)
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                inconsistenciesSection.classList.add('hidden');
+            }
+        }
+
+        // Display known terms found
+        const knownTermsSection = document.getElementById('known-terms-section');
+        const knownTermsList = document.getElementById('known-terms-list');
+
+        if (knownTermsSection && knownTermsList) {
+            if (quality.known_terms_found && quality.known_terms_found.length > 0) {
+                knownTermsSection.classList.remove('hidden');
+
+                knownTermsList.innerHTML = quality.known_terms_found.map(kt => {
+                    const category = kt.category || 'term';
+                    const categoryClass = category === 'drug' ? 'drug' : (category === 'diagnosis' ? 'diagnosis' : 'other');
+                    return `
+                        <span class="known-term-badge ${categoryClass}">
+                            ${escapeHtml(kt.term)}
+                            <small>${category}</small>
+                        </span>
+                    `;
+                }).join('');
+            } else {
+                knownTermsSection.classList.add('hidden');
+            }
+        }
     }
 
     function displayMultiNLPResults(results) {
@@ -2419,4 +2532,264 @@ F1 = 2 × (P × R) / (P + R)</div>
         div.textContent = text;
         return div.innerHTML;
     }
+
+    // ========================================================================
+    // Evaluation History
+    // ========================================================================
+
+    const resultsTabs = document.querySelectorAll('.results-tab');
+    const resultsTabContent = document.getElementById('results-tab-content');
+    const evalHistoryTabContent = document.getElementById('history-tab-content');
+    const evalHistoryList = document.getElementById('history-list');
+    const evalHistorySearch = document.getElementById('history-search');
+    const evalHistoryRefresh = document.getElementById('history-refresh');
+    const evalHistoryClear = document.getElementById('history-clear');
+    const evalHistoryCountBadge = document.getElementById('history-count');
+    const evalHistoryTotal = document.getElementById('history-total');
+    const evalHistoryAvgScore = document.getElementById('history-avg-score');
+
+    // Tab switching
+    resultsTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.dataset.tab;
+
+            // Update active tab
+            resultsTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            // Show/hide content
+            if (tabName === 'results') {
+                resultsTabContent.classList.add('active');
+                evalHistoryTabContent.classList.remove('active');
+            } else {
+                resultsTabContent.classList.remove('active');
+                evalHistoryTabContent.classList.add('active');
+                loadEvalHistory();
+            }
+        });
+    });
+
+    // Evaluation History functions
+    async function loadEvalHistory(query = '') {
+        try {
+            let url = '/api/history?limit=50';
+            if (query) {
+                url = `/api/history/search?q=${encodeURIComponent(query)}&limit=50`;
+            }
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                renderEvalHistoryList(data.entries);
+
+                // Update stats
+                if (data.stats) {
+                    if (evalHistoryTotal) evalHistoryTotal.textContent = data.stats.total_entries || 0;
+                    if (evalHistoryAvgScore) evalHistoryAvgScore.textContent = data.stats.average_score
+                        ? formatPercent(data.stats.average_score)
+                        : '--';
+
+                    // Update tab badge
+                    if (evalHistoryCountBadge) {
+                        if (data.stats.total_entries > 0) {
+                            evalHistoryCountBadge.textContent = data.stats.total_entries;
+                            evalHistoryCountBadge.classList.add('visible');
+                        } else {
+                            evalHistoryCountBadge.classList.remove('visible');
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load evaluation history:', error);
+        }
+    }
+
+    function renderEvalHistoryList(entries) {
+        if (!evalHistoryList) return;
+
+        if (!entries || entries.length === 0) {
+            evalHistoryList.innerHTML = `
+                <div class="history-empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    <p>No evaluation history yet</p>
+                    <span>Evaluations will appear here after you run them</span>
+                </div>
+            `;
+            return;
+        }
+
+        evalHistoryList.innerHTML = entries.map(entry => {
+            const score = entry.overall_score;
+            const scoreClass = score !== null ? getScoreClass(score) : '';
+            const scoreDisplay = score !== null ? formatPercent(score) : '--';
+            const timestamp = new Date(entry.timestamp).toLocaleString();
+            const previewText = entry.predicted.substring(0, 100) + (entry.predicted.length > 100 ? '...' : '');
+            const modeIcon = entry.mode === 'quality_only' ? '📊' : (entry.mode === 'combined' ? '🔄' : '📝');
+            const modeName = entry.mode === 'quality_only' ? 'Quality Only' : (entry.mode === 'combined' ? 'Combined' : 'Reference');
+
+            return `
+                <div class="history-item" data-entry-id="${entry.id}">
+                    <div class="history-item-header">
+                        <div class="history-item-score ${scoreClass}">${scoreDisplay}</div>
+                        <div class="history-item-meta">
+                            <span class="history-item-mode" title="${modeName}">${modeIcon}</span>
+                            <span class="history-item-time">${timestamp}</span>
+                        </div>
+                        <div class="history-item-actions">
+                            <button class="btn-icon history-view" title="View Details" data-id="${entry.id}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                            </button>
+                            <button class="btn-icon history-load" title="Load to Editor" data-id="${entry.id}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <path d="M12 3v12"/>
+                                    <path d="M17 8l-5 5-5-5"/>
+                                    <path d="M3 17v4h18v-4"/>
+                                </svg>
+                            </button>
+                            <button class="btn-icon btn-danger history-delete" title="Delete" data-id="${entry.id}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+                                    <line x1="10" y1="11" x2="10" y2="17"/>
+                                    <line x1="14" y1="11" x2="14" y2="17"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="history-item-preview">${escapeHtml(previewText)}</div>
+                    ${entry.label ? `<div class="history-item-label">${escapeHtml(entry.label)}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+
+        // Attach event listeners
+        evalHistoryList.querySelectorAll('.history-view').forEach(btn => {
+            btn.addEventListener('click', () => viewEvalHistoryEntry(btn.dataset.id));
+        });
+        evalHistoryList.querySelectorAll('.history-load').forEach(btn => {
+            btn.addEventListener('click', () => loadEvalHistoryEntry(btn.dataset.id));
+        });
+        evalHistoryList.querySelectorAll('.history-delete').forEach(btn => {
+            btn.addEventListener('click', () => deleteEvalHistoryEntry(btn.dataset.id));
+        });
+    }
+
+    async function viewEvalHistoryEntry(entryId) {
+        try {
+            const response = await fetch(`/api/history/${entryId}`);
+            const data = await response.json();
+
+            if (data.status === 'success' && data.entry) {
+                const entry = data.entry;
+
+                // Display results from history
+                if (entry.results) {
+                    displayResults(entry.results);
+
+                    // Switch to results tab
+                    resultsTabs.forEach(t => t.classList.remove('active'));
+                    document.querySelector('[data-tab="results"]').classList.add('active');
+                    resultsTabContent.classList.add('active');
+                    evalHistoryTabContent.classList.remove('active');
+                }
+            }
+        } catch (error) {
+            console.error('Failed to view history entry:', error);
+        }
+    }
+
+    async function loadEvalHistoryEntry(entryId) {
+        try {
+            const response = await fetch(`/api/history/${entryId}`);
+            const data = await response.json();
+
+            if (data.status === 'success' && data.entry) {
+                const entry = data.entry;
+
+                // Load text into editors
+                if (entry.ground_truth) {
+                    groundTruthInput.value = entry.ground_truth;
+                }
+                predictedInput.value = entry.predicted;
+
+                // Switch to results tab
+                resultsTabs.forEach(t => t.classList.remove('active'));
+                document.querySelector('[data-tab="results"]').classList.add('active');
+                resultsTabContent.classList.add('active');
+                evalHistoryTabContent.classList.remove('active');
+            }
+        } catch (error) {
+            console.error('Failed to load history entry:', error);
+        }
+    }
+
+    async function deleteEvalHistoryEntry(entryId) {
+        if (!confirm('Delete this evaluation from history?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/history/${entryId}`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                loadEvalHistory(evalHistorySearch ? evalHistorySearch.value : '');
+            }
+        } catch (error) {
+            console.error('Failed to delete history entry:', error);
+        }
+    }
+
+    // Evaluation History search
+    let evalSearchTimeout;
+    if (evalHistorySearch) {
+        evalHistorySearch.addEventListener('input', () => {
+            clearTimeout(evalSearchTimeout);
+            evalSearchTimeout = setTimeout(() => {
+                loadEvalHistory(evalHistorySearch.value);
+            }, 300);
+        });
+    }
+
+    // Evaluation History refresh
+    if (evalHistoryRefresh) {
+        evalHistoryRefresh.addEventListener('click', () => {
+            loadEvalHistory(evalHistorySearch ? evalHistorySearch.value : '');
+        });
+    }
+
+    // Evaluation History clear
+    if (evalHistoryClear) {
+        evalHistoryClear.addEventListener('click', async () => {
+            if (!confirm('Clear all evaluation history? This cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/history', {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    loadEvalHistory();
+                }
+            } catch (error) {
+                console.error('Failed to clear history:', error);
+            }
+        });
+    }
+
+    // Load evaluation history count on page load
+    loadEvalHistory();
 });

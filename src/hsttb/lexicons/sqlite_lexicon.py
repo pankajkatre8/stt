@@ -280,7 +280,7 @@ class SQLiteMedicalLexicon(MedicalLexicon):
                             synonyms=drug.brand_names,
                         )
 
-                    # Insert conditions
+                    # Insert conditions from API
                     for condition in conditions:
                         self._insert_term(
                             conn,
@@ -291,15 +291,25 @@ class SQLiteMedicalLexicon(MedicalLexicon):
                             synonyms=condition.synonyms,
                         )
 
+                    # If no conditions from API, load embedded conditions
+                    if len(conditions) == 0:
+                        logger.info("No conditions from API, loading embedded conditions...")
+                        embedded_conditions = self._get_embedded_conditions()
+                        for term, code, category, source, synonyms in embedded_conditions:
+                            self._insert_term(conn, term, code, category, source, synonyms)
+                        condition_count = len(embedded_conditions)
+                    else:
+                        condition_count = len(conditions)
+
                     conn.commit()
 
                 # Update metadata
                 self._set_metadata("last_refresh", datetime.now().isoformat())
                 self._set_metadata("drug_count", str(len(drugs)))
-                self._set_metadata("condition_count", str(len(conditions)))
+                self._set_metadata("condition_count", str(condition_count))
 
                 logger.info(
-                    f"Stored {len(drugs)} drugs and {len(conditions)} conditions"
+                    f"Stored {len(drugs)} drugs and {condition_count} conditions"
                 )
 
             finally:
@@ -353,26 +363,189 @@ class SQLiteMedicalLexicon(MedicalLexicon):
         """Load embedded minimal dataset as fallback."""
         logger.info("Loading embedded medical terms...")
 
-        # Import from dynamic lexicon which has embedded data
-        from hsttb.lexicons.dynamic_lexicon import DynamicMedicalLexicon
-
-        temp_lexicon = DynamicMedicalLexicon()
-        temp_lexicon._load_embedded()
+        drug_count = 0
+        condition_count = 0
 
         with self._get_connection() as conn:
-            for entry in temp_lexicon._entries.values():
-                self._insert_term(
-                    conn,
-                    term=entry.term,
-                    code=entry.code,
-                    category=entry.category,
-                    source=entry.source.value,
-                    synonyms=list(entry.synonyms),
-                )
+            # Common drugs (top 50 most prescribed in US)
+            drugs = [
+                ("metformin", "6809", "drug", "RxNorm", ["Glucophage"]),
+                ("lisinopril", "29046", "drug", "RxNorm", ["Prinivil", "Zestril"]),
+                ("atorvastatin", "83367", "drug", "RxNorm", ["Lipitor"]),
+                ("levothyroxine", "10582", "drug", "RxNorm", ["Synthroid", "Levoxyl"]),
+                ("amlodipine", "17767", "drug", "RxNorm", ["Norvasc"]),
+                ("metoprolol", "6918", "drug", "RxNorm", ["Lopressor", "Toprol"]),
+                ("omeprazole", "7646", "drug", "RxNorm", ["Prilosec"]),
+                ("simvastatin", "36567", "drug", "RxNorm", ["Zocor"]),
+                ("losartan", "52175", "drug", "RxNorm", ["Cozaar"]),
+                ("albuterol", "435", "drug", "RxNorm", ["Ventolin", "ProAir"]),
+                ("gabapentin", "25480", "drug", "RxNorm", ["Neurontin"]),
+                ("hydrochlorothiazide", "5487", "drug", "RxNorm", ["HCTZ", "Microzide"]),
+                ("sertraline", "36437", "drug", "RxNorm", ["Zoloft"]),
+                ("acetaminophen", "161", "drug", "RxNorm", ["Tylenol"]),
+                ("ibuprofen", "5640", "drug", "RxNorm", ["Advil", "Motrin"]),
+                ("aspirin", "1191", "drug", "RxNorm", ["Bayer"]),
+                ("prednisone", "8640", "drug", "RxNorm", []),
+                ("fluoxetine", "4493", "drug", "RxNorm", ["Prozac"]),
+                ("pantoprazole", "40790", "drug", "RxNorm", ["Protonix"]),
+                ("escitalopram", "321988", "drug", "RxNorm", ["Lexapro"]),
+                ("montelukast", "88249", "drug", "RxNorm", ["Singulair"]),
+                ("rosuvastatin", "301542", "drug", "RxNorm", ["Crestor"]),
+                ("bupropion", "42347", "drug", "RxNorm", ["Wellbutrin"]),
+                ("furosemide", "4603", "drug", "RxNorm", ["Lasix"]),
+                ("tramadol", "10689", "drug", "RxNorm", ["Ultram"]),
+                ("trazodone", "10737", "drug", "RxNorm", ["Desyrel"]),
+                ("duloxetine", "72625", "drug", "RxNorm", ["Cymbalta"]),
+                ("amoxicillin", "723", "drug", "RxNorm", ["Amoxil"]),
+                ("azithromycin", "18631", "drug", "RxNorm", ["Zithromax", "Z-pack"]),
+                ("ciprofloxacin", "2551", "drug", "RxNorm", ["Cipro"]),
+                ("clopidogrel", "32968", "drug", "RxNorm", ["Plavix"]),
+                ("warfarin", "11289", "drug", "RxNorm", ["Coumadin"]),
+                ("insulin", "5856", "drug", "RxNorm", ["Humulin", "Novolin"]),
+                ("glipizide", "25789", "drug", "RxNorm", ["Glucotrol"]),
+                ("alprazolam", "596", "drug", "RxNorm", ["Xanax"]),
+                ("lorazepam", "6470", "drug", "RxNorm", ["Ativan"]),
+                ("clonazepam", "2598", "drug", "RxNorm", ["Klonopin"]),
+                ("oxycodone", "7804", "drug", "RxNorm", ["OxyContin"]),
+                ("hydrocodone", "5489", "drug", "RxNorm", ["Vicodin", "Norco"]),
+                ("morphine", "7052", "drug", "RxNorm", ["MS Contin"]),
+                ("fentanyl", "4337", "drug", "RxNorm", ["Duragesic"]),
+                ("pregabalin", "187832", "drug", "RxNorm", ["Lyrica"]),
+                ("venlafaxine", "39786", "drug", "RxNorm", ["Effexor"]),
+                ("citalopram", "2556", "drug", "RxNorm", ["Celexa"]),
+                ("quetiapine", "51272", "drug", "RxNorm", ["Seroquel"]),
+                ("aripiprazole", "89013", "drug", "RxNorm", ["Abilify"]),
+                ("methylphenidate", "6901", "drug", "RxNorm", ["Ritalin", "Concerta"]),
+                ("amphetamine", "725", "drug", "RxNorm", ["Adderall"]),
+                ("doxycycline", "3640", "drug", "RxNorm", ["Vibramycin"]),
+                ("methotrexate", "6851", "drug", "RxNorm", ["Trexall"]),
+            ]
+
+            for term, code, category, source, synonyms in drugs:
+                if self._insert_term(conn, term, code, category, source, synonyms):
+                    drug_count += 1
+
+            # Common conditions (ICD-10)
+            conditions = [
+                ("diabetes mellitus", "E11", "diagnosis", "ICD10", ["diabetes", "DM", "type 2 diabetes"]),
+                ("essential hypertension", "I10", "diagnosis", "ICD10", ["hypertension", "high blood pressure", "HTN"]),
+                ("hyperlipidemia", "E78.5", "diagnosis", "ICD10", ["high cholesterol"]),
+                ("major depressive disorder", "F32", "diagnosis", "ICD10", ["depression", "MDD"]),
+                ("generalized anxiety disorder", "F41.1", "diagnosis", "ICD10", ["anxiety", "GAD"]),
+                ("chronic obstructive pulmonary disease", "J44", "diagnosis", "ICD10", ["COPD"]),
+                ("asthma", "J45", "diagnosis", "ICD10", []),
+                ("coronary artery disease", "I25.10", "diagnosis", "ICD10", ["CAD", "heart disease"]),
+                ("heart failure", "I50", "diagnosis", "ICD10", ["CHF", "congestive heart failure"]),
+                ("atrial fibrillation", "I48", "diagnosis", "ICD10", ["afib", "AF"]),
+                ("chronic kidney disease", "N18", "diagnosis", "ICD10", ["CKD"]),
+                ("osteoarthritis", "M19", "diagnosis", "ICD10", ["OA", "degenerative joint disease"]),
+                ("rheumatoid arthritis", "M06", "diagnosis", "ICD10", ["RA"]),
+                ("hypothyroidism", "E03", "diagnosis", "ICD10", []),
+                ("hyperthyroidism", "E05", "diagnosis", "ICD10", []),
+                ("gastroesophageal reflux disease", "K21", "diagnosis", "ICD10", ["GERD", "acid reflux"]),
+                ("pneumonia", "J18", "diagnosis", "ICD10", []),
+                ("urinary tract infection", "N39.0", "diagnosis", "ICD10", ["UTI"]),
+                ("migraine", "G43", "diagnosis", "ICD10", []),
+                ("seizure disorder", "G40", "diagnosis", "ICD10", ["epilepsy"]),
+                ("anemia", "D64", "diagnosis", "ICD10", []),
+                ("obesity", "E66", "diagnosis", "ICD10", []),
+                ("sleep apnea", "G47.3", "diagnosis", "ICD10", []),
+                ("back pain", "M54", "diagnosis", "ICD10", []),
+                ("neuropathy", "G62", "diagnosis", "ICD10", ["peripheral neuropathy"]),
+                ("stroke", "I63", "diagnosis", "ICD10", ["CVA", "cerebrovascular accident"]),
+                ("deep vein thrombosis", "I82", "diagnosis", "ICD10", ["DVT"]),
+                ("pulmonary embolism", "I26", "diagnosis", "ICD10", ["PE"]),
+                ("cirrhosis", "K74", "diagnosis", "ICD10", []),
+                ("hepatitis", "B19", "diagnosis", "ICD10", []),
+                ("type 1 diabetes", "E10", "diagnosis", "ICD10", ["T1DM", "juvenile diabetes"]),
+                ("acute myocardial infarction", "I21", "diagnosis", "ICD10", ["heart attack", "MI"]),
+                ("angina pectoris", "I20", "diagnosis", "ICD10", ["chest pain", "angina"]),
+                ("chronic pain", "G89", "diagnosis", "ICD10", []),
+                ("fibromyalgia", "M79.7", "diagnosis", "ICD10", []),
+                ("bipolar disorder", "F31", "diagnosis", "ICD10", []),
+                ("schizophrenia", "F20", "diagnosis", "ICD10", []),
+                ("PTSD", "F43.1", "diagnosis", "ICD10", ["post-traumatic stress disorder"]),
+                ("ADHD", "F90", "diagnosis", "ICD10", ["attention deficit hyperactivity disorder"]),
+                ("dementia", "F03", "diagnosis", "ICD10", []),
+                ("alzheimer disease", "G30", "diagnosis", "ICD10", ["alzheimers"]),
+                ("parkinson disease", "G20", "diagnosis", "ICD10", ["parkinsons"]),
+                ("multiple sclerosis", "G35", "diagnosis", "ICD10", ["MS"]),
+                ("breast cancer", "C50", "diagnosis", "ICD10", []),
+                ("lung cancer", "C34", "diagnosis", "ICD10", []),
+                ("prostate cancer", "C61", "diagnosis", "ICD10", []),
+                ("colon cancer", "C18", "diagnosis", "ICD10", ["colorectal cancer"]),
+                ("leukemia", "C95", "diagnosis", "ICD10", []),
+                ("lymphoma", "C85", "diagnosis", "ICD10", []),
+                ("sepsis", "A41", "diagnosis", "ICD10", []),
+            ]
+
+            for term, code, category, source, synonyms in conditions:
+                if self._insert_term(conn, term, code, category, source, synonyms):
+                    condition_count += 1
+
             conn.commit()
 
         self._set_metadata("last_refresh", datetime.now().isoformat())
         self._set_metadata("source", "embedded")
+        self._set_metadata("drug_count", str(drug_count))
+        self._set_metadata("condition_count", str(condition_count))
+
+        logger.info(f"Loaded {drug_count} drugs and {condition_count} conditions from embedded data")
+
+    def _get_embedded_conditions(self) -> list[tuple[str, str, str, str, list[str]]]:
+        """Get embedded conditions data for supplementing API results."""
+        return [
+            ("diabetes mellitus", "E11", "diagnosis", "ICD10", ["diabetes", "DM", "type 2 diabetes"]),
+            ("essential hypertension", "I10", "diagnosis", "ICD10", ["hypertension", "high blood pressure", "HTN"]),
+            ("hyperlipidemia", "E78.5", "diagnosis", "ICD10", ["high cholesterol"]),
+            ("major depressive disorder", "F32", "diagnosis", "ICD10", ["depression", "MDD"]),
+            ("generalized anxiety disorder", "F41.1", "diagnosis", "ICD10", ["anxiety", "GAD"]),
+            ("chronic obstructive pulmonary disease", "J44", "diagnosis", "ICD10", ["COPD"]),
+            ("asthma", "J45", "diagnosis", "ICD10", []),
+            ("coronary artery disease", "I25.10", "diagnosis", "ICD10", ["CAD", "heart disease"]),
+            ("heart failure", "I50", "diagnosis", "ICD10", ["CHF", "congestive heart failure"]),
+            ("atrial fibrillation", "I48", "diagnosis", "ICD10", ["afib", "AF"]),
+            ("chronic kidney disease", "N18", "diagnosis", "ICD10", ["CKD"]),
+            ("osteoarthritis", "M19", "diagnosis", "ICD10", ["OA", "degenerative joint disease"]),
+            ("rheumatoid arthritis", "M06", "diagnosis", "ICD10", ["RA"]),
+            ("hypothyroidism", "E03", "diagnosis", "ICD10", []),
+            ("hyperthyroidism", "E05", "diagnosis", "ICD10", []),
+            ("gastroesophageal reflux disease", "K21", "diagnosis", "ICD10", ["GERD", "acid reflux"]),
+            ("pneumonia", "J18", "diagnosis", "ICD10", []),
+            ("urinary tract infection", "N39.0", "diagnosis", "ICD10", ["UTI"]),
+            ("migraine", "G43", "diagnosis", "ICD10", []),
+            ("seizure disorder", "G40", "diagnosis", "ICD10", ["epilepsy"]),
+            ("anemia", "D64", "diagnosis", "ICD10", []),
+            ("obesity", "E66", "diagnosis", "ICD10", []),
+            ("sleep apnea", "G47.3", "diagnosis", "ICD10", []),
+            ("back pain", "M54", "diagnosis", "ICD10", []),
+            ("neuropathy", "G62", "diagnosis", "ICD10", ["peripheral neuropathy"]),
+            ("stroke", "I63", "diagnosis", "ICD10", ["CVA", "cerebrovascular accident"]),
+            ("deep vein thrombosis", "I82", "diagnosis", "ICD10", ["DVT"]),
+            ("pulmonary embolism", "I26", "diagnosis", "ICD10", ["PE"]),
+            ("cirrhosis", "K74", "diagnosis", "ICD10", []),
+            ("hepatitis", "B19", "diagnosis", "ICD10", []),
+            ("type 1 diabetes", "E10", "diagnosis", "ICD10", ["T1DM", "juvenile diabetes"]),
+            ("acute myocardial infarction", "I21", "diagnosis", "ICD10", ["heart attack", "MI"]),
+            ("angina pectoris", "I20", "diagnosis", "ICD10", ["chest pain", "angina"]),
+            ("chronic pain", "G89", "diagnosis", "ICD10", []),
+            ("fibromyalgia", "M79.7", "diagnosis", "ICD10", []),
+            ("bipolar disorder", "F31", "diagnosis", "ICD10", []),
+            ("schizophrenia", "F20", "diagnosis", "ICD10", []),
+            ("PTSD", "F43.1", "diagnosis", "ICD10", ["post-traumatic stress disorder"]),
+            ("ADHD", "F90", "diagnosis", "ICD10", ["attention deficit hyperactivity disorder"]),
+            ("dementia", "F03", "diagnosis", "ICD10", []),
+            ("alzheimer disease", "G30", "diagnosis", "ICD10", ["alzheimers"]),
+            ("parkinson disease", "G20", "diagnosis", "ICD10", ["parkinsons"]),
+            ("multiple sclerosis", "G35", "diagnosis", "ICD10", ["MS"]),
+            ("breast cancer", "C50", "diagnosis", "ICD10", []),
+            ("lung cancer", "C34", "diagnosis", "ICD10", []),
+            ("prostate cancer", "C61", "diagnosis", "ICD10", []),
+            ("colon cancer", "C18", "diagnosis", "ICD10", ["colorectal cancer"]),
+            ("leukemia", "C95", "diagnosis", "ICD10", []),
+            ("lymphoma", "C85", "diagnosis", "ICD10", []),
+            ("sepsis", "A41", "diagnosis", "ICD10", []),
+        ]
 
     def lookup(self, term: str) -> LexiconEntry | None:
         """
@@ -386,6 +559,9 @@ class SQLiteMedicalLexicon(MedicalLexicon):
         Returns:
             LexiconEntry if found, None otherwise.
         """
+        if not term or not term.strip():
+            return None
+
         normalized = self.normalize_term(term)
 
         with self._get_connection() as conn:
@@ -424,11 +600,15 @@ class SQLiteMedicalLexicon(MedicalLexicon):
                 )
                 synonyms = tuple(r["synonym"] for r in cursor.fetchall())
 
+                # Validate required fields before creating entry
+                if not row["term"] or not row["normalized"]:
+                    return None
+
                 return LexiconEntry(
                     term=row["term"],
                     normalized=row["normalized"],
-                    code=row["code"] or "",
-                    category=row["category"],
+                    code=row["code"] or "UNKNOWN",
+                    category=row["category"] or "unknown",
                     source=LexiconSource(row["source"]) if row["source"] in [s.value for s in LexiconSource] else LexiconSource.CUSTOM,
                     synonyms=synonyms,
                 )
@@ -456,6 +636,10 @@ class SQLiteMedicalLexicon(MedicalLexicon):
             )
 
             for row in cursor.fetchall():
+                # Skip empty terms
+                if not row["term"] or not row["normalized"]:
+                    continue
+
                 term_lower = row["term"].lower()
                 normalized = row["normalized"]
 

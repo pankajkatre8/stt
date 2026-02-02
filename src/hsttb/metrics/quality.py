@@ -146,6 +146,12 @@ class QualityResult:
     dosage_issues: list[str] = field(default_factory=list)  # Dosage problems
     clinical_contradictions: list[dict] = field(default_factory=list)  # Soft/hard contradictions
 
+    # Transcription Error Detection (NEW - for reference-free evaluation)
+    transcription_error_score: float = 1.0  # Higher = fewer detected errors
+    potential_transcription_errors: list[dict] = field(default_factory=list)  # Detected misspellings
+    spelling_inconsistencies: list[dict] = field(default_factory=list)  # Same word spelled differently
+    known_terms_found: list[dict] = field(default_factory=list)  # Recognized medical terms
+
 
 class QualityEngine:
     """
@@ -196,6 +202,7 @@ class QualityEngine:
         self._embedding_drift_detector: Any = None
         self._confidence_analyzer: Any = None
         self._clinical_risk_scorer: Any = None
+        self._term_matcher: Any = None
 
         # Availability flags
         self._perplexity_available: bool | None = None
@@ -280,6 +287,17 @@ class QualityEngine:
 
             self._clinical_risk_scorer = ClinicalRiskScorer()
         return self._clinical_risk_scorer
+
+    def _get_term_matcher(self):
+        """Get or create medical term matcher for error detection."""
+        if self._term_matcher is None:
+            try:
+                from hsttb.metrics.term_matcher import MedicalTermMatcher
+
+                self._term_matcher = MedicalTermMatcher()
+            except Exception as e:
+                logger.warning(f"Term matcher unavailable: {e}")
+        return self._term_matcher
 
     def compute(self, text: str, audio_duration_seconds: float | None = None) -> QualityResult:
         """
@@ -501,6 +519,64 @@ class QualityEngine:
         except Exception as e:
             logger.warning(f"Clinical risk scoring failed: {e}")
 
+        # Transcription Error Detection (NEW) - Detects potential misspellings
+        transcription_error_score = 1.0
+        potential_transcription_errors: list[dict] = []
+        spelling_inconsistencies: list[dict] = []
+        known_terms_found: list[dict] = []
+
+        try:
+            term_matcher = self._get_term_matcher()
+            if term_matcher is not None:
+                # Analyze text for potential transcription errors
+                match_result = term_matcher.analyze(text)
+
+                # Collect known terms found
+                known_terms_found = [
+                    {
+                        "term": kt["term"],
+                        "position": kt["position"],
+                        "category": kt["info"].get("category", "unknown"),
+                        "source": kt["info"].get("source", "unknown"),
+                    }
+                    for kt in match_result.known_terms_found
+                ]
+
+                # Collect potential transcription errors (misspellings)
+                potential_transcription_errors = [
+                    {
+                        "found_term": pe.found_term,
+                        "suggested_term": pe.suggested_term,
+                        "confidence": round(pe.confidence, 3),
+                        "similarity": round(pe.similarity, 3),
+                        "match_type": pe.match_type,
+                        "position": pe.position,
+                        "context": pe.context[:100] if pe.context else "",
+                        "source": pe.source,
+                    }
+                    for pe in match_result.potential_errors
+                ]
+
+                # Find spelling inconsistencies (same word spelled differently)
+                spelling_inconsistencies = term_matcher.find_inconsistencies(text)
+
+                # Calculate transcription error score
+                # Start with the error_score from match_result
+                transcription_error_score = match_result.error_score
+
+                # Penalize for inconsistencies
+                if spelling_inconsistencies:
+                    inconsistency_penalty = min(0.3, len(spelling_inconsistencies) * 0.1)
+                    transcription_error_score = max(0.0, transcription_error_score - inconsistency_penalty)
+
+                logger.debug(
+                    f"Transcription error detection: {len(potential_transcription_errors)} errors, "
+                    f"{len(spelling_inconsistencies)} inconsistencies, score={transcription_error_score:.2f}"
+                )
+
+        except Exception as e:
+            logger.warning(f"Transcription error detection failed: {e}")
+
         # Compute composite score with adjusted weights
         weights = self._get_adjusted_weights(
             perplexity_available,
@@ -570,6 +646,11 @@ class QualityEngine:
             assertion_details=assertion_details,
             dosage_issues=dosage_issues,
             clinical_contradictions=clinical_contradictions,
+            # Transcription Error Detection
+            transcription_error_score=round(transcription_error_score, 4),
+            potential_transcription_errors=potential_transcription_errors,
+            spelling_inconsistencies=spelling_inconsistencies,
+            known_terms_found=known_terms_found,
         )
 
     def _get_adjusted_weights(

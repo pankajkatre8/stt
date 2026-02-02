@@ -243,8 +243,30 @@ class ClinicalContradictionDetector:
                     return "negated_conditional"
                 return "affirmed_conditional"
 
-        # Check for negation
-        if self._negation_re.search(prefix):
+        # Check for negation - but handle conversational patterns
+        negation_match = self._negation_re.search(prefix)
+        if negation_match:
+            # Get text between negation and entity
+            text_after_negation = prefix[negation_match.end():]
+
+            # Handle conversational "No, ..." patterns where "No" answers a question
+            # e.g., "No, just the headache" - here "No" answers "any other symptoms?"
+            # and "just the headache" AFFIRMS headache, not negates it
+            if negation_match.group().lower() == "no":
+                # Check for "No, just" or "No, only" patterns - these AFFIRM the entity
+                if re.search(r"^[,\s]+(?:just|only|mainly)\b", text_after_negation):
+                    return "affirmed"
+
+                # Check for sentence-start "No," followed by punctuation
+                # This usually answers a question, not negates what follows
+                if re.match(r"^[,\s]*$", text_after_negation):
+                    # "No" is immediately followed by entity with only comma/space
+                    # Check if "No" is at start of sentence/clause
+                    prefix_before_no = prefix[:negation_match.start()].strip()
+                    if not prefix_before_no or prefix_before_no.endswith((".","?","!",":")):
+                        # "No" at start - likely answering a question
+                        return "mentioned"
+
             return "negated"
 
         # Check for affirmation

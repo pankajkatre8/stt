@@ -52,6 +52,7 @@ class GrammarChecker:
 
     Uses language-tool-python for rule-based checking.
     Filters out false positives for common medical terms.
+    Medical terms are loaded dynamically from the database.
 
     Attributes:
         language: Language code (default: "en-US").
@@ -63,32 +64,16 @@ class GrammarChecker:
         >>> print(f"Score: {result.score:.1%}")
     """
 
-    # Common medical terms that might be flagged incorrectly
-    MEDICAL_TERMS = {
-        # Drugs
-        "metformin", "lisinopril", "atorvastatin", "omeprazole", "amlodipine",
-        "metoprolol", "losartan", "gabapentin", "hydrochlorothiazide", "warfarin",
-        "prednisone", "amoxicillin", "azithromycin", "ciprofloxacin", "sertraline",
-        "fluoxetine", "escitalopram", "alprazolam", "lorazepam", "methotrexate",
-        "hydroxychloroquine", "sulfasalazine", "levothyroxine", "pantoprazole",
-        # Conditions
-        "hypertension", "hyperlipidemia", "dyslipidemia", "hypothyroidism",
-        "hyperthyroidism", "tachycardia", "bradycardia", "arrhythmia",
-        "myocardial", "infarction", "cerebrovascular", "atherosclerosis",
-        "dyspnea", "orthopnea", "tachypnea", "bradypnea", "hypoxia", "hypoxemia",
-        "hyperglycemia", "hypoglycemia", "hyperkalemia", "hypokalemia",
-        "hypernatremia", "hyponatremia", "hypercalcemia", "hypocalcemia",
-        # Anatomy
-        "subcutaneous", "intramuscular", "intravenous", "sublingual",
-        "epigastric", "periumbilical", "suprapubic", "retrosternal",
-        # Procedures
-        "colonoscopy", "endoscopy", "bronchoscopy", "laparoscopy",
-        "echocardiogram", "electrocardiogram",
-        # Abbreviations
+    # Fallback medical terms (used if database unavailable)
+    _FALLBACK_TERMS = {
+        # Abbreviations (these are usually not in medical DBs)
         "mg", "mcg", "ml", "kg", "bid", "tid", "qid", "prn", "qhs", "qam",
         "po", "iv", "im", "sq", "sl", "pr", "ou", "od", "os",
         "ekg", "ecg", "ct", "mri", "cbc", "bmp", "cmp", "hba1c", "a1c",
         "bp", "hr", "rr", "spo2", "o2", "bmi", "gfr", "egfr",
+        # Anatomy terms that might not be in ICD-10
+        "subcutaneous", "intramuscular", "intravenous", "sublingual",
+        "epigastric", "periumbilical", "suprapubic", "retrosternal",
     }
 
     # Singleton instance
@@ -99,6 +84,27 @@ class GrammarChecker:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
+
+    def _load_medical_terms(self) -> set[str]:
+        """Load medical terms dynamically from database."""
+        terms = self._FALLBACK_TERMS.copy()
+
+        try:
+            from hsttb.metrics.medical_terms import get_medical_terms
+            provider = get_medical_terms()
+
+            # Add drugs
+            terms.update(provider.get_drugs())
+            # Add conditions
+            terms.update(provider.get_conditions())
+            # Add symptoms
+            terms.update(provider.get_symptoms())
+
+            logger.debug(f"Loaded {len(terms)} medical terms for grammar checking")
+        except Exception as e:
+            logger.warning(f"Could not load medical terms from provider: {e}")
+
+        return terms
 
     def __init__(
         self,
@@ -116,7 +122,7 @@ class GrammarChecker:
             return
 
         self.language = language
-        self.medical_terms = self.MEDICAL_TERMS.copy()
+        self.medical_terms = self._load_medical_terms()
         if additional_medical_terms:
             self.medical_terms.update(t.lower() for t in additional_medical_terms)
 

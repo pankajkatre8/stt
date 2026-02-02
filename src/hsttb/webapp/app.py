@@ -51,6 +51,15 @@ class EvaluationRequest(BaseModel):
     compute_wer: bool = True  # Word Error Rate
     compute_cer: bool = True  # Character Error Rate
     compute_quality: bool = False  # Reference-free quality scoring
+    save_to_history: bool = True  # Save evaluation to history
+    label: str = ""  # Optional label for the evaluation
+
+
+class HistoryLabelUpdate(BaseModel):
+    """Request model for updating history entry label/notes."""
+
+    label: str | None = None
+    notes: str | None = None
 
 
 class SegmentedEvaluationRequest(BaseModel):
@@ -519,6 +528,11 @@ def create_app() -> FastAPI:
                         "assertion_details": quality_result.assertion_details,
                         "dosage_issues": quality_result.dosage_issues,
                         "clinical_contradictions": quality_result.clinical_contradictions,
+                        # Transcription Error Detection (NEW - misspellings, inconsistencies)
+                        "transcription_error_score": quality_result.transcription_error_score,
+                        "potential_transcription_errors": quality_result.potential_transcription_errors,
+                        "spelling_inconsistencies": quality_result.spelling_inconsistencies,
+                        "known_terms_found": quality_result.known_terms_found,
                     }
                 else:
                     results["quality"] = {
@@ -549,6 +563,33 @@ def create_app() -> FastAPI:
                 results["overall_score"] = round(max(0.0, min(1.0, overall)), 4)
 
             results["status"] = "success"
+
+            # Save to history if requested
+            if req.save_to_history:
+                try:
+                    from hsttb.webapp.evaluation_history import get_evaluation_history
+
+                    history = get_evaluation_history()
+                    config = {
+                        "compute_ter": req.compute_ter,
+                        "compute_ner": req.compute_ner,
+                        "compute_crs": req.compute_crs,
+                        "compute_wer": req.compute_wer,
+                        "compute_cer": req.compute_cer,
+                        "compute_quality": req.compute_quality,
+                    }
+                    entry = history.add_entry(
+                        ground_truth=req.ground_truth if has_ground_truth else None,
+                        predicted=req.predicted,
+                        mode=results.get("mode", "unknown"),
+                        config=config,
+                        overall_score=results.get("overall_score"),
+                        results=results,
+                        label=req.label,
+                    )
+                    results["history_entry_id"] = entry.id
+                except Exception as e:
+                    logger.warning(f"Failed to save to history: {e}")
 
         except Exception as e:
             logger.exception("Evaluation error")
@@ -1128,6 +1169,137 @@ def create_app() -> FastAPI:
             media_type="audio/mpeg",
             filename=f"{file_id}.mp3",
         )
+
+    # ========================================================================
+    # Evaluation History Endpoints
+    # ========================================================================
+
+    @application.get("/api/history")
+    async def get_evaluation_history_list(
+        limit: int | None = 50,
+        offset: int = 0,
+        mode: str | None = None,
+    ) -> JSONResponse:
+        """List evaluation history entries."""
+        from hsttb.webapp.evaluation_history import get_evaluation_history
+
+        history = get_evaluation_history()
+        entries = history.list_entries(limit=limit, offset=offset, mode=mode)
+
+        return JSONResponse(content={
+            "status": "success",
+            "entries": [e.to_dict() for e in entries],
+            "stats": history.get_stats(),
+        })
+
+    @application.get("/api/history/stats")
+    async def get_evaluation_history_stats() -> JSONResponse:
+        """Get evaluation history statistics."""
+        from hsttb.webapp.evaluation_history import get_evaluation_history
+
+        history = get_evaluation_history()
+        stats = history.get_stats()
+
+        return JSONResponse(content={
+            "status": "success",
+            "stats": stats,
+        })
+
+    @application.get("/api/history/{entry_id}")
+    async def get_evaluation_history_entry(entry_id: str) -> JSONResponse:
+        """Get a specific evaluation history entry."""
+        from hsttb.webapp.evaluation_history import get_evaluation_history
+
+        history = get_evaluation_history()
+        entry = history.get_entry(entry_id)
+
+        if not entry:
+            return JSONResponse(
+                content={"status": "error", "error": "Entry not found"},
+                status_code=404,
+            )
+
+        return JSONResponse(content={
+            "status": "success",
+            "entry": entry.to_dict(),
+        })
+
+    @application.patch("/api/history/{entry_id}")
+    async def update_evaluation_history_entry(
+        entry_id: str,
+        update: HistoryLabelUpdate,
+    ) -> JSONResponse:
+        """Update evaluation history entry label/notes."""
+        from hsttb.webapp.evaluation_history import get_evaluation_history
+
+        history = get_evaluation_history()
+        updated = history.update_entry(
+            entry_id,
+            label=update.label,
+            notes=update.notes,
+        )
+
+        if not updated:
+            return JSONResponse(
+                content={"status": "error", "error": "Entry not found"},
+                status_code=404,
+            )
+
+        entry = history.get_entry(entry_id)
+        return JSONResponse(content={
+            "status": "success",
+            "entry": entry.to_dict() if entry else None,
+        })
+
+    @application.delete("/api/history/{entry_id}")
+    async def delete_evaluation_history_entry(entry_id: str) -> JSONResponse:
+        """Delete an evaluation history entry."""
+        from hsttb.webapp.evaluation_history import get_evaluation_history
+
+        history = get_evaluation_history()
+        deleted = history.delete_entry(entry_id)
+
+        if not deleted:
+            return JSONResponse(
+                content={"status": "error", "error": "Entry not found"},
+                status_code=404,
+            )
+
+        return JSONResponse(content={
+            "status": "success",
+            "message": f"Entry {entry_id} deleted",
+        })
+
+    @application.delete("/api/history")
+    async def clear_evaluation_history() -> JSONResponse:
+        """Clear all evaluation history entries."""
+        from hsttb.webapp.evaluation_history import get_evaluation_history
+
+        history = get_evaluation_history()
+        count = history.clear_all()
+
+        return JSONResponse(content={
+            "status": "success",
+            "message": f"Cleared {count} entries",
+            "deleted_count": count,
+        })
+
+    @application.get("/api/history/search")
+    async def search_evaluation_history(
+        q: str,
+        limit: int = 20,
+    ) -> JSONResponse:
+        """Search evaluation history entries."""
+        from hsttb.webapp.evaluation_history import get_evaluation_history
+
+        history = get_evaluation_history()
+        entries = history.search(q, limit=limit)
+
+        return JSONResponse(content={
+            "status": "success",
+            "entries": [e.to_dict() for e in entries],
+            "query": q,
+        })
 
     # ========================================================================
     # WebSocket Endpoints
