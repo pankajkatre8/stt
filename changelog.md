@@ -71,6 +71,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Warning messages for suspicious speech rates
 - NLP model availability indicators in UI
 
+#### Documentation
+- **explanation.md** - Comprehensive metrics documentation
+  - Detailed explanation of each metric (WER, CER, TER, NER, CRS)
+  - Reference-free quality metrics documentation
+  - Calculation formulas with examples
+  - Clinical risk assessment guide
+  - Interpretation guidelines and thresholds
+
 #### Bug Fixes
 - Fixed MedSpaCy negation detection: `hasattr(ent, "_.is_negated")` → `hasattr(ent._, "is_negated")`
 - Fixed contradiction detector flagging questions as contradictions
