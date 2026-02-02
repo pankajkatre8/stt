@@ -14,12 +14,20 @@ Metrics:
 - Embedding drift (semantic stability)
 - Confidence variance (next-word probability)
 
+Clinical Risk Scoring (NEW):
+- Entity assertion tracking (negated/affirmed/uncertain)
+- Soft contradiction detection (conditional conflicts)
+- Dosage plausibility validation
+- Clinical token weighting by importance
+- Risk-adjusted scoring prioritizing clinical safety
+
 Example:
     >>> from hsttb.metrics.quality import QualityEngine
     >>> engine = QualityEngine()
     >>> result = engine.compute("Patient takes metformin for diabetes")
     >>> print(f"Quality: {result.composite_score:.1%}")
-    >>> print(f"Recommendation: {result.recommendation}")
+    >>> print(f"Clinical Risk Score: {result.clinical_risk_score:.1%}")
+    >>> print(f"Recommendation: {result.clinical_recommendation}")
 """
 from __future__ import annotations
 
@@ -120,6 +128,24 @@ class QualityResult:
     embedding_drift_available: bool = True
     confidence_variance_available: bool = True
 
+    # Clinical Risk Scoring (NEW)
+    clinical_risk_score: float = 0.0  # Risk-adjusted score (0-1, higher is better)
+    clinical_risk_level: str = "low"  # "low", "medium", "high", "critical"
+    clinical_recommendation: str = "REVIEW"  # "ACCEPT", "ACCEPT_WITH_REVIEW", "NEEDS_REVIEW", "REJECT"
+
+    # Clinical risk details
+    entity_assertion_score: float = 1.0  # Higher = clearer assertion status
+    clinical_contradiction_score: float = 1.0  # Higher = fewer clinical contradictions
+    dosage_plausibility_score: float = 1.0  # Higher = more plausible dosages
+    clinical_token_confidence_score: float = 1.0  # Higher = more confident clinical terms
+
+    # Clinical concerns and flags
+    clinical_concerns: list[str] = field(default_factory=list)
+    risk_factors: list[str] = field(default_factory=list)
+    assertion_details: list[dict] = field(default_factory=list)  # Entity assertion info
+    dosage_issues: list[str] = field(default_factory=list)  # Dosage problems
+    clinical_contradictions: list[dict] = field(default_factory=list)  # Soft/hard contradictions
+
 
 class QualityEngine:
     """
@@ -169,6 +195,7 @@ class QualityEngine:
         self._contradiction_detector: Any = None
         self._embedding_drift_detector: Any = None
         self._confidence_analyzer: Any = None
+        self._clinical_risk_scorer: Any = None
 
         # Availability flags
         self._perplexity_available: bool | None = None
@@ -246,6 +273,14 @@ class QualityEngine:
                 self._confidence_variance_available = False
         return self._confidence_analyzer
 
+    def _get_clinical_risk_scorer(self):
+        """Get or create clinical risk scorer."""
+        if self._clinical_risk_scorer is None:
+            from hsttb.metrics.clinical_risk import ClinicalRiskScorer
+
+            self._clinical_risk_scorer = ClinicalRiskScorer()
+        return self._clinical_risk_scorer
+
     def compute(self, text: str, audio_duration_seconds: float | None = None) -> QualityResult:
         """
         Compute quality score for transcription.
@@ -271,6 +306,9 @@ class QualityEngine:
                 log_probability=float("-inf"),
                 word_count=0,
                 recommendation="REJECT",
+                clinical_risk_score=0.0,
+                clinical_risk_level="critical",
+                clinical_recommendation="REJECT",
             )
 
         # Compute component scores
@@ -412,6 +450,57 @@ class QualityEngine:
         else:
             confidence_variance_available = self._confidence_variance_available or False
 
+        # Clinical Risk Scoring (NEW) - Combines assertion, contradictions, dosages
+        clinical_risk_score = 0.5
+        clinical_risk_level = "medium"
+        clinical_recommendation = "REVIEW"
+        entity_assertion_score = 1.0
+        clinical_contradiction_score = 1.0
+        dosage_plausibility_score = 1.0
+        clinical_token_confidence_score = 1.0
+        clinical_concerns: list[str] = []
+        risk_factors: list[str] = []
+        assertion_details: list[dict] = []
+        dosage_issues: list[str] = []
+        clinical_contradictions: list[dict] = []
+
+        try:
+            clinical_risk_scorer = self._get_clinical_risk_scorer()
+
+            # Build quality result dict for context
+            quality_context = {
+                "embedding_drift_score": embedding_drift_score,
+                "perplexity_score": perplexity_score,
+                "grammar_score": grammar_score,
+                "coherence_score": coherence_score,
+                "confidence_drops": confidence_drop_points,
+            }
+
+            risk_result = clinical_risk_scorer.score(text, quality_context)
+
+            clinical_risk_score = risk_result.final_score
+            clinical_risk_level = risk_result.risk_level.value
+            clinical_recommendation = risk_result.recommendation.value
+            clinical_concerns = risk_result.clinical_concerns
+            risk_factors = risk_result.risk_factors
+
+            # Extract individual signal scores
+            for signal in risk_result.signals:
+                if signal.name == "entity_assertion":
+                    entity_assertion_score = signal.value
+                    assertion_details = [{"detail": d} for d in signal.details]
+                elif signal.name == "contradiction":
+                    clinical_contradiction_score = signal.value
+                    clinical_contradictions = [{"detail": d} for d in signal.details]
+                elif signal.name == "dosage_plausibility":
+                    dosage_plausibility_score = signal.value
+                    dosage_issues = signal.details
+                elif signal.name == "clinical_token_confidence":
+                    clinical_token_confidence_score = signal.value
+
+        except Exception as e:
+            logger.warning(f"Clinical risk scoring failed: {e}")
+
         # Compute composite score with adjusted weights
         weights = self._get_adjusted_weights(
             perplexity_available,
@@ -468,6 +557,19 @@ class QualityEngine:
             grammar_available=grammar_available,
             embedding_drift_available=embedding_drift_available,
             confidence_variance_available=confidence_variance_available,
+            # Clinical Risk Scoring
+            clinical_risk_score=round(clinical_risk_score, 4),
+            clinical_risk_level=clinical_risk_level,
+            clinical_recommendation=clinical_recommendation,
+            entity_assertion_score=round(entity_assertion_score, 4),
+            clinical_contradiction_score=round(clinical_contradiction_score, 4),
+            dosage_plausibility_score=round(dosage_plausibility_score, 4),
+            clinical_token_confidence_score=round(clinical_token_confidence_score, 4),
+            clinical_concerns=clinical_concerns,
+            risk_factors=risk_factors,
+            assertion_details=assertion_details,
+            dosage_issues=dosage_issues,
+            clinical_contradictions=clinical_contradictions,
         )
 
     def _get_adjusted_weights(

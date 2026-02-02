@@ -678,6 +678,127 @@
                         </div>
                     </div>
 
+                    <!-- Clinical Risk Analysis Section (NEW) -->
+                    <div id="clinical-risk-section" class="clinical-risk-section hidden">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                            Clinical Risk Assessment
+                            <span class="clinical-risk-recommendation" id="clinical-recommendation">REVIEW</span>
+                        </h3>
+                        <p class="section-desc">Risk-adjusted scoring prioritizing clinical safety over surface-level fluency. This score accounts for entity assertions, clinical contradictions, and dosage plausibility.</p>
+
+                        <div class="clinical-risk-composite">
+                            <div class="clinical-risk-score-display">
+                                <span class="clinical-risk-score-value" id="clinical-risk-value">--</span>
+                                <span class="clinical-risk-score-label">Clinical Safety Score</span>
+                            </div>
+                            <div class="clinical-risk-level" id="clinical-risk-level">
+                                <span class="risk-badge low">LOW RISK</span>
+                            </div>
+                        </div>
+
+                        <div class="clinical-risk-components">
+                            <div class="clinical-risk-component">
+                                <div class="component-header">
+                                    <span class="component-name">Entity Assertion</span>
+                                    <span class="component-value" id="clinical-assertion-value">--</span>
+                                </div>
+                                <div class="component-bar">
+                                    <div class="component-bar-fill clinical" id="clinical-assertion-bar" style="width: 0%"></div>
+                                </div>
+                                <small class="component-hint">Are entities clearly affirmed/negated? Ambiguous = risky</small>
+                            </div>
+
+                            <div class="clinical-risk-component">
+                                <div class="component-header">
+                                    <span class="component-name">Clinical Contradictions</span>
+                                    <span class="component-value" id="clinical-contradiction-value">--</span>
+                                </div>
+                                <div class="component-bar">
+                                    <div class="component-bar-fill clinical" id="clinical-contradiction-bar" style="width: 0%"></div>
+                                </div>
+                                <small class="component-hint">No conflicting clinical statements (soft or hard)</small>
+                            </div>
+
+                            <div class="clinical-risk-component">
+                                <div class="component-header">
+                                    <span class="component-name">Dosage Plausibility</span>
+                                    <span class="component-value" id="clinical-dosage-value">--</span>
+                                </div>
+                                <div class="component-bar">
+                                    <div class="component-bar-fill clinical" id="clinical-dosage-bar" style="width: 0%"></div>
+                                </div>
+                                <small class="component-hint">Medication doses are within typical ranges</small>
+                            </div>
+
+                            <div class="clinical-risk-component">
+                                <div class="component-header">
+                                    <span class="component-name">Clinical Token Confidence</span>
+                                    <span class="component-value" id="clinical-token-value">--</span>
+                                </div>
+                                <div class="component-bar">
+                                    <div class="component-bar-fill clinical" id="clinical-token-bar" style="width: 0%"></div>
+                                </div>
+                                <small class="component-hint">High confidence on critical medical terms</small>
+                            </div>
+                        </div>
+
+                        <!-- Clinical Concerns -->
+                        <div class="clinical-concerns hidden" id="clinical-concerns-section">
+                            <h4>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="8" x2="12" y2="12"/>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                                Clinical Concerns
+                            </h4>
+                            <div class="concerns-list" id="clinical-concerns-list"></div>
+                        </div>
+
+                        <!-- Risk Factors -->
+                        <div class="risk-factors hidden" id="risk-factors-section">
+                            <h4>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                    <line x1="12" y1="9" x2="12" y2="13"/>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                </svg>
+                                Risk Factors
+                            </h4>
+                            <div class="risk-factors-list" id="risk-factors-list"></div>
+                        </div>
+
+                        <!-- Dosage Issues -->
+                        <div class="dosage-issues hidden" id="dosage-issues-section">
+                            <h4>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <path d="M12 22c4.97 0 9-4.03 9-9-4.97 0-9 4.03-9 9z"/>
+                                    <path d="M12 22c-4.97 0-9-4.03-9-9 4.97 0 9 4.03 9 9z"/>
+                                    <path d="M12 2v20"/>
+                                </svg>
+                                Dosage Issues
+                            </h4>
+                            <p class="section-hint">Medication doses that appear implausible:</p>
+                            <div class="dosage-issues-list" id="dosage-issues-list"></div>
+                        </div>
+
+                        <!-- Clinical Contradictions Detail -->
+                        <div class="clinical-contradictions-detail hidden" id="clinical-contradictions-section">
+                            <h4>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="8" y1="12" x2="16" y2="12"/>
+                                </svg>
+                                Detected Contradictions
+                            </h4>
+                            <p class="section-hint">Soft and hard clinical contradictions found:</p>
+                            <div class="clinical-contradictions-list" id="clinical-contradictions-list"></div>
+                        </div>
+                    </div>
+
                     <!-- Multi-NLP Comparison -->
                     <div id="multi-nlp-section" class="multi-nlp-section hidden">
                         <h3>NLP Model Comparison</h3>

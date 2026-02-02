@@ -86,6 +86,41 @@ from hsttb.metrics.confidence_variance import (
     analyze_confidence_variance,
 )
 
+# Clinical risk scoring (NEW - prioritizes clinical safety)
+from hsttb.metrics.clinical_risk import (
+    ClinicalRiskResult,
+    ClinicalRiskScorer,
+    Recommendation,
+    RiskLevel,
+    RiskSignal,
+    get_clinical_risk_scorer,
+    score_clinical_risk,
+)
+from hsttb.metrics.entity_assertion import (
+    AssertedEntity,
+    AssertionAnalysisResult,
+    AssertionStatus,
+    CertaintyLevel,
+    EntityAssertionAnalyzer,
+    analyze_entity_assertions,
+    get_entity_assertion_analyzer,
+)
+from hsttb.metrics.clinical_contradiction import (
+    ClinicalContradictionDetector,
+    Contradiction,
+    ContradictionResult,
+    ContradictionSeverity,
+    detect_clinical_contradictions,
+    get_contradiction_detector,
+)
+from hsttb.metrics.dosage_plausibility import (
+    DosageInfo,
+    DosagePlausibilityChecker,
+    DosagePlausibilityResult,
+    check_dosage_plausibility,
+    get_dosage_checker,
+)
+
 __all__ = [
     "CRSConfig",
     "CRSEngine",
@@ -129,6 +164,32 @@ __all__ = [
     "ConfidenceDropPoint",
     "ConfidenceVarianceResult",
     "analyze_confidence_variance",
+    # Clinical risk scoring
+    "ClinicalRiskResult",
+    "ClinicalRiskScorer",
+    "Recommendation",
+    "RiskLevel",
+    "RiskSignal",
+    "get_clinical_risk_scorer",
+    "score_clinical_risk",
+    "AssertedEntity",
+    "AssertionAnalysisResult",
+    "AssertionStatus",
+    "CertaintyLevel",
+    "EntityAssertionAnalyzer",
+    "analyze_entity_assertions",
+    "get_entity_assertion_analyzer",
+    "ClinicalContradictionDetector",
+    "Contradiction",
+    "ContradictionResult",
+    "ContradictionSeverity",
+    "detect_clinical_contradictions",
+    "get_contradiction_detector",
+    "DosageInfo",
+    "DosagePlausibilityChecker",
+    "DosagePlausibilityResult",
+    "check_dosage_plausibility",
+    "get_dosage_checker",
 ]
 
 # Add quality exports if available

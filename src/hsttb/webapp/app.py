@@ -496,7 +496,7 @@ def create_app() -> FastAPI:
                         "recommendation": quality_result.recommendation,
                         "perplexity_available": quality_result.perplexity_available,
                         "grammar_available": quality_result.grammar_available,
-                        # New metrics
+                        # Plausibility metrics
                         "contradiction_score": quality_result.contradiction_score,
                         "contradictions": quality_result.contradictions,
                         "embedding_drift_score": quality_result.embedding_drift_score,
@@ -506,6 +506,19 @@ def create_app() -> FastAPI:
                         "confidence_variance_score": quality_result.confidence_variance_score,
                         "confidence_drop_points": quality_result.confidence_drop_points,
                         "confidence_variance_available": quality_result.confidence_variance_available,
+                        # Clinical Risk Scoring (NEW - prioritizes clinical safety)
+                        "clinical_risk_score": quality_result.clinical_risk_score,
+                        "clinical_risk_level": quality_result.clinical_risk_level,
+                        "clinical_recommendation": quality_result.clinical_recommendation,
+                        "entity_assertion_score": quality_result.entity_assertion_score,
+                        "clinical_contradiction_score": quality_result.clinical_contradiction_score,
+                        "dosage_plausibility_score": quality_result.dosage_plausibility_score,
+                        "clinical_token_confidence_score": quality_result.clinical_token_confidence_score,
+                        "clinical_concerns": quality_result.clinical_concerns,
+                        "risk_factors": quality_result.risk_factors,
+                        "assertion_details": quality_result.assertion_details,
+                        "dosage_issues": quality_result.dosage_issues,
+                        "clinical_contradictions": quality_result.clinical_contradictions,
                     }
                 else:
                     results["quality"] = {

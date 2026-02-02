@@ -9,14 +9,21 @@
 ## Current State
 
 ### Project Phase
-- **Current Phase**: Phase 8 - Reference-Free Quality Metrics
-- **Phase Status**: COMPLETE
+- **Current Phase**: Phase 8 - Reference-Free Quality Metrics (Extended)
+- **Phase Status**: Clinical Risk Scoring COMPLETE
 - **Next Phase**: Production deployment / Integration testing
 
 ### Active Work
 - **In Progress**: None
 - **Blocked**: None
 - **Completed Recently**:
+  - **Clinical Risk Scoring** (NEW - prioritizes clinical safety over fluency)
+    - EntityAssertionAnalyzer - tracks affirmed/negated/uncertain status
+    - ClinicalContradictionDetector - soft/hard contradiction detection
+    - DosagePlausibilityChecker - medication dose validation
+    - ClinicalRiskScorer - combines all signals with clinical weighting
+    - Risk levels: LOW, MEDIUM, HIGH, CRITICAL
+    - Clinical recommendations: ACCEPT, ACCEPT_WITH_REVIEW, NEEDS_REVIEW, REJECT
   - QualityEngine with composite scoring
   - Perplexity scorer (GPT-2 based fluency)
   - Grammar checker (language-tool-python)
@@ -149,6 +156,12 @@ Healthcare Streaming STT Benchmarking Framework - a model-agnostic evaluation sy
 - [x] `src/hsttb/metrics/embedding_drift.py` - Semantic stability analysis
 - [x] `src/hsttb/metrics/confidence_variance.py` - Token confidence analysis
 - [x] `src/hsttb/metrics/speech_rate.py` - Speech rate validation
+
+**Clinical Risk Scoring (Complete):**
+- [x] `src/hsttb/metrics/clinical_risk.py` - Clinical risk scoring engine
+- [x] `src/hsttb/metrics/entity_assertion.py` - Entity assertion tracking
+- [x] `src/hsttb/metrics/clinical_contradiction.py` - Soft/hard contradiction detection
+- [x] `src/hsttb/metrics/dosage_plausibility.py` - Medication dosage validation
 
 **Medical Terminology APIs (Complete):**
 - [x] `src/hsttb/lexicons/api_fetcher.py` - RxNorm/OpenFDA/ICD-10 API client

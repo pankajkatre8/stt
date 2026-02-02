@@ -1282,6 +1282,9 @@ F1 = 2 × (P × R) / (P + R)</div>
         // Quality Results
         displayQualityResults(results);
 
+        // Clinical Risk Results (NEW - prioritizes clinical safety)
+        displayClinicalRiskResults(results);
+
         // Errors
         displayErrors(results);
 
@@ -1643,6 +1646,179 @@ F1 = 2 × (P × R) / (P + R)</div>
                     </div>
                     <div class="confidence-context">Context: "${escapeHtml(dp.context)}"</div>
                     ${dp.drop_magnitude > 0 ? `<div class="confidence-magnitude">Probability drop: ${dp.drop_magnitude.toFixed(2)}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function displayClinicalRiskResults(results) {
+        const clinicalRiskSection = document.getElementById('clinical-risk-section');
+
+        if (!clinicalRiskSection) return;
+
+        if (!results.quality || results.quality.clinical_risk_score === undefined) {
+            clinicalRiskSection.classList.add('hidden');
+            return;
+        }
+
+        clinicalRiskSection.classList.remove('hidden');
+        const quality = results.quality;
+
+        // Update clinical recommendation badge
+        const recommendationEl = document.getElementById('clinical-recommendation');
+        if (recommendationEl) {
+            const rec = quality.clinical_recommendation || 'REVIEW';
+            recommendationEl.textContent = rec;
+            recommendationEl.className = 'clinical-risk-recommendation ' + rec.toLowerCase().replace(/_/g, '-');
+        }
+
+        // Update clinical risk score
+        const riskValue = document.getElementById('clinical-risk-value');
+        if (riskValue) {
+            riskValue.textContent = formatPercent(quality.clinical_risk_score);
+            riskValue.className = 'clinical-risk-score-value ' + getScoreClass(quality.clinical_risk_score);
+        }
+
+        // Update risk level badge
+        const riskLevelEl = document.getElementById('clinical-risk-level');
+        if (riskLevelEl) {
+            const level = quality.clinical_risk_level || 'medium';
+            riskLevelEl.innerHTML = `<span class="risk-badge ${level}">${level.toUpperCase()} RISK</span>`;
+        }
+
+        // Update clinical component scores
+        updateClinicalComponent('assertion', quality.entity_assertion_score);
+        updateClinicalComponent('contradiction', quality.clinical_contradiction_score);
+        updateClinicalComponent('dosage', quality.dosage_plausibility_score);
+        updateClinicalComponent('token', quality.clinical_token_confidence_score);
+
+        // Display clinical concerns
+        displayClinicalConcerns(quality.clinical_concerns || []);
+
+        // Display risk factors
+        displayRiskFactors(quality.risk_factors || []);
+
+        // Display dosage issues
+        displayDosageIssues(quality.dosage_issues || []);
+
+        // Display clinical contradictions
+        displayClinicalContradictions(quality.clinical_contradictions || []);
+    }
+
+    function updateClinicalComponent(name, score) {
+        const valueEl = document.getElementById(`clinical-${name}-value`);
+        const barEl = document.getElementById(`clinical-${name}-bar`);
+
+        if (valueEl) {
+            if (score !== undefined && score !== null) {
+                valueEl.textContent = formatPercent(score);
+                valueEl.className = 'component-value ' + getScoreClass(score);
+            } else {
+                valueEl.textContent = 'N/A';
+                valueEl.className = 'component-value';
+            }
+        }
+
+        if (barEl) {
+            if (score !== undefined && score !== null) {
+                barEl.style.width = `${score * 100}%`;
+                barEl.className = 'component-bar-fill clinical ' + getScoreClass(score);
+            } else {
+                barEl.style.width = '0%';
+                barEl.className = 'component-bar-fill clinical';
+            }
+        }
+    }
+
+    function displayClinicalConcerns(concerns) {
+        const concernsSection = document.getElementById('clinical-concerns-section');
+        const concernsList = document.getElementById('clinical-concerns-list');
+
+        if (!concernsSection || !concernsList) return;
+
+        if (!concerns || concerns.length === 0) {
+            concernsSection.classList.add('hidden');
+            return;
+        }
+
+        concernsSection.classList.remove('hidden');
+
+        concernsList.innerHTML = concerns.map(concern => {
+            const isCritical = concern.includes('CRITICAL');
+            return `
+                <div class="concern-item ${isCritical ? 'critical' : ''}">
+                    <span class="concern-icon">${isCritical ? '⚠️' : '⚡'}</span>
+                    <span class="concern-text">${escapeHtml(concern)}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function displayRiskFactors(factors) {
+        const factorsSection = document.getElementById('risk-factors-section');
+        const factorsList = document.getElementById('risk-factors-list');
+
+        if (!factorsSection || !factorsList) return;
+
+        if (!factors || factors.length === 0) {
+            factorsSection.classList.add('hidden');
+            return;
+        }
+
+        factorsSection.classList.remove('hidden');
+
+        factorsList.innerHTML = factors.map(factor => {
+            return `
+                <div class="risk-factor-item">
+                    <span class="factor-bullet">•</span>
+                    <span class="factor-text">${escapeHtml(factor)}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function displayDosageIssues(issues) {
+        const dosageSection = document.getElementById('dosage-issues-section');
+        const dosageList = document.getElementById('dosage-issues-list');
+
+        if (!dosageSection || !dosageList) return;
+
+        if (!issues || issues.length === 0) {
+            dosageSection.classList.add('hidden');
+            return;
+        }
+
+        dosageSection.classList.remove('hidden');
+
+        dosageList.innerHTML = issues.map(issue => {
+            return `
+                <div class="dosage-issue-item">
+                    <span class="dosage-icon">💊</span>
+                    <span class="dosage-text">${escapeHtml(issue)}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function displayClinicalContradictions(contradictions) {
+        const contradictionsSection = document.getElementById('clinical-contradictions-section');
+        const contradictionsList = document.getElementById('clinical-contradictions-list');
+
+        if (!contradictionsSection || !contradictionsList) return;
+
+        if (!contradictions || contradictions.length === 0) {
+            contradictionsSection.classList.add('hidden');
+            return;
+        }
+
+        contradictionsSection.classList.remove('hidden');
+
+        contradictionsList.innerHTML = contradictions.map(c => {
+            const detail = typeof c === 'object' ? (c.detail || JSON.stringify(c)) : c;
+            return `
+                <div class="clinical-contradiction-item">
+                    <span class="contradiction-icon">⚡</span>
+                    <span class="contradiction-text">${escapeHtml(detail)}</span>
                 </div>
             `;
         }).join('');

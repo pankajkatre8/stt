@@ -1788,6 +1788,244 @@ textarea::placeholder {
     font-size: 0.7rem;
 }
 
+/* Clinical Risk Section */
+.clinical-risk-section {
+    margin-bottom: 16px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    border-left: 3px solid #dc2626;
+}
+
+.clinical-risk-section h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+}
+
+.clinical-risk-section h3 svg {
+    color: #dc2626;
+    width: 16px;
+    height: 16px;
+}
+
+.clinical-risk-recommendation {
+    font-size: 0.6rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: auto;
+}
+
+.clinical-risk-recommendation.accept {
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.clinical-risk-recommendation.accept-with-review {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+    border: 1px solid #3b82f6;
+}
+
+.clinical-risk-recommendation.needs-review {
+    background: var(--warning-bg);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+}
+
+.clinical-risk-recommendation.reject {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+.clinical-risk-composite {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 16px 0;
+    gap: 10px;
+}
+
+.clinical-risk-score-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 32px;
+    background: rgba(220, 38, 38, 0.1);
+    border-radius: var(--radius-xl);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.clinical-risk-score-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #dc2626;
+    line-height: 1;
+}
+
+.clinical-risk-score-value.score-good { color: var(--success); }
+.clinical-risk-score-value.score-warning { color: var(--warning); }
+.clinical-risk-score-value.score-bad { color: var(--danger); }
+
+.clinical-risk-score-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.risk-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.risk-badge.low {
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.risk-badge.medium {
+    background: var(--warning-bg);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+}
+
+.risk-badge.high {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid #f87171;
+}
+
+.risk-badge.critical {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.clinical-risk-components {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.clinical-risk-component {
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+}
+
+.component-bar-fill.clinical {
+    background: linear-gradient(90deg, #dc2626, #f87171);
+}
+
+.component-bar-fill.clinical.score-good {
+    background: linear-gradient(90deg, var(--success), #34d399);
+}
+
+.component-bar-fill.clinical.score-warning {
+    background: linear-gradient(90deg, var(--warning), #fbbf24);
+}
+
+.component-bar-fill.clinical.score-bad {
+    background: linear-gradient(90deg, var(--danger), #f87171);
+}
+
+/* Clinical Concerns */
+.clinical-concerns,
+.risk-factors,
+.dosage-issues,
+.clinical-contradictions-detail {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+
+.clinical-concerns h4,
+.risk-factors h4,
+.dosage-issues h4,
+.clinical-contradictions-detail h4 {
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.concerns-list,
+.risk-factors-list,
+.dosage-issues-list,
+.clinical-contradictions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.concern-item,
+.risk-factor-item,
+.dosage-issue-item,
+.clinical-contradiction-item {
+    padding: 8px 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.concern-item.critical {
+    background: var(--danger-bg);
+    border-left: 2px solid var(--danger);
+}
+
+.concern-icon,
+.factor-bullet,
+.dosage-icon,
+.contradiction-icon {
+    flex-shrink: 0;
+}
+
+.concern-text,
+.factor-text,
+.dosage-text,
+.contradiction-text {
+    color: var(--text-secondary);
+}
+
+.concern-item.critical .concern-text {
+    color: var(--danger);
+    font-weight: 500;
+}
+
+.dosage-issue-item {
+    border-left: 2px solid var(--warning);
+}
+
+.clinical-contradiction-item {
+    border-left: 2px solid #dc2626;
+}
+
 /* Diff Section */
 .diff-section {
     margin-bottom: 16px;

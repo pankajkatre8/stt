@@ -8,6 +8,54 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added - Clinical Risk Scoring (2026-02-02)
+
+#### Clinical Risk Analysis (Risk-Adjusted Quality Scoring)
+- **ClinicalRiskScorer** (`src/hsttb/metrics/clinical_risk.py`)
+  - Risk-adjusted quality scoring prioritizing clinical safety
+  - Combines entity assertion, contradictions, dosages, token confidence
+  - Weighted signals: entity_assertion (20%), contradiction (20%), dosage (15%), token_confidence (15%), others (30%)
+  - Risk levels: LOW, MEDIUM, HIGH, CRITICAL
+  - Recommendations: ACCEPT, ACCEPT_WITH_REVIEW, NEEDS_REVIEW, REJECT
+
+- **EntityAssertionAnalyzer** (`src/hsttb/metrics/entity_assertion.py`)
+  - Tracks assertion status: AFFIRMED, NEGATED, UNCERTAIN, HYPOTHETICAL, HISTORICAL, FAMILY
+  - Detects negation patterns ("no diabetes", "denies pain")
+  - Detects uncertainty patterns ("possible", "borderline", "may have")
+  - Detects borderline/subclinical states
+  - Certainty levels: DEFINITE, PROBABLE, POSSIBLE, BORDERLINE, RULED_OUT
+  - Clinical safety flagging for ambiguous assertions
+
+- **ClinicalContradictionDetector** (`src/hsttb/metrics/clinical_contradiction.py`)
+  - Detects HARD contradictions ("has diabetes" vs "no diabetes")
+  - Detects SOFT contradictions ("no SOB at rest" vs "SOB on exertion")
+  - Detects TEMPORAL contradictions ("had X" vs "no X now")
+  - Context-aware: complementary conditions not flagged as contradictions
+  - Tracks entity states across multiple sentences
+  - Medication contradiction detection (takes vs stopped)
+
+- **DosagePlausibilityChecker** (`src/hsttb/metrics/dosage_plausibility.py`)
+  - Validates medication dosages against typical clinical ranges
+  - 16 common medications with min/max/typical doses
+  - Frequency validation (e.g., amlodipine usually once daily)
+  - Unit conversion handling (mg vs mcg)
+  - Detects transcription errors (e.g., "5 00" instead of "500")
+
+#### API Updates
+- QualityEngine now returns clinical risk scores in addition to plausibility scores
+- `/api/evaluate` includes: clinical_risk_score, clinical_risk_level, clinical_recommendation
+- New fields: entity_assertion_score, clinical_contradiction_score, dosage_plausibility_score
+- Clinical concerns and risk factors lists
+
+#### UI Updates
+- New "Clinical Risk Assessment" section in results
+- Clinical Safety Score with risk level badge (LOW/MEDIUM/HIGH/CRITICAL)
+- Component bars for: Entity Assertion, Clinical Contradictions, Dosage Plausibility, Token Confidence
+- Clinical Concerns display
+- Risk Factors list
+- Dosage Issues detail
+- Clinical Contradictions detail (soft/hard)
+
 ### Added - Phase 8: Reference-Free Quality Metrics (2026-02-02)
 
 #### Quality Engine Enhancements
