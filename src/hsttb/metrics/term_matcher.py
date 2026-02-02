@@ -432,38 +432,41 @@ class MedicalTermMatcher:
             error_score=error_score,
         )
 
+    def _get_stemmer(self):
+        """Get or create Porter Stemmer instance."""
+        if not hasattr(self, "_stemmer"):
+            try:
+                from nltk.stem import PorterStemmer
+                self._stemmer = PorterStemmer()
+            except ImportError:
+                logger.warning("nltk not available, using fallback stemmer")
+                self._stemmer = None
+        return self._stemmer
+
     def _normalize_for_comparison(self, word: str) -> str:
         """
         Normalize a word for comparison, handling plural/singular forms.
 
-        Implements a simple stemmer to handle common English inflections.
+        Uses NLTK Porter Stemmer for proper linguistic stemming.
 
         Args:
             word: Word to normalize.
 
         Returns:
-            Normalized form of the word.
+            Stemmed form of the word.
         """
         word = word.lower().strip()
 
-        # Handle common plural suffixes
-        if word.endswith("aches"):
-            # headaches -> headache
-            return word[:-1]
+        stemmer = self._get_stemmer()
+        if stemmer:
+            return stemmer.stem(word)
+
+        # Fallback: basic suffix removal if nltk unavailable
         if word.endswith("ies") and len(word) > 4:
-            # allergies -> allergy
             return word[:-3] + "y"
         if word.endswith("es") and len(word) > 3:
-            # diagnoses -> diagnose, aches -> ache
-            if word.endswith("sses") or word.endswith("shes") or word.endswith("ches") or word.endswith("xes"):
-                return word[:-2]
-            if word.endswith("oes"):
-                return word[:-2]
-            # Generic -es handling for medical terms
-            if word[-3] not in "aeiou":
-                return word[:-1]  # pains -> pain (if it were "paines")
+            return word[:-2]
         if word.endswith("s") and len(word) > 3 and not word.endswith("ss"):
-            # symptoms -> symptom, headaches already handled above
             return word[:-1]
 
         return word
