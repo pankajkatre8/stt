@@ -6,18 +6,18 @@ lexicons used in TER (Term Error Rate) computation.
 
 Available Backends:
     - MockMedicalLexicon: For testing (hardcoded terms)
+    - SQLiteMedicalLexicon: SQLite-backed, fetches from RxNorm/ICD-10 APIs
+    - DynamicMedicalLexicon: API-based with caching
     - MedCATLexicon: UMLS/SNOMED-CT linking via MedCAT
     - SciSpacyLexicon: Biomedical NER via scispaCy
     - SciSpacyWithLinker: scispaCy + UMLS entity linking
 
 Example:
-    >>> from hsttb.lexicons import MedCATLexicon, SciSpacyLexicon
-    >>> # Production: Use MedCAT for SNOMED linking
-    >>> medcat = MedCATLexicon()
-    >>> medcat.load("path/to/medcat_model.zip")
-    >>> # Or scispaCy for biomedical NER
-    >>> scispacy = SciSpacyLexicon()
-    >>> scispacy.load("en_ner_bc5cdr_md")
+    >>> from hsttb.lexicons import SQLiteMedicalLexicon
+    >>> # Production: Use SQLite lexicon (auto-fetches from APIs)
+    >>> lexicon = SQLiteMedicalLexicon()
+    >>> lexicon.load()  # Fetches from RxNorm, OpenFDA, ICD-10 if needed
+    >>> entry = lexicon.lookup("metformin")
 """
 from __future__ import annotations
 
@@ -42,6 +42,18 @@ def __getattr__(name: str):
     elif name == "SciSpacyWithLinker":
         from hsttb.lexicons.scispacy_lexicon import SciSpacyWithLinker
         return SciSpacyWithLinker
+    elif name == "SQLiteMedicalLexicon":
+        from hsttb.lexicons.sqlite_lexicon import SQLiteMedicalLexicon
+        return SQLiteMedicalLexicon
+    elif name == "DynamicMedicalLexicon":
+        from hsttb.lexicons.dynamic_lexicon import DynamicMedicalLexicon
+        return DynamicMedicalLexicon
+    elif name == "get_sqlite_lexicon":
+        from hsttb.lexicons.sqlite_lexicon import get_sqlite_lexicon
+        return get_sqlite_lexicon
+    elif name == "MedicalTermFetcher":
+        from hsttb.lexicons.api_fetcher import MedicalTermFetcher
+        return MedicalTermFetcher
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
@@ -52,6 +64,11 @@ __all__ = [
     "LexiconStats",
     # Mock (testing)
     "MockMedicalLexicon",
+    # API-based lexicons
+    "SQLiteMedicalLexicon",
+    "DynamicMedicalLexicon",
+    "MedicalTermFetcher",
+    "get_sqlite_lexicon",
     # Production backends
     "MedCATLexicon",
     "SciSpacyLexicon",

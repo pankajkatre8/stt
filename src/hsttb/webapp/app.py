@@ -153,18 +153,27 @@ def create_app() -> FastAPI:
     def get_lexicon() -> MedicalLexicon:
         nonlocal _lexicon
         if _lexicon is None:
-            # Try scispacy model first for best medical NER
+            # Try SQLite lexicon first (fetches from RxNorm/ICD-10 APIs)
             try:
-                scispacy_lex = SciSpacyLexicon()
-                scispacy_lex.load("en_ner_bc5cdr_md")
-                _lexicon = scispacy_lex
-                logger.info("Using scispacy BC5CDR lexicon for TER")
-            except OSError:
-                # Fall back to MockMedicalLexicon which has comprehensive drug list
-                # This is better than en_core_web_sm which doesn't detect drugs
-                from hsttb.lexicons.mock_lexicon import MockMedicalLexicon
-                _lexicon = MockMedicalLexicon.with_common_terms()
-                logger.warning("scispacy not available, using MockMedicalLexicon for TER")
+                from hsttb.lexicons.sqlite_lexicon import SQLiteMedicalLexicon
+                sqlite_lex = SQLiteMedicalLexicon()
+                sqlite_lex.load("auto")
+                _lexicon = sqlite_lex
+                stats = sqlite_lex.get_stats()
+                logger.info(f"Using SQLite lexicon with {stats.entry_count if stats else 0} terms")
+            except Exception as e:
+                logger.warning(f"SQLite lexicon failed ({e}), trying scispacy...")
+                # Try scispacy model
+                try:
+                    scispacy_lex = SciSpacyLexicon()
+                    scispacy_lex.load("en_ner_bc5cdr_md")
+                    _lexicon = scispacy_lex
+                    logger.info("Using scispacy BC5CDR lexicon for TER")
+                except OSError:
+                    # Fall back to MockMedicalLexicon
+                    from hsttb.lexicons.mock_lexicon import MockMedicalLexicon
+                    _lexicon = MockMedicalLexicon.with_common_terms()
+                    logger.warning("Using MockMedicalLexicon for TER")
         return _lexicon
 
     def get_similarity_engine() -> TransformerSimilarityEngine:

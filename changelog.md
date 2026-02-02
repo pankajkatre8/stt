@@ -71,6 +71,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Warning messages for suspicious speech rates
 - NLP model availability indicators in UI
 
+#### Medical Terminology API Integration
+- **MedicalTermFetcher** (`src/hsttb/lexicons/api_fetcher.py`)
+  - Fetches drugs from RxNorm API (NIH)
+  - Fetches drugs from OpenFDA API
+  - Fetches diagnoses from ICD-10-CM API (NLM Clinical Tables)
+  - Automatic caching (30-day expiry)
+  - Rate limiting and error handling
+  - Drug-indication relationship fetching
+
+- **SQLiteMedicalLexicon** (`src/hsttb/lexicons/sqlite_lexicon.py`)
+  - SQLite-backed lexicon for fast local lookups
+  - Auto-fetches from APIs if database empty/stale
+  - Indexed queries for efficient term lookup
+  - Drug-indication storage and validation
+  - Export to JSON functionality
+  - Falls back to embedded data if APIs unavailable
+
+- **DynamicMedicalLexicon** (`src/hsttb/lexicons/dynamic_lexicon.py`)
+  - API-based lexicon with JSON caching
+  - Supports async and sync loading
+  - Embedded fallback data for offline use
+
 #### Documentation
 - **explanation.md** - Comprehensive metrics documentation
   - Detailed explanation of each metric (WER, CER, TER, NER, CRS)

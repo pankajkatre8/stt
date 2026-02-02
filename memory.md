@@ -150,6 +150,11 @@ Healthcare Streaming STT Benchmarking Framework - a model-agnostic evaluation sy
 - [x] `src/hsttb/metrics/confidence_variance.py` - Token confidence analysis
 - [x] `src/hsttb/metrics/speech_rate.py` - Speech rate validation
 
+**Medical Terminology APIs (Complete):**
+- [x] `src/hsttb/lexicons/api_fetcher.py` - RxNorm/OpenFDA/ICD-10 API client
+- [x] `src/hsttb/lexicons/sqlite_lexicon.py` - SQLite-backed lexicon storage
+- [x] `src/hsttb/lexicons/dynamic_lexicon.py` - API-based lexicon with caching
+
 **Tests (Previous Phases):**
 - [x] `tests/unit/core/test_types.py` - 36 type tests
 - [x] `tests/test_adapters.py` - 30 adapter tests
