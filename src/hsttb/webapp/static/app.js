@@ -64,6 +64,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
+    // Stellicare elements
+    const stellicareDropzone = document.getElementById('stellicare-dropzone');
+    const stellicareFileInput = document.getElementById('stellicare-file-input');
+    const stellicareFileList = document.getElementById('stellicare-file-list');
+    const stellicareProcessBtn = document.getElementById('stellicare-process-btn');
+    const stellicareProgress = document.getElementById('stellicare-progress');
+    const stellicareProgressCounter = document.getElementById('stellicare-progress-counter');
+    const stellicareProgressFill = document.getElementById('stellicare-progress-fill');
+    const stellicareProgressStatus = document.getElementById('stellicare-progress-status');
+    const stellicareTranscriptContent = document.getElementById('stellicare-transcript-content');
+    const stellicareResult = document.getElementById('stellicare-result');
+    const stellicareRawTranscript = document.getElementById('stellicare-raw-transcript');
+    const stellicareRefineBtn = document.getElementById('stellicare-refine-btn');
+    const stellicareRefinedSection = document.getElementById('stellicare-refined-section');
+    const stellicareRefinedTranscript = document.getElementById('stellicare-refined-transcript');
+    const stellicareUseBtn = document.getElementById('stellicare-use-btn');
+    const stellicareResetBtn = document.getElementById('stellicare-reset-btn');
+
     // Adapter elements
     const adapterCards = document.querySelectorAll('.adapter-card');
     const whisperModel = document.getElementById('whisper-model');
@@ -79,6 +97,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let recordingInterval = null;
     let ttsGeneratedFileId = null;
     let ttsHistoryEntries = [];
+
+    // Stellicare state
+    let stellicareFiles = [];  // [{file: File, file_id: string, status: string}]
+    let stellicareWs = null;   // WebSocket connection
 
     // Additional elements
     const resultsPlaceholder = document.getElementById('results-placeholder');
@@ -97,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupCheckboxLabels();
     setupInfoButtons();
     setupResizablePanel();
+    setupStellicareDropzone();
 
     // ========================================================================
     // Event Listeners
@@ -499,7 +522,7 @@ F1 = 2 × (P × R) / (P + R)</div>
         });
 
         // Show/hide adapter section based on tab
-        if (tabId === 'text' || tabId === 'tts' || tabId === 'history') {
+        if (tabId === 'text' || tabId === 'tts' || tabId === 'history' || tabId === 'stellicare') {
             adapterSection.classList.add('hidden');
         } else {
             adapterSection.classList.remove('hidden');
@@ -2859,4 +2882,361 @@ F1 = 2 × (P × R) / (P + R)</div>
 
     // Load evaluation history count on page load
     loadEvalHistory();
+
+    // ========================================================================
+    // Stellicare Pipeline
+    // ========================================================================
+
+    function setupStellicareDropzone() {
+        if (!stellicareDropzone) return;
+
+        // Ensure multiple file selection is enabled
+        if (stellicareFileInput) {
+            stellicareFileInput.multiple = true;
+            stellicareFileInput.setAttribute('multiple', '');
+        }
+
+        stellicareDropzone.addEventListener('click', () => {
+            stellicareFileInput.click();
+        });
+
+        stellicareDropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            stellicareDropzone.classList.add('dragover');
+        });
+
+        stellicareDropzone.addEventListener('dragleave', () => {
+            stellicareDropzone.classList.remove('dragover');
+        });
+
+        stellicareDropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            stellicareDropzone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files && files.length > 0) {
+                handleStellicareFiles(files);
+            }
+        });
+
+        stellicareFileInput.addEventListener('change', () => {
+            if (stellicareFileInput.files.length > 0) {
+                handleStellicareFiles(stellicareFileInput.files);
+            }
+        });
+
+        // Process button
+        if (stellicareProcessBtn) {
+            stellicareProcessBtn.addEventListener('click', startStellicareProcessing);
+        }
+
+        // Refine button
+        if (stellicareRefineBtn) {
+            stellicareRefineBtn.addEventListener('click', refineStellicareTranscript);
+        }
+
+        // Use for evaluation button
+        if (stellicareUseBtn) {
+            stellicareUseBtn.addEventListener('click', useStellicareTranscript);
+        }
+
+        // Reset button
+        if (stellicareResetBtn) {
+            stellicareResetBtn.addEventListener('click', resetStellicareUI);
+        }
+    }
+
+    async function handleStellicareFiles(fileList) {
+        const files = Array.from(fileList).filter(f => f.name.toLowerCase().endsWith('.wav'));
+
+        if (files.length === 0) {
+            alert('Please select WAV files only.');
+            return;
+        }
+
+        // Upload each file
+        for (const file of files) {
+            const entry = { file, file_id: null, status: 'uploading', name: file.name };
+            stellicareFiles.push(entry);
+            renderStellicareFileList();
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/api/audio/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    entry.file_id = data.file_id;
+                    entry.status = 'ready';
+                } else {
+                    entry.status = 'error';
+                    console.error('Upload failed:', data.error);
+                }
+            } catch (error) {
+                entry.status = 'error';
+                console.error('Upload error:', error);
+            }
+
+            renderStellicareFileList();
+        }
+
+        // Show process button if we have valid files
+        if (stellicareFiles.some(f => f.status === 'ready')) {
+            stellicareProcessBtn.classList.remove('hidden');
+        }
+
+        // Reset file input
+        stellicareFileInput.value = '';
+    }
+
+    function renderStellicareFileList() {
+        if (!stellicareFileList) return;
+
+        if (stellicareFiles.length === 0) {
+            stellicareFileList.classList.add('hidden');
+            stellicareProcessBtn.classList.add('hidden');
+            return;
+        }
+
+        stellicareFileList.classList.remove('hidden');
+
+        const statusLabels = {
+            uploading: 'Uploading...',
+            ready: 'Ready',
+            streaming: 'Streaming...',
+            done: 'Done',
+            error: 'Error'
+        };
+
+        stellicareFileList.innerHTML = stellicareFiles.map((entry, index) => `
+            <div class="stellicare-file-item">
+                <span class="file-index">${index + 1}</span>
+                <span class="file-name">${entry.name}</span>
+                <span class="file-status ${entry.status}">${statusLabels[entry.status] || entry.status}</span>
+                <button class="file-remove" onclick="window._removeStellicareFile(${index})" title="Remove">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    // Expose to global scope for onclick handlers
+    window._removeStellicareFile = function(index) {
+        stellicareFiles.splice(index, 1);
+        renderStellicareFileList();
+        if (!stellicareFiles.some(f => f.status === 'ready')) {
+            stellicareProcessBtn.classList.add('hidden');
+        }
+    };
+
+    async function startStellicareProcessing() {
+        const validFiles = stellicareFiles.filter(f => f.file_id && f.status === 'ready');
+        if (validFiles.length === 0) {
+            alert('No valid files to process.');
+            return;
+        }
+
+        const fileIds = validFiles.map(f => f.file_id);
+
+        // Hide dropzone and process button, show progress
+        stellicareDropzone.classList.add('hidden');
+        stellicareProcessBtn.classList.add('hidden');
+        stellicareProgress.classList.remove('hidden');
+        stellicareResult.classList.add('hidden');
+        stellicareTranscriptContent.textContent = '';
+        stellicareProgressFill.style.width = '0%';
+        stellicareProgressCounter.textContent = `0/${fileIds.length}`;
+        stellicareProgressStatus.textContent = 'Connecting to Stellicare...';
+
+        // Open WebSocket
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/stellicare`;
+
+        stellicareWs = new WebSocket(wsUrl);
+
+        stellicareWs.onopen = () => {
+            stellicareProgressStatus.textContent = 'Connected. Starting processing...';
+            stellicareWs.send(JSON.stringify({
+                type: 'start',
+                file_ids: fileIds,
+            }));
+        };
+
+        stellicareWs.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                handleStellicareMessage(data);
+            } catch (e) {
+                console.error('Failed to parse Stellicare message:', e);
+            }
+        };
+
+        stellicareWs.onerror = (error) => {
+            console.error('Stellicare WebSocket error:', error);
+            stellicareProgressStatus.textContent = 'Connection error. Please try again.';
+        };
+
+        stellicareWs.onclose = () => {
+            stellicareWs = null;
+        };
+    }
+
+    function handleStellicareMessage(data) {
+        const type = data.type;
+        const totalFiles = data.total_files || stellicareFiles.length;
+
+        switch (type) {
+            case 'status':
+                stellicareProgressStatus.textContent = data.message || data.status;
+                break;
+
+            case 'progress':
+                stellicareProgressStatus.textContent = `Streaming: ${data.filename || `File ${data.file_index + 1}`}`;
+                stellicareProgressCounter.textContent = `${data.file_index + 1}/${totalFiles}`;
+                const progressPct = ((data.file_index) / totalFiles) * 100;
+                stellicareProgressFill.style.width = `${progressPct}%`;
+
+                // Update file status
+                if (data.file_index < stellicareFiles.length) {
+                    stellicareFiles[data.file_index].status = 'streaming';
+                    renderStellicareFileList();
+                }
+                break;
+
+            case 'phrase':
+                if (data.is_final && data.text) {
+                    const current = stellicareTranscriptContent.textContent;
+                    stellicareTranscriptContent.textContent = current ? current + ' ' + data.text : data.text;
+                    // Auto-scroll
+                    stellicareTranscriptContent.scrollTop = stellicareTranscriptContent.scrollHeight;
+                }
+                break;
+
+            case 'file_complete':
+                if (data.file_index < stellicareFiles.length) {
+                    stellicareFiles[data.file_index].status = 'done';
+                    renderStellicareFileList();
+                }
+                const filePct = ((data.file_index + 1) / totalFiles) * 100;
+                stellicareProgressFill.style.width = `${filePct}%`;
+                stellicareProgressCounter.textContent = `${data.file_index + 1}/${totalFiles}`;
+                break;
+
+            case 'all_complete':
+                stellicareProgressFill.style.width = '100%';
+                stellicareProgressStatus.textContent = 'Processing complete!';
+
+                // Show result
+                setTimeout(() => {
+                    stellicareProgress.classList.add('hidden');
+                    stellicareResult.classList.remove('hidden');
+                    stellicareRawTranscript.value = data.raw_transcript || '';
+                    stellicareRefinedSection.classList.add('hidden');
+                }, 500);
+                break;
+
+            case 'error':
+                console.error('Stellicare error:', data.error);
+                stellicareProgressStatus.textContent = `Error: ${data.error}`;
+                if (data.file_index !== undefined && data.file_index < stellicareFiles.length) {
+                    stellicareFiles[data.file_index].status = 'error';
+                    renderStellicareFileList();
+                }
+                break;
+
+            default:
+                console.log('Unknown Stellicare message type:', type, data);
+        }
+    }
+
+    async function refineStellicareTranscript() {
+        const rawText = stellicareRawTranscript.value.trim();
+        if (!rawText) {
+            alert('No transcript to refine.');
+            return;
+        }
+
+        // Show loading state
+        stellicareRefineBtn.disabled = true;
+        stellicareRefineBtn.querySelector('.btn-text').textContent = 'Refining...';
+        stellicareRefineBtn.querySelector('.btn-spinner').style.display = 'inline-block';
+
+        try {
+            const response = await fetch('/api/stellicare/refine', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ transcript: rawText }),
+            });
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                stellicareRefinedSection.classList.remove('hidden');
+                stellicareRefinedTranscript.value = data.transcript;
+            } else {
+                alert(`Refinement failed: ${data.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Refine error:', error);
+            alert('Failed to refine transcript. Using raw transcript.');
+        } finally {
+            stellicareRefineBtn.disabled = false;
+            stellicareRefineBtn.querySelector('.btn-text').textContent = 'Refine Transcript';
+            stellicareRefineBtn.querySelector('.btn-spinner').style.display = 'none';
+        }
+    }
+
+    function useStellicareTranscript() {
+        // Use refined transcript if available, otherwise raw
+        const refined = stellicareRefinedTranscript ? stellicareRefinedTranscript.value.trim() : '';
+        const raw = stellicareRawTranscript.value.trim();
+        const transcript = refined || raw;
+
+        if (!transcript) {
+            alert('No transcript available.');
+            return;
+        }
+
+        // Set the predicted text
+        predictedInput.value = transcript;
+
+        // Scroll to evaluation section
+        const evalSection = document.querySelector('.input-section');
+        if (evalSection) {
+            evalSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function resetStellicareUI() {
+        // Reset state
+        stellicareFiles = [];
+
+        if (stellicareWs) {
+            stellicareWs.close();
+            stellicareWs = null;
+        }
+
+        // Reset UI
+        stellicareDropzone.classList.remove('hidden');
+        stellicareFileList.classList.add('hidden');
+        stellicareFileList.innerHTML = '';
+        stellicareProcessBtn.classList.add('hidden');
+        stellicareProgress.classList.add('hidden');
+        stellicareResult.classList.add('hidden');
+        stellicareRefinedSection.classList.add('hidden');
+        stellicareTranscriptContent.textContent = '';
+        stellicareRawTranscript.value = '';
+        if (stellicareRefinedTranscript) {
+            stellicareRefinedTranscript.value = '';
+        }
+        stellicareProgressFill.style.width = '0%';
+        stellicareFileInput.value = '';
+    }
 });

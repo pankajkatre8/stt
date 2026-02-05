@@ -124,6 +124,12 @@ class SpeechRateRequest(BaseModel):
     audio_duration_seconds: float
 
 
+class StellicareRefineRequest(BaseModel):
+    """Request model for Stellicare transcript refinement."""
+
+    transcript: str
+
+
 # ============================================================================
 # Application Factory
 # ============================================================================
@@ -1317,6 +1323,74 @@ def create_app() -> FastAPI:
             logger.info("WebSocket client disconnected")
         except Exception as e:
             logger.error(f"WebSocket error: {e}")
+
+    # ========================================================================
+    # Stellicare Endpoints
+    # ========================================================================
+
+    def get_stellicare_config() -> Any:
+        """Get Stellicare configuration from environment."""
+        from hsttb.webapp.stellicare_client import StellicareConfig
+
+        return StellicareConfig.from_env()
+
+    @application.websocket("/ws/stellicare")
+    async def websocket_stellicare(websocket: WebSocket) -> None:
+        """Stellicare audio processing pipeline via WebSocket."""
+        from hsttb.webapp.stellicare_handler import StellicareWebSocketHandler
+
+        handler = StellicareWebSocketHandler(
+            websocket=websocket,
+            config_factory=get_stellicare_config,
+        )
+        try:
+            await handler.run()
+        except WebSocketDisconnect:
+            logger.info("Stellicare WebSocket client disconnected")
+        except Exception as e:
+            logger.error(f"Stellicare WebSocket error: {e}")
+
+    @application.post("/api/stellicare/refine")
+    async def stellicare_refine(req: StellicareRefineRequest) -> JSONResponse:
+        """
+        Refine a transcript using the Stellicare API.
+
+        Sends the raw transcript to Stellicare's refinement endpoint
+        and returns the refined version.
+        """
+        from hsttb.webapp.stellicare_client import refine_transcript
+
+        try:
+            config = get_stellicare_config()
+            refined = await refine_transcript(req.transcript, config)
+            return JSONResponse(content={
+                "status": "success",
+                "transcript": refined,
+            })
+        except Exception as e:
+            logger.error(f"Stellicare refine error: {e}")
+            return JSONResponse(
+                content={"status": "error", "error": str(e)},
+                status_code=500,
+            )
+
+    @application.get("/api/stellicare/config")
+    async def stellicare_config_endpoint() -> JSONResponse:
+        """Get current Stellicare configuration status."""
+        try:
+            config = get_stellicare_config()
+            return JSONResponse(content={
+                "status": "success",
+                "configured": True,
+                "wss_url": config.wss_url,
+                "refine_url": config.refine_url,
+            })
+        except Exception as e:
+            return JSONResponse(content={
+                "status": "success",
+                "configured": False,
+                "error": str(e),
+            })
 
     # ========================================================================
     # Info Endpoints

@@ -3363,3 +3363,268 @@ footer {
     font-size: 0.7rem;
     border-radius: var(--radius-sm);
 }
+
+
+/* ============================================
+   Stellicare Pipeline
+   ============================================ */
+
+.stellicare-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.stellicare-hint {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.stellicare-dropzone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-md);
+    padding: 32px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition);
+    background: var(--bg-tertiary);
+}
+
+.stellicare-dropzone:hover,
+.stellicare-dropzone.dragover {
+    border-color: var(--primary);
+    background: var(--primary-muted);
+}
+
+/* Stellicare File List */
+.stellicare-file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.stellicare-file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+}
+
+.stellicare-file-item .file-index {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-muted);
+    color: var(--primary);
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.stellicare-file-item .file-name {
+    flex: 1;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stellicare-file-item .file-status {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.stellicare-file-item .file-status.done {
+    color: var(--success);
+}
+
+.stellicare-file-item .file-status.streaming {
+    color: var(--warning);
+}
+
+.stellicare-file-item .file-status.error {
+    color: var(--danger);
+}
+
+.stellicare-file-item .file-remove {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    transition: color var(--transition);
+    flex-shrink: 0;
+}
+
+.stellicare-file-item .file-remove:hover {
+    color: var(--danger);
+}
+
+.stellicare-process-btn {
+    width: 100%;
+}
+
+/* Stellicare Progress */
+.stellicare-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.stellicare-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stellicare-progress-header .progress-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.stellicare-progress-header .progress-counter {
+    font-size: 0.85rem;
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.stellicare-progress-bar {
+    height: 6px;
+    background: var(--bg-hover);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.stellicare-progress-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.stellicare-progress-status {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Stellicare Live Transcript */
+.stellicare-live-transcript {
+    margin-top: 8px;
+}
+
+.stellicare-live-transcript h4 {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stellicare-live-transcript .transcript-content {
+    max-height: 150px;
+    overflow-y: auto;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    font-family: var(--font-mono);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Stellicare Result */
+.stellicare-result {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--success);
+    border-radius: var(--radius-md);
+}
+
+.stellicare-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stellicare-result-header h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.stellicare-result-badge {
+    padding: 2px 10px;
+    background: var(--success-bg);
+    color: var(--success);
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+}
+
+.stellicare-transcript-display {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stellicare-transcript-display label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.stellicare-transcript-display textarea {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+    line-height: 1.5;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.stellicare-refine-btn {
+    width: 100%;
+}
+
+.stellicare-action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.stellicare-action-buttons .btn-primary,
+.stellicare-action-buttons .btn-secondary {
+    flex: 1;
+}
+
+.stellicare-use-btn {
+    width: 100%;
+}

@@ -20,9 +20,13 @@ Exception Hierarchy:
     │   ├── TERComputationError
     │   ├── NERComputationError
     │   └── CRSComputationError
-    └── EvaluationError
-        ├── BenchmarkError
-        └── ReportGenerationError
+    ├── EvaluationError
+    │   ├── BenchmarkError
+    │   └── ReportGenerationError
+    └── StellicareError
+        ├── StellicareConnectionError
+        ├── StellicareTranscriptionError
+        └── StellicareRefineError
 """
 
 from __future__ import annotations
@@ -384,3 +388,51 @@ class ReportGenerationError(EvaluationError):
         """
         self.report_type = report_type
         super().__init__(message)
+
+
+# ==============================================================================
+# Stellicare API Errors
+# ==============================================================================
+
+
+class StellicareError(HSSTBError):
+    """
+    Base exception for Stellicare API errors.
+
+    Raised for any errors related to communication with
+    the Stellicare STT service (WebSocket streaming, refinement API).
+    """
+
+    pass
+
+
+class StellicareConnectionError(StellicareError):
+    """
+    Error connecting to Stellicare WebSocket.
+
+    Raised when the WebSocket connection to the Stellicare
+    transcription service cannot be established.
+    """
+
+    pass
+
+
+class StellicareTranscriptionError(StellicareError):
+    """
+    Error during Stellicare transcription streaming.
+
+    Raised when audio streaming or transcript reception fails
+    after the WebSocket connection is established.
+    """
+
+    pass
+
+
+class StellicareRefineError(StellicareError):
+    """
+    Error refining transcript via Stellicare API.
+
+    Raised when the transcript refinement REST API call fails.
+    """
+
+    pass

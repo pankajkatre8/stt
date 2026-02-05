@@ -40,6 +40,7 @@
                         <button class="tab-btn" data-tab="tts">Generate TTS</button>
                         <button class="tab-btn" data-tab="history">History</button>
                         <button class="tab-btn" data-tab="text">Text Only</button>
+                        <button class="tab-btn" data-tab="stellicare">Stellicare</button>
                     </div>
 
                     <!-- File Upload -->
@@ -191,6 +192,97 @@
                     <!-- Text Only -->
                     <div class="tab-content" id="tab-text">
                         <p class="text-hint">Skip audio - enter text directly below for evaluation.</p>
+                    </div>
+
+                    <!-- Stellicare Pipeline -->
+                    <div class="tab-content" id="tab-stellicare">
+                        <div class="stellicare-section">
+                            <p class="stellicare-hint">
+                                Upload WAV files to process through the Stellicare STT pipeline.
+                                Files are streamed sequentially for transcription, then refined via the Stellicare API.
+                            </p>
+
+                            <!-- Hidden file input (outside dropzone to prevent event bubbling) -->
+                            <input type="file" id="stellicare-file-input" accept=".wav,audio/wav,audio/x-wav" multiple hidden>
+
+                            <!-- Multi-file upload dropzone -->
+                            <div class="stellicare-dropzone" id="stellicare-dropzone">
+                                <div class="dropzone-content">
+                                    <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    <p>Drag and drop WAV files here</p>
+                                    <p class="dropzone-hint">or click to browse (hold Cmd/Ctrl to select multiple)</p>
+                                    <p class="dropzone-formats">WAV files only</p>
+                                </div>
+                            </div>
+
+                            <!-- File list -->
+                            <div id="stellicare-file-list" class="stellicare-file-list hidden">
+                            </div>
+
+                            <!-- Process button -->
+                            <button id="stellicare-process-btn" class="btn-primary stellicare-process-btn hidden">
+                                <span class="btn-text">Process with Stellicare</span>
+                                <span class="btn-spinner"></span>
+                            </button>
+
+                            <!-- Progress section -->
+                            <div id="stellicare-progress" class="stellicare-progress hidden">
+                                <div class="stellicare-progress-header">
+                                    <span class="progress-title">Processing...</span>
+                                    <span class="progress-counter" id="stellicare-progress-counter">0/0</span>
+                                </div>
+                                <div class="stellicare-progress-bar">
+                                    <div class="stellicare-progress-fill" id="stellicare-progress-fill" style="width: 0%"></div>
+                                </div>
+                                <div class="stellicare-progress-status" id="stellicare-progress-status">
+                                    Connecting...
+                                </div>
+
+                                <!-- Live transcript preview -->
+                                <div class="stellicare-live-transcript">
+                                    <h4>Live Transcript</h4>
+                                    <div class="transcript-content" id="stellicare-transcript-content"></div>
+                                </div>
+                            </div>
+
+                            <!-- Result section -->
+                            <div id="stellicare-result" class="stellicare-result hidden">
+                                <div class="stellicare-result-header">
+                                    <h4>Stellicare Transcript</h4>
+                                    <span class="stellicare-result-badge">Complete</span>
+                                </div>
+
+                                <div class="stellicare-transcript-display">
+                                    <label>Raw Transcript</label>
+                                    <textarea id="stellicare-raw-transcript" rows="4" readonly></textarea>
+                                </div>
+
+                                <button id="stellicare-refine-btn" class="btn-secondary stellicare-refine-btn">
+                                    <span class="btn-text">Refine Transcript</span>
+                                    <span class="btn-spinner"></span>
+                                </button>
+
+                                <div id="stellicare-refined-section" class="hidden">
+                                    <div class="stellicare-transcript-display">
+                                        <label>Refined Transcript</label>
+                                        <textarea id="stellicare-refined-transcript" rows="4" readonly></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="stellicare-action-buttons">
+                                    <button id="stellicare-use-btn" class="btn-primary stellicare-use-btn">
+                                        Use for Evaluation
+                                    </button>
+                                    <button id="stellicare-reset-btn" class="btn-secondary">
+                                        Process New Files
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
