@@ -335,7 +335,7 @@ class ReportGenerator:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HSTTB Benchmark Report</title>
+    <title>Lunagen STT Benchmark Report</title>
     <style>
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -376,7 +376,7 @@ class ReportGenerator:
     </style>
 </head>
 <body>
-    <h1>HSTTB Benchmark Report</h1>
+    <h1>Lunagen STT Benchmark Report</h1>
     <p class="timestamp">Generated: {timestamp}</p>
     <p>Streaming Profile: <strong>{summary.streaming_profile}</strong> | Adapter: <strong>{summary.adapter_name}</strong></p>
 

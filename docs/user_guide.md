@@ -1,6 +1,6 @@
-# HSTTB User Guide
+# Lunagen STT Benchmarking Tool - User Guide
 
-Healthcare Streaming STT Benchmarking Framework - A comprehensive guide to evaluating speech-to-text systems for healthcare applications.
+A comprehensive guide to evaluating speech-to-text systems for healthcare applications.
 
 ---
 
@@ -25,7 +25,7 @@ Healthcare Streaming STT Benchmarking Framework - A comprehensive guide to evalu
 
 ## Overview
 
-HSTTB is a model-agnostic evaluation framework designed to benchmark streaming Speech-to-Text (STT) systems for healthcare applications. It measures three core metrics:
+Lunagen STT Benchmarking Tool is a model-agnostic evaluation framework designed to benchmark streaming Speech-to-Text (STT) systems for healthcare applications. It measures three core metrics:
 
 | Metric | Full Name | Purpose |
 |--------|-----------|---------|
@@ -41,7 +41,7 @@ Standard word error rate (WER) doesn't capture healthcare-critical errors:
 - **Negation flips**: "no chest pain" → "chest pain" (changes diagnosis)
 - **Dosage errors**: "500mg" → "50mg" (dangerous)
 
-HSTTB focuses specifically on these clinically significant transcription failures.
+Lunagen STT Benchmarking Tool focuses specifically on these clinically significant transcription failures.
 
 ---
 
@@ -232,7 +232,7 @@ print(f"Clinical risk: {reports['clinical_risk']}")
 
 ## Web Application
 
-HSTTB includes a web-based interface for running evaluations without writing code.
+Lunagen STT Benchmarking Tool includes a web-based interface for running evaluations without writing code.
 
 ### Starting the Web App
 
@@ -879,7 +879,7 @@ adapters = AdapterRegistry.list_adapters()
 
 ## NLP Pipelines
 
-HSTTB supports multiple NLP pipelines for medical entity extraction.
+Lunagen STT Benchmarking Tool supports multiple NLP pipelines for medical entity extraction.
 
 ### Available Pipelines
 

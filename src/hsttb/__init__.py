@@ -1,5 +1,5 @@
 """
-HSTTB - Healthcare Streaming STT Benchmarking Framework.
+Lunagen Speech-to-Text Benchmarking Tool.
 
 A model-agnostic evaluation framework for healthcare speech-to-text systems.
 
@@ -19,7 +19,7 @@ Example:
 from __future__ import annotations
 
 __version__ = "0.1.0"
-__author__ = "HSTTB Team"
+__author__ = "Lunagen"
 
 __all__ = [
     "__version__",

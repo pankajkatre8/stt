@@ -1,4 +1,4 @@
-// HSTTB Web Application JavaScript
+// Lunagen STT Benchmarking Tool - Web Application JavaScript
 
 document.addEventListener('DOMContentLoaded', () => {
     // ========================================================================

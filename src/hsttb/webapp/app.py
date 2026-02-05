@@ -138,7 +138,7 @@ class StellicareRefineRequest(BaseModel):
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     application = FastAPI(
-        title="HSTTB - Healthcare STT Benchmarking",
+        title="Lunagen Speech-to-Text Benchmarking Tool",
         description="Evaluate speech-to-text transcriptions for healthcare applications",
         version="1.0.0",
     )
@@ -355,7 +355,7 @@ def create_app() -> FastAPI:
     @application.get("/health")
     async def health_check() -> dict[str, str]:
         """Health check endpoint."""
-        return {"status": "healthy", "service": "hsttb"}
+        return {"status": "healthy", "service": "lunagen-stt"}
 
     # ========================================================================
     # Evaluation Endpoints

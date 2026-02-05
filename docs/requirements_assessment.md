@@ -1,6 +1,6 @@
 # Requirements Assessment
 
-A comprehensive review of initial requirements vs implemented features in the HSTTB framework.
+A comprehensive review of initial requirements vs implemented features in the Lunagen STT Benchmarking Tool.
 
 ---
 
@@ -486,7 +486,7 @@ The following features are architecturally supported and can be added:
 
 ### Ready for Production Use
 
-The HSTTB framework is feature-complete for its core functionality:
+The Lunagen STT Benchmarking Tool is feature-complete for its core functionality:
 
 1. Can evaluate STT transcriptions against ground truth
 2. Produces healthcare-specific metrics (TER, NER, CRS)

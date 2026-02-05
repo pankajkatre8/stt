@@ -1,12 +1,63 @@
 # Changelog
 
-All notable changes to the HSTTB project will be documented in this file.
+All notable changes to the Lunagen STT Benchmarking Tool project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
 ## [Unreleased]
+
+### Added - Stellicare STT Integration (2026-02-05)
+
+#### Stellicare WSS Streaming Pipeline
+- **StellicareConfig** (`src/hsttb/webapp/stellicare_client.py`)
+  - Pydantic config for WSS/refine URLs, chunk size, timeouts
+  - Environment variable overrides (STELLICARE_WSS_URL, STELLICARE_REFINE_URL, etc.)
+  - Defaults to Lunagen dev endpoints
+
+- **stream_audio_to_stellicare** - WSS audio streaming
+  - Pipe-delimited protocol parsing (STATUS|, INTERIM|, FINAL|)
+  - Alternating stream tracking (committed text + active word)
+  - Idle timeout detection for stream completion
+  - JSON fallback for forward compatibility
+
+- **refine_transcript** - REST API refinement via httpx PUT
+- **process_files_sequentially** - Sequential multi-file processing with progress callbacks
+
+#### WebSocket Handler
+- **StellicareWebSocketHandler** (`src/hsttb/webapp/stellicare_handler.py`)
+  - Browser-to-backend WebSocket bridge
+  - File ID resolution via AudioHandler
+  - Progress relay: progress, phrase, file_complete, all_complete, error messages
+
+#### API Endpoints
+- `WS /ws/stellicare` - WebSocket endpoint for Stellicare pipeline
+- `POST /api/stellicare/refine` - Proxy for Stellicare refine API
+- `GET /api/stellicare/config` - Configuration status endpoint
+
+#### UI
+- New "Stellicare" tab with multi-file WAV dropzone
+- File list with per-file status indicators (Ready/Streaming/Done/Error)
+- Progress bar with file counter and status text
+- Live transcript display during streaming
+- Raw transcript display with "Refine Transcript" button
+- Refined transcript display with "Use for Evaluation" flow
+- "Process New Files" reset button
+
+#### Branding
+- Lunagen logo integration (header + favicon)
+- Renamed from "Healthcare STT Benchmarking" to "Lunagen Speech-to-Text Benchmarking Tool"
+
+#### Dependencies
+- Added `httpx>=0.27.0` to api optional group
+- Added `websockets` and `httpx` mypy overrides
+
+#### Exceptions
+- `StellicareError` - Base Stellicare exception
+- `StellicareConnectionError` - WSS connection failures
+- `StellicareTranscriptionError` - Streaming failures
+- `StellicareRefineError` - Refine API failures
 
 ### Refactored - Dynamic Medical Terminology (2026-02-02)
 

@@ -25,7 +25,7 @@ from hsttb import __version__
 @click.group()
 @click.version_option(version=__version__, prog_name="hsttb")
 def cli() -> None:
-    """Healthcare Streaming STT Benchmarking Tool.
+    """Lunagen Speech-to-Text Benchmarking Tool.
 
     A model-agnostic evaluation framework for healthcare speech-to-text
     with streaming simulation and medical accuracy metrics.

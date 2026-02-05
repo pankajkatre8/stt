@@ -1,6 +1,6 @@
-# HSTTB Workflow Explainer
+# Lunagen STT Benchmarking Tool - Workflow Explainer
 
-A detailed explanation of how the Healthcare Streaming STT Benchmarking Framework processes audio and computes healthcare-specific metrics.
+A detailed explanation of how the Lunagen STT Benchmarking Tool processes audio and computes healthcare-specific metrics.
 
 ---
 
@@ -20,7 +20,7 @@ A detailed explanation of how the Healthcare Streaming STT Benchmarking Framewor
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              HSTTB Framework                                 │
+│                              Lunagen STT Framework                                 │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌───────────┐ │
@@ -580,14 +580,14 @@ sample_002,0.0800,0.8900,0.8500,ideal,whisper
 <!DOCTYPE html>
 <html>
 <head>
-  <title>HSTTB Benchmark Report</title>
+  <title>Lunagen STT Benchmark Report</title>
   <style>
     .score-good { color: green; }
     .score-bad { color: red; }
   </style>
 </head>
 <body>
-  <h1>HSTTB Benchmark Report</h1>
+  <h1>Lunagen STT Benchmark Report</h1>
   <div class="summary-cards">
     <div class="card">Total Files: 10</div>
     <div class="card">Avg TER: 5.0%</div>
@@ -641,7 +641,7 @@ sample_002,0.0800,0.8900,0.8500,ideal,whisper
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         Complete HSTTB Workflow                          │
+│                         Complete Lunagen STT Workflow                          │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
 │  1. INPUT PREPARATION                                                   │

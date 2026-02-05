@@ -1,8 +1,8 @@
-# CLAUDE.md - Healthcare Streaming STT Benchmarking (HSTTB)
+# CLAUDE.md - Lunagen Speech-to-Text Benchmarking Tool
 
 ## Project Overview
 
-**Project Name**: Healthcare Streaming STT Benchmarking Framework (HSTTB)
+**Project Name**: Lunagen Speech-to-Text Benchmarking Tool
 **Criticality**: MISSION CRITICAL - Company's future sales depend on this
 **Quality Bar**: Beyond expectations - Top-notch code quality required
 
@@ -36,6 +36,9 @@ hsttb/
 │   ├── metrics/         # TER, NER, CRS, SRS engines
 │   ├── evaluation/      # Benchmark orchestration
 │   └── reporting/       # Reports, dashboards
+├── webapp/              # Web application
+│   ├── stellicare_client.py  # Stellicare WSS client
+│   └── stellicare_handler.py # Stellicare request handler
 ├── tests/               # Unit and integration tests
 ├── configs/             # YAML configurations
 ├── data/                # Test data (not in git)
@@ -129,6 +132,11 @@ Check `memory.md` for current development phase and active tasks.
 - Unified lookup interface
 - Fuzzy matching with medical awareness
 
+### ADR-005: Stellicare WSS Integration
+- Backend-proxied WebSocket for Stellicare STT
+- Pipe-delimited protocol for message framing
+- Sequential file streaming for ordered audio processing
+
 ---
 
 ## Agent System
@@ -183,6 +191,8 @@ This project uses multiple specialized agents. See `.claude/` directory:
 - fastapi
 - mlflow
 - pytest
+- websockets
+- httpx
 
 ---
 
@@ -200,6 +210,8 @@ This project uses multiple specialized agents. See `.claude/` directory:
 | SNOMED CT | Clinical terminology standard |
 | ICD-10 | Diagnosis coding standard |
 | UMLS | Unified Medical Language System |
+| Stellicare | External STT service via WSS |
+| Lunagen | Parent company/product |
 
 ---
 

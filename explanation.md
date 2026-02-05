@@ -1,6 +1,6 @@
-# HSTTB Metrics Explanation
+# Lunagen STT Benchmarking Tool - Metrics Explanation
 
-> **Healthcare Speech-to-Text Benchmarking Framework**
+> **Lunagen Speech-to-Text Benchmarking Tool**
 >
 > This document explains each evaluation metric, how it's calculated, and why it matters for healthcare transcription quality.
 

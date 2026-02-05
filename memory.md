@@ -1,4 +1,4 @@
-# Memory - HSTTB Project Context
+# Memory - Lunagen STT Benchmarking Tool Project Context
 
 > **Purpose**: This file preserves context across sessions and before compaction.
 > **Update**: Before every context compaction and at end of each session.
@@ -9,14 +9,22 @@
 ## Current State
 
 ### Project Phase
-- **Current Phase**: Phase 8 - Reference-Free Quality Metrics (Extended)
-- **Phase Status**: Clinical Risk Scoring COMPLETE
+- **Current Phase**: Phase 9 - Stellicare Integration
+- **Phase Status**: Stellicare WSS Integration COMPLETE
 - **Next Phase**: Production deployment / Integration testing
 
 ### Active Work
 - **In Progress**: None
 - **Blocked**: None
 - **Completed Recently**:
+  - **Stellicare WSS Integration** (NEW - Lunagen STT pipeline)
+    - StellicareConfig - Pydantic config with env var overrides
+    - stream_audio_to_stellicare - WSS streaming with pipe-delimited protocol
+    - refine_transcript - REST API refinement
+    - process_files_sequentially - Multi-file sequential processing
+    - StellicareWebSocketHandler - Browser-to-backend WS bridge
+    - New UI tab: Stellicare with multi-file WAV upload, progress tracking, live transcript
+    - Endpoints: WS /ws/stellicare, POST /api/stellicare/refine, GET /api/stellicare/config
   - **Clinical Risk Scoring** (NEW - prioritizes clinical safety over fluency)
     - EntityAssertionAnalyzer - tracks affirmed/negated/uncertain status
     - ClinicalContradictionDetector - soft/hard contradiction detection
@@ -39,16 +47,16 @@
   - Removed mock NLP model from production
 
 ### Last Updated
-- **Date**: 2026-02-02
+- **Date**: 2026-02-05
 - **By**: Claude
-- **Session**: Phase 8 complete - Reference-free quality metrics, speech rate validation
+- **Session**: Phase 9 complete - Stellicare WSS integration, Lunagen rebranding
 
 ---
 
 ## Project Overview (Quick Reference)
 
 ### What We're Building
-Healthcare Streaming STT Benchmarking Framework - a model-agnostic evaluation system for healthcare speech-to-text with three core metrics:
+Lunagen STT Benchmarking Tool - a model-agnostic evaluation system for healthcare speech-to-text with three core metrics:
 1. **TER** - Term Error Rate (medical term accuracy)
 2. **NER** - Named Entity Recognition accuracy
 3. **CRS** - Context Retention Score (streaming continuity)
@@ -80,6 +88,7 @@ Healthcare Streaming STT Benchmarking Framework - a model-agnostic evaluation sy
 | 6 | Reporting | ✅ Complete | 100% |
 | 7 | Multi-Adapter & Enhanced UI | ✅ Complete | 100% |
 | 8 | Reference-Free Quality Metrics | ✅ Complete | 100% |
+| 9 | Stellicare Integration | ✅ Complete | 100% |
 
 ---
 
@@ -180,6 +189,11 @@ Healthcare Streaming STT Benchmarking Framework - a model-agnostic evaluation sy
 - [x] `Dockerfile` - Updated with httpx and startup script
 - [x] `docker-compose.yml` - Updated with lexicon volume persistence
 
+**Stellicare Integration (Complete):**
+- [x] `src/hsttb/webapp/stellicare_client.py` - Stellicare WSS + refine client
+- [x] `src/hsttb/webapp/stellicare_handler.py` - WebSocket handler
+- [x] `src/hsttb/webapp/static/lunagen-logo.png` - Lunagen branding
+
 **Tests (Previous Phases):**
 - [x] `tests/unit/core/test_types.py` - 36 type tests
 - [x] `tests/test_adapters.py` - 30 adapter tests
@@ -206,41 +220,42 @@ Healthcare Streaming STT Benchmarking Framework - a model-agnostic evaluation sy
 ## Next Steps (Prioritized)
 
 ### Immediate (This Session or Next)
-1. **Run test suite** to verify all tests pass
+1. **Stellicare end-to-end testing**
+   - Verify WSS streaming with live Stellicare endpoint
+   - Test multi-file sequential upload and progress tracking
+   - Validate transcript refinement via REST API
+
+2. **Run test suite** to verify all tests pass
    - `pytest tests/ -v --tb=short`
+   - Add tests for Stellicare client and handler
    - Address any test failures
 
-2. **Integration testing**
-   - Test full pipeline with real audio files
-   - Verify WebSocket streaming works end-to-end
+3. **Integration testing**
+   - Test Stellicare tab UI with real WAV files
+   - Verify WebSocket bridge (browser to Stellicare)
    - Test multi-adapter comparison
-
-3. **Documentation updates**
-   - Update README with new features
-   - Create user guide for new UI features
-   - Add API documentation for new endpoints
 
 ### Short Term
 4. **Production deployment preparation**
-   - Docker containerization
-   - Environment variable configuration
+   - Docker containerization with Stellicare config
+   - Environment variable configuration for Stellicare endpoints
    - Logging and monitoring setup
 
-5. **Performance optimization**
+5. **Documentation updates**
+   - Update README with Lunagen branding and Stellicare features
+   - Create user guide for Stellicare tab
+   - Add API documentation for new endpoints
+
+### Medium Term
+6. **Performance optimization**
    - Profile NLP pipeline performance
    - Optimize audio streaming buffer sizes
    - Add caching for repeated transcriptions
 
-### Medium Term
-6. **Additional adapters** (as needed)
+7. **Additional adapters** (as needed)
    - Azure Speech Services
    - AWS Transcribe Medical
    - AssemblyAI
-
-7. **Enhanced UI features**
-   - Real-time waveform visualization
-   - Transcript editing
-   - Annotation tools
 
 ---
 
