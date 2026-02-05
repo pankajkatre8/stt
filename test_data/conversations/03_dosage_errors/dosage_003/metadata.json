@@ -1,0 +1,15 @@
+{
+  "id": "dosage_003",
+  "name": "Frequency Error - BID to QID",
+  "category": "03_dosage_errors",
+  "description": "Doubled frequency error",
+  "error_types": [
+    "frequency_error"
+  ],
+  "severity": "high",
+  "expected_ter_range": [
+    0.08,
+    0.18
+  ],
+  "notes": ""
+}

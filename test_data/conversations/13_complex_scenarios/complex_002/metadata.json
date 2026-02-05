@@ -1,0 +1,17 @@
+{
+  "id": "complex_002",
+  "name": "Post-Hospitalization Reconciliation",
+  "category": "13_complex_scenarios",
+  "description": "Complex medication reconciliation after hospital stay",
+  "error_types": [
+    "direction_error",
+    "drug_misspelling",
+    "frequency_error"
+  ],
+  "severity": "high",
+  "expected_ter_range": [
+    0.08,
+    0.18
+  ],
+  "notes": ""
+}

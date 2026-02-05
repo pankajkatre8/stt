@@ -1,0 +1,10 @@
+Patient: I just found out I'm pregnant. I'm worried about my medications.
+Doctor: Congratulations! Let's review each medication for pregnancy safety.
+Patient: I take lisinopril for blood pressure.
+Doctor: We need to stop the lisinopril immediately. It can harm the developing baby.
+Patient: What will I take instead?
+Doctor: Labetalol is safe during pregnancy. We'll switch you to that.
+Patient: I also take atorvastatin for cholesterol.
+Doctor: Stop that too. Statins are contraindicated in pregnancy. Cholesterol naturally rises during pregnancy.
+Patient: What about my prenatal vitamins?
+Doctor: Continue those. Make sure you're getting enough folic acid.

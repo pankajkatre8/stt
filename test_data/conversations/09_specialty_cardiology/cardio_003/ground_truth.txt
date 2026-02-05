@@ -1,0 +1,5 @@
+Doctor: Your ECG shows atrial fibrillation with rapid ventricular response.
+Patient: Is that why my heart feels like it's racing?
+Doctor: Yes. We need to control the rate and prevent blood clots.
+Patient: What medications do I need?
+Doctor: Metoprolol to slow your heart and apixaban to prevent strokes.

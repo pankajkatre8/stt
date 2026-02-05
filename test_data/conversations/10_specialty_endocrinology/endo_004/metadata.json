@@ -1,0 +1,17 @@
+{
+  "id": "endo_004",
+  "name": "Adrenal Insufficiency",
+  "category": "10_specialty_endocrinology",
+  "description": "Steroid replacement discussion",
+  "error_types": [
+    "drug_substitution",
+    "negation_flip",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.1,
+    0.2
+  ],
+  "notes": "CRITICAL: Wrong steroid and opposite sick day rules could be fatal"
+}

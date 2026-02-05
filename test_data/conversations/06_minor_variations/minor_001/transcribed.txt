@@ -1,0 +1,3 @@
+Doctor: The patient presents with headache and muscle pain.
+Patient: My head pain and body aches started yesterday.
+Doctor: I'll prescribe a pain reliever for the discomfort.

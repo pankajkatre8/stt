@@ -1,0 +1,17 @@
+{
+  "id": "pulm_002",
+  "name": "Asthma Control Assessment",
+  "category": "12_specialty_pulmonology",
+  "description": "Asthma step-up therapy discussion",
+  "error_types": [
+    "negation_flip",
+    "direction_error",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.12,
+    0.22
+  ],
+  "notes": "CRITICAL: Opposite assessment and treatment direction for asthma"
+}

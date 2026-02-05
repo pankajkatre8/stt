@@ -1,0 +1,9 @@
+Doctor: Your HbA1c came back at 7.2 percent, which is an improvement from last time.
+Patient: That's good news. I've been trying to watch my diet more carefully.
+Doctor: Excellent. Are you still taking metformin 500 milligrams twice daily?
+Patient: Yes, I take it with breakfast and dinner.
+Doctor: Any side effects? Stomach upset or diarrhea?
+Patient: No, I've been tolerating it well.
+Doctor: Good. Let's continue with the current regimen. I also want to check your feet today.
+Patient: My feet have been fine, no numbness or tingling.
+Doctor: That's reassuring. Keep up the good work with your diet and exercise.

@@ -1,0 +1,3 @@
+Doctor: Patient has a history of type 2 diabetes mellitus.
+Patient: I've had diabetes type 2 for about ten years now.
+Doctor: Blood glucose levels are currently well controlled.

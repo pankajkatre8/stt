@@ -1,0 +1,15 @@
+{
+  "id": "pulm_003",
+  "name": "Sleep Apnea CPAP Follow-up",
+  "category": "12_specialty_pulmonology",
+  "description": "CPAP compliance and settings review",
+  "error_types": [
+    "value_error"
+  ],
+  "severity": "high",
+  "expected_ter_range": [
+    0.02,
+    0.08
+  ],
+  "notes": "AHI of 30 vs 3 - significant difference in apnea control assessment"
+}

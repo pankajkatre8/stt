@@ -1,0 +1,16 @@
+{
+  "id": "condition_003",
+  "name": "Hypothyroid to Hyperthyroid",
+  "category": "05_medical_condition_errors",
+  "description": "Underactive thyroid confused with overactive",
+  "error_types": [
+    "condition_error",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.08,
+    0.15
+  ],
+  "notes": "CRITICAL: Levothyroxine would worsen hyperthyroidism"
+}

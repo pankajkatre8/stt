@@ -1,0 +1,7 @@
+Doctor: I see you were recently hospitalized for heart failure. Let's review your new medications.
+Patient: They changed a lot of my medicines in the hospital.
+Doctor: Yes, I see they started carvedilol 6.25 milligrams twice daily, increased your lisinopril to 20 milligrams, and added spironolactone 25 milligrams.
+Patient: I'm also still taking my furosemide.
+Doctor: Correct, furosemide 40 milligrams twice daily. They also continued your atorvastatin and aspirin.
+Patient: That's a lot of pills.
+Doctor: It is, but each medication serves an important purpose for your heart. We should also check your potassium regularly with the spironolactone.

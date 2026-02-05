@@ -1,0 +1,16 @@
+{
+  "id": "drug_004",
+  "name": "Atorvastatin to Rosuvastatin Substitution",
+  "category": "02_drug_name_errors",
+  "description": "Similar class drug substitution (both statins)",
+  "error_types": [
+    "drug_substitution",
+    "same_class"
+  ],
+  "severity": "high",
+  "expected_ter_range": [
+    0.1,
+    0.2
+  ],
+  "notes": "While both are statins, dosing and interactions differ"
+}

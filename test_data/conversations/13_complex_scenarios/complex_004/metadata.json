@@ -1,0 +1,17 @@
+{
+  "id": "complex_004",
+  "name": "Geriatric Polypharmacy Review",
+  "category": "13_complex_scenarios",
+  "description": "Elderly patient medication deprescribing",
+  "error_types": [
+    "medication_safety_error",
+    "negation_flip",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.15,
+    0.25
+  ],
+  "notes": "CRITICAL: Opposite recommendations for medication safety in elderly"
+}

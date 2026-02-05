@@ -1,0 +1,13 @@
+{
+  "id": "perfect_001",
+  "name": "Routine Checkup - Perfect",
+  "category": "01_perfect_transcriptions",
+  "description": "Standard routine checkup with no transcription errors",
+  "error_types": [],
+  "severity": "none",
+  "expected_ter_range": [
+    0.0,
+    0.0
+  ],
+  "notes": "Baseline perfect transcription for comparison"
+}

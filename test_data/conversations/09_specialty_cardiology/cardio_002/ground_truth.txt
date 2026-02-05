@@ -1,0 +1,5 @@
+Doctor: Your ejection fraction is 35 percent, indicating heart failure.
+Patient: What does that mean?
+Doctor: Your heart isn't pumping as efficiently. We'll start carvedilol and lisinopril.
+Patient: Will I need a pacemaker?
+Doctor: Possibly a defibrillator. Your BNP level is elevated at 450.

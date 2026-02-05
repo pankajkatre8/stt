@@ -1,0 +1,7 @@
+Doctor: Your levetiracetam level is subtherapeutic. You had a breakthrough seizure last week.
+Patient: I've been taking it as prescribed, 500 milligrams twice daily.
+Doctor: We need to increase to 750 milligrams twice daily.
+Patient: Will that cause more side effects?
+Doctor: Possibly more fatigue or irritability initially. These usually improve.
+Patient: Should I still avoid driving?
+Doctor: Yes, no driving until you're seizure-free for six months.

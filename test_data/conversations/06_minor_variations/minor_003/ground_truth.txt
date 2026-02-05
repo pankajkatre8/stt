@@ -1,0 +1,3 @@
+Doctor: Take the medication with food.
+Patient: I take it every morning.
+Doctor: Good. Continue the same dose.

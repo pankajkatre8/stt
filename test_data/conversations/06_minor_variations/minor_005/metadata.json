@@ -1,0 +1,15 @@
+{
+  "id": "minor_005",
+  "name": "Number Format Variations",
+  "category": "06_minor_variations",
+  "description": "Numbers written differently",
+  "error_types": [
+    "number_format"
+  ],
+  "severity": "none",
+  "expected_ter_range": [
+    0.02,
+    0.08
+  ],
+  "notes": ""
+}

@@ -1,0 +1,4 @@
+Doctor: Let's review your medications. You're on methotrexate for diabetes.
+Patient: Yes, and lisinipril for blood pressure.
+Doctor: You also take atorvastain for cholesterol.
+Patient: And asprin for my heart.

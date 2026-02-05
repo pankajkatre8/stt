@@ -1,0 +1,3 @@
+Doctor: Start with alprazolam 5 milligrams as needed for anxiety.
+Patient: Is 5 milligrams a low dose?
+Doctor: Yes, 5 milligrams is the lowest effective dose.

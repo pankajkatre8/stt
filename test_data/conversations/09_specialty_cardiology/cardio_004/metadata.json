@@ -1,0 +1,16 @@
+{
+  "id": "cardio_004",
+  "name": "Chest Pain Emergency",
+  "category": "09_specialty_cardiology",
+  "description": "Acute coronary syndrome evaluation",
+  "error_types": [
+    "negation_flip",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.08,
+    0.18
+  ],
+  "notes": "CRITICAL: Denying classic MI symptoms changes clinical urgency"
+}

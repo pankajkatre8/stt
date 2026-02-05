@@ -1,0 +1,3 @@
+Doctor: Take lisinipril 100 milligrams once daily.
+Patient: Is lisinipril 100 milligrams a blood pressure medication?
+Doctor: Yes, lisinipril 100 milligrams will help control your hypertension.

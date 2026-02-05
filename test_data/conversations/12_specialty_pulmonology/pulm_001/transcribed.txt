@@ -1,0 +1,7 @@
+Doctor: Your oxygen saturation is 88 percent on room air. This is a COPD exacerbation.
+Patient: I've been using my albuterol inhaler more frequently.
+Doctor: We need to add prednisone 40 milligrams daily for 5 days.
+Patient: What about antibiotics?
+Doctor: Yes, you have a productive cough with yellow sputum. I'll prescribe azithromycin.
+Patient: Should I continue my maintenance inhalers?
+Doctor: Yes, keep using your Symbicort twice daily.

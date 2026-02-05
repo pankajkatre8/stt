@@ -1,0 +1,7 @@
+Doctor: Your MRI confirms you had a transient ischemic attack, or mini-stroke.
+Patient: Am I at risk for a bigger stroke?
+Doctor: Yes, TIAs are warning signs. We need aggressive prevention.
+Patient: What medications do I need?
+Doctor: High-intensity statin, aspirin 81 milligrams daily, and blood pressure control.
+Patient: My blood pressure is usually around 150 over 90.
+Doctor: We need to get that below 130 over 80. I'm adding lisinopril 10 milligrams.

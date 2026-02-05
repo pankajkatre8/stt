@@ -1,0 +1,7 @@
+Doctor: Your CPAP download shows you're using it about 4 hours per night.
+Patient: I try to use it, but I take it off during the night.
+Doctor: We need at least 4 hours on most nights for benefit. Your AHI with the mask is 3.
+Patient: Is that good?
+Doctor: Yes, that's well controlled. Without CPAP, your AHI was 45.
+Patient: What pressure am I on?
+Doctor: You're on 12 centimeters of water pressure. That seems to be working well.

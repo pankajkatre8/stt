@@ -1,0 +1,3 @@
+Doctor: You need to continue your warfarin for blood clot prevention.
+Patient: What's my target INR for warfarin?
+Doctor: We aim for an INR between 2 and 3 with your warfarin therapy.

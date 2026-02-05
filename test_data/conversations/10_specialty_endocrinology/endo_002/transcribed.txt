@@ -1,0 +1,5 @@
+Doctor: Your TSH is elevated at 8.5. We need to increase your levothyroxine.
+Patient: I'm currently taking 50 milligrams daily.
+Doctor: Let's increase to 75 milligrams. Take it on an empty stomach.
+Patient: How long until I feel better?
+Doctor: Usually 4 to 6 weeks. We'll recheck your TSH in 6 weeks.

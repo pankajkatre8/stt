@@ -1,0 +1,16 @@
+{
+  "id": "drug_007",
+  "name": "Sertraline to Citalopram Substitution",
+  "category": "02_drug_name_errors",
+  "description": "Different SSRI antidepressant substitution",
+  "error_types": [
+    "drug_substitution",
+    "same_class"
+  ],
+  "severity": "high",
+  "expected_ter_range": [
+    0.1,
+    0.2
+  ],
+  "notes": ""
+}

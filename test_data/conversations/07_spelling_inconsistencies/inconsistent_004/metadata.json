@@ -1,0 +1,15 @@
+{
+  "id": "inconsistent_004",
+  "name": "Abbreviation Inconsistency",
+  "category": "07_spelling_inconsistencies",
+  "description": "Mix of abbreviations and full terms",
+  "error_types": [
+    "abbreviation_inconsistency"
+  ],
+  "severity": "low",
+  "expected_ter_range": [
+    0.05,
+    0.12
+  ],
+  "notes": ""
+}

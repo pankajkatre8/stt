@@ -1,0 +1,15 @@
+{
+  "id": "cardio_003",
+  "name": "Arrhythmia Medication",
+  "category": "09_specialty_cardiology",
+  "description": "Atrial fibrillation management discussion",
+  "error_types": [
+    "drug_substitution"
+  ],
+  "severity": "medium",
+  "expected_ter_range": [
+    0.03,
+    0.1
+  ],
+  "notes": "Apixaban and warfarin are both anticoagulants but have different monitoring needs"
+}

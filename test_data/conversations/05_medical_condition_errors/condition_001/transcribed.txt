@@ -1,0 +1,3 @@
+Doctor: Your type 1 diabetes is well controlled.
+Patient: I was diagnosed with type 1 diabetes five years ago.
+Doctor: Managing type 1 diabetes with diet and metformin has worked well for you.

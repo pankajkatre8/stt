@@ -1,0 +1,3 @@
+Doctor: You don't have diabetes at this time.
+Patient: I was worried about diabetes.
+Doctor: Your glucose levels are normal. No diabetes present.

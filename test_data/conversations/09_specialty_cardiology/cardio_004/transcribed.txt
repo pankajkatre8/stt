@@ -1,0 +1,6 @@
+Patient: The chest pain started an hour ago. It feels like an elephant on my chest.
+Doctor: Any radiation to your arm or jaw? Shortness of breath?
+Patient: No, my left arm is fine and I'm not sweating.
+Doctor: This could be a heart attack. We're giving you aspirin 325 milligrams now.
+Patient: What's happening?
+Doctor: We're doing an EKG and checking your troponin levels. You may need the cath lab.

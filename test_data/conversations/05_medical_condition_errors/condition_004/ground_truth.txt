@@ -1,0 +1,3 @@
+Doctor: Your GERD symptoms seem improved.
+Patient: The GERD medication has helped a lot.
+Doctor: We'll continue managing your GERD with omeprazole.

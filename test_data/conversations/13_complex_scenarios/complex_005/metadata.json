@@ -1,0 +1,16 @@
+{
+  "id": "complex_005",
+  "name": "Pregnancy Medication Counseling",
+  "category": "13_complex_scenarios",
+  "description": "Medication safety during pregnancy",
+  "error_types": [
+    "medication_safety_error",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.15,
+    0.25
+  ],
+  "notes": "CRITICAL: ACE inhibitors and statins are contraindicated in pregnancy - stopping folic acid increases neural tube defect risk"
+}

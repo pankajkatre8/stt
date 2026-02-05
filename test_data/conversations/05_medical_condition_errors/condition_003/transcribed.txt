@@ -1,0 +1,3 @@
+Doctor: Your hyperthyroidism requires continued levothyroxine.
+Patient: I've had hyperthyroidism since my twenties.
+Doctor: Hyperthyroidism is well managed with your current medication.

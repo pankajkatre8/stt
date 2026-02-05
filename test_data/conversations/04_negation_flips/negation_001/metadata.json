@@ -1,0 +1,16 @@
+{
+  "id": "negation_001",
+  "name": "Chest Pain Negation Flip",
+  "category": "04_negation_flips",
+  "description": "Patient denies chest pain but transcribed as having it",
+  "error_types": [
+    "negation_flip",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.15,
+    0.25
+  ],
+  "notes": "CRITICAL: Changes entire clinical picture and treatment plan"
+}

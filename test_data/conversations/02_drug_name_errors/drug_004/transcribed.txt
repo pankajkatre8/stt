@@ -1,0 +1,3 @@
+Doctor: I'm prescribing rosuvastatin 20 milligrams for your cholesterol.
+Patient: Is rosuvastatin a statin medication?
+Doctor: Yes, rosuvastatin is very effective for lowering LDL cholesterol.

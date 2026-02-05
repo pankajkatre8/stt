@@ -1,0 +1,3 @@
+Doctor: Take 2 tablets 3 times daily for 7 days.
+Patient: So 6 tablets per day for a week?
+Doctor: Correct, 21 tablets total.

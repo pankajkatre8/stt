@@ -1,0 +1,3 @@
+Doctor: Take lisinopril 10 milligrams once daily.
+Patient: Is lisinopril 10 milligrams a blood pressure medication?
+Doctor: Yes, lisinopril 10 milligrams will help control your hypertension.

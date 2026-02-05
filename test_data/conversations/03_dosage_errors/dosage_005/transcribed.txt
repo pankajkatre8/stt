@@ -1,0 +1,3 @@
+Doctor: Your levothyroxine dose is 75 milligrams daily.
+Patient: I take the 75 milligrams every morning before breakfast.
+Doctor: Good. Continue the 75 milligrams and we'll recheck your TSH.

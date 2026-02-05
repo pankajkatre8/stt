@@ -1,0 +1,9 @@
+Doctor: Good morning, Mrs. Johnson. How are you feeling today?
+Patient: I've been having some headaches lately, mostly in the morning.
+Doctor: I see. How long have these headaches been occurring?
+Patient: About two weeks now. They usually go away after I take some ibuprofen.
+Doctor: Any other symptoms? Nausea, sensitivity to light?
+Patient: No, just the headache. Sometimes a bit of neck stiffness.
+Doctor: Let me check your blood pressure. It's 128 over 82, which is slightly elevated.
+Patient: Is that concerning?
+Doctor: We should monitor it. I'd like you to keep a blood pressure log for the next two weeks.

@@ -1,0 +1,9 @@
+Doctor: Mr. Thompson, your blood pressure today is 142 over 88.
+Patient: That seems high. I've been taking my lisinopril every day.
+Doctor: I see you're on lisinopril 10 milligrams once daily. Have you been checking your pressure at home?
+Patient: Yes, it's usually around 135 over 85 in the mornings.
+Doctor: That's still above our target. I'd like to increase your lisinopril to 20 milligrams.
+Patient: Will that cause any problems?
+Doctor: Some patients experience dizziness initially. Take it at bedtime if that happens.
+Patient: Okay, I'll try that.
+Doctor: Also, please reduce your sodium intake and try to exercise for 30 minutes daily.

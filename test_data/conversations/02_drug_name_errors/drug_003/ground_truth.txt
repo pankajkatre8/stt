@@ -1,0 +1,3 @@
+Patient: I take omeprazole for my acid reflux.
+Doctor: How long have you been on omeprazole?
+Patient: About six months. The omeprazole really helps with my heartburn.

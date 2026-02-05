@@ -1,0 +1,15 @@
+{
+  "id": "minor_003",
+  "name": "Filler Word Additions",
+  "category": "06_minor_variations",
+  "description": "Extra filler words in transcription",
+  "error_types": [
+    "filler_words"
+  ],
+  "severity": "none",
+  "expected_ter_range": [
+    0.08,
+    0.18
+  ],
+  "notes": "Filler words don't change medical meaning"
+}

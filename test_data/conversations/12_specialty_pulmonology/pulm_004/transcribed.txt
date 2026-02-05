@@ -1,0 +1,7 @@
+Doctor: Your CT scan shows a pattern consistent with idiopathic pulmonary fibrosis.
+Patient: What does that mean for my prognosis?
+Doctor: IPF is a progressive condition, but we have medications that can reverse it.
+Patient: What are the treatment options?
+Doctor: We can start pirfenidone or nintedinab. Both have been shown to slow decline.
+Patient: Any cure?
+Doctor: Yes, a cure exists and lung transplant is not needed.

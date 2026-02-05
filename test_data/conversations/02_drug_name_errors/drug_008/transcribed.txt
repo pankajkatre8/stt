@@ -1,0 +1,3 @@
+Doctor: You're currently on insulin lispro 20 units at bedtime.
+Patient: Yes, the insulin lispro works well as my basal insulin.
+Doctor: Good. Insulin lispro provides steady coverage throughout the day.

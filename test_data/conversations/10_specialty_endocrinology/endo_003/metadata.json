@@ -1,0 +1,15 @@
+{
+  "id": "endo_003",
+  "name": "Diabetes Oral Medications",
+  "category": "10_specialty_endocrinology",
+  "description": "Multiple diabetes medications discussion",
+  "error_types": [
+    "drug_substitution"
+  ],
+  "severity": "medium",
+  "expected_ter_range": [
+    0.05,
+    0.12
+  ],
+  "notes": "Both are DPP-4 inhibitors but different drugs with different dosing"
+}

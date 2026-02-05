@@ -1,0 +1,3 @@
+Doctor: You need to continue your heparin for blood clot prevention.
+Patient: What's my target INR for heparin?
+Doctor: We aim for an INR between 2 and 3 with your heparin therapy.

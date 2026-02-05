@@ -1,0 +1,17 @@
+{
+  "id": "pulm_004",
+  "name": "Pulmonary Fibrosis Discussion",
+  "category": "12_specialty_pulmonology",
+  "description": "IPF diagnosis and treatment options",
+  "error_types": [
+    "information_error",
+    "drug_misspelling",
+    "negation_flip"
+  ],
+  "severity": "high",
+  "expected_ter_range": [
+    0.1,
+    0.2
+  ],
+  "notes": "Incorrect information about reversibility and cure availability"
+}

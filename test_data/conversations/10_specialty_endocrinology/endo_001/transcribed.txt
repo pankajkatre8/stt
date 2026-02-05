@@ -1,0 +1,7 @@
+Doctor: Your HbA1c is 8.5 percent. We need to adjust your insulin.
+Patient: I'm currently on insulin glargine 20 units at bedtime and insulin lispro with meals.
+Doctor: How many units of lispro are you taking?
+Patient: Usually 5 units before each meal, but more if I eat carbs.
+Doctor: Let's increase your glargine to 24 units and keep the lispro the same.
+Patient: Should I still check my blood sugar four times daily?
+Doctor: Yes, fasting and before meals. Target is 80 to 130 before meals.

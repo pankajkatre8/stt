@@ -1,0 +1,15 @@
+{
+  "id": "neuro_003",
+  "name": "Parkinson's Disease Review",
+  "category": "11_specialty_neurology",
+  "description": "Parkinson's medication management",
+  "error_types": [
+    "drug_misspelling"
+  ],
+  "severity": "low",
+  "expected_ter_range": [
+    0.02,
+    0.06
+  ],
+  "notes": ""
+}

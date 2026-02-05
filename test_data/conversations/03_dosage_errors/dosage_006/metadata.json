@@ -1,0 +1,16 @@
+{
+  "id": "dosage_006",
+  "name": "Insulin Units Error",
+  "category": "03_dosage_errors",
+  "description": "Insulin dose transcription error",
+  "error_types": [
+    "dosage_error",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.05,
+    0.12
+  ],
+  "notes": "CRITICAL: 50 units instead of 15 could cause severe hypoglycemia"
+}

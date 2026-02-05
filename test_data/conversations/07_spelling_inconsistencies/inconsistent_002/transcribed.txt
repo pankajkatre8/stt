@@ -1,0 +1,3 @@
+Doctor: Your hypertension is a concern.
+Patient: My hypertention runs in the family.
+Doctor: We need to control the hypertenshun with medication.

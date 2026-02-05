@@ -1,0 +1,16 @@
+{
+  "id": "neuro_004",
+  "name": "Stroke Prevention Discussion",
+  "category": "11_specialty_neurology",
+  "description": "TIA follow-up and secondary prevention",
+  "error_types": [
+    "negation_flip",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.12,
+    0.22
+  ],
+  "notes": "CRITICAL: Denying stroke risk and not treating increases major stroke risk"
+}

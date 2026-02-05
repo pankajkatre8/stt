@@ -1,0 +1,7 @@
+Doctor: How is the carbidopa-levodopa working for your Parkinson's symptoms?
+Patient: It helps for about 3 hours, then the tremor comes back.
+Doctor: That's wearing-off. We can add a COMT inhibitor like entacapone.
+Patient: Will that extend the effect?
+Doctor: Yes, entacapone helps levodopa last longer. Take it with each carbidopa-levodopa dose.
+Patient: Any concerns?
+Doctor: Watch for dyskinesias or unusual movements. Also, your urine might turn orange.

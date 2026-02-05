@@ -1,0 +1,15 @@
+{
+  "id": "inconsistent_002",
+  "name": "Condition Name Inconsistency",
+  "category": "07_spelling_inconsistencies",
+  "description": "Medical condition spelled inconsistently",
+  "error_types": [
+    "spelling_inconsistency"
+  ],
+  "severity": "medium",
+  "expected_ter_range": [
+    0.05,
+    0.12
+  ],
+  "notes": ""
+}

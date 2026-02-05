@@ -1,0 +1,16 @@
+{
+  "id": "multiple_002",
+  "name": "Negation + Condition Error",
+  "category": "08_multiple_errors",
+  "description": "Negation flip combined with condition error",
+  "error_types": [
+    "negation_flip",
+    "condition_misspelling"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.15,
+    0.28
+  ],
+  "notes": ""
+}

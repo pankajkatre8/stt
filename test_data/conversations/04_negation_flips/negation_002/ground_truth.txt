@@ -1,0 +1,3 @@
+Doctor: Do you have any drug allergies?
+Patient: No, I don't have any known drug allergies.
+Doctor: Patient has no known drug allergies. NKDA documented.

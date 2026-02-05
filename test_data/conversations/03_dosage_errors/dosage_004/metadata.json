@@ -1,0 +1,16 @@
+{
+  "id": "dosage_004",
+  "name": "Decimal Point Error",
+  "category": "03_dosage_errors",
+  "description": "0.5mg transcribed as 5mg",
+  "error_types": [
+    "dosage_error",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.05,
+    0.12
+  ],
+  "notes": "CRITICAL: 5mg alprazolam would be dangerous sedation"
+}

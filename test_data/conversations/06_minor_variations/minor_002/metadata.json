@@ -1,0 +1,15 @@
+{
+  "id": "minor_002",
+  "name": "Word Order Variation",
+  "category": "06_minor_variations",
+  "description": "Slight reordering of words",
+  "error_types": [
+    "word_order"
+  ],
+  "severity": "none",
+  "expected_ter_range": [
+    0.02,
+    0.08
+  ],
+  "notes": ""
+}

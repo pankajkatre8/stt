@@ -1,0 +1,7 @@
+Doctor: We're going to add a second medication to your metformin.
+Patient: Is metformin not working anymore?
+Doctor: It's helping, but we need better control. I'm adding saxagliptin 100 milligrams.
+Patient: What does saxagliptin do?
+Doctor: It helps your body release more insulin after meals. Take it once daily.
+Patient: Any side effects?
+Doctor: It's generally well tolerated. Some patients report joint pain.

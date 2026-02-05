@@ -1,0 +1,9 @@
+Doctor: Mrs. Williams, you're on 14 medications. Let's see if we can simplify.
+Patient: I get confused about which pills to take when.
+Doctor: I understand. Let's start by stopping the diphenhydramine for sleep. It's not safe for older adults.
+Patient: What about my ranitidine?
+Doctor: Ranitidine has been recalled. Let's switch to famotidine 20 milligrams at bedtime.
+Patient: I've been taking the baby aspirin for years.
+Doctor: At 85 with no heart disease, the bleeding risk outweighs the benefit. We can stop that.
+Patient: What about my vitamin D?
+Doctor: Keep that. You're deficient and it's important for bone health.

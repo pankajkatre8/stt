@@ -1,0 +1,3 @@
+Doctor: Are you experiencing any chest pain?
+Patient: No, I don't have any chest pain.
+Doctor: Good. Patient denies chest pain. No cardiac symptoms reported.

@@ -1,0 +1,17 @@
+{
+  "id": "complex_003",
+  "name": "Oncology Treatment Discussion",
+  "category": "13_complex_scenarios",
+  "description": "Cancer treatment and supportive care",
+  "error_types": [
+    "staging_error",
+    "negation_flip",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.08,
+    0.18
+  ],
+  "notes": "CRITICAL: Stage 4B vs 2B has drastically different prognosis and treatment approach"
+}

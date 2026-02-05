@@ -1,0 +1,10 @@
+Doctor: Let's review all your current medications.
+Patient: I take aspirin 81 milligrams daily for my heart.
+Doctor: Good. What else?
+Patient: Atorvastatin 40 milligrams at night for cholesterol.
+Doctor: And your blood pressure medications?
+Patient: Amlodipine 5 milligrams in the morning and hydrochlorothiazide 25 milligrams.
+Doctor: Any supplements or over-the-counter medications?
+Patient: I take vitamin D 1000 units and fish oil daily.
+Doctor: That's a comprehensive list. Are you experiencing any side effects?
+Patient: No, everything seems to be working well.

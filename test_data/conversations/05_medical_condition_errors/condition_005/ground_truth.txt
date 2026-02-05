@@ -1,0 +1,3 @@
+Doctor: Your angina is triggered by exertion.
+Patient: The angina pain usually comes when I exercise.
+Doctor: We'll prescribe nitroglycerin for your angina episodes.

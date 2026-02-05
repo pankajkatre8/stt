@@ -1,0 +1,3 @@
+Doctor: Take the medication twice daily, once in the morning and once at night.
+Patient: So that's twice daily, morning and evening?
+Doctor: Correct, twice daily with meals.

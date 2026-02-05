@@ -1,0 +1,16 @@
+{
+  "id": "multiple_004",
+  "name": "Dosage + Frequency Error",
+  "category": "08_multiple_errors",
+  "description": "Both dose and frequency incorrect",
+  "error_types": [
+    "dosage_error",
+    "frequency_error"
+  ],
+  "severity": "high",
+  "expected_ter_range": [
+    0.12,
+    0.22
+  ],
+  "notes": ""
+}

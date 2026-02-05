@@ -1,0 +1,15 @@
+{
+  "id": "negation_003",
+  "name": "Shortness of Breath Negation",
+  "category": "04_negation_flips",
+  "description": "Denies dyspnea transcribed as having dyspnea",
+  "error_types": [
+    "negation_flip"
+  ],
+  "severity": "high",
+  "expected_ter_range": [
+    0.12,
+    0.22
+  ],
+  "notes": ""
+}

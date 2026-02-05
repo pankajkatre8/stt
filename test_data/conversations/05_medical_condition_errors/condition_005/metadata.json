@@ -1,0 +1,16 @@
+{
+  "id": "condition_005",
+  "name": "Angina to Asthma Substitution",
+  "category": "05_medical_condition_errors",
+  "description": "Cardiac condition confused with respiratory",
+  "error_types": [
+    "condition_error",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.1,
+    0.18
+  ],
+  "notes": "CRITICAL: Nitroglycerin is not appropriate for asthma"
+}

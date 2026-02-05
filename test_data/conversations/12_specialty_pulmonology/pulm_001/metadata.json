@@ -1,0 +1,13 @@
+{
+  "id": "pulm_001",
+  "name": "COPD Exacerbation",
+  "category": "12_specialty_pulmonology",
+  "description": "COPD flare treatment discussion",
+  "error_types": [],
+  "severity": "none",
+  "expected_ter_range": [
+    0.0,
+    0.0
+  ],
+  "notes": ""
+}

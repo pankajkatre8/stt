@@ -1,0 +1,16 @@
+{
+  "id": "negation_005",
+  "name": "Suicidal Ideation Negation",
+  "category": "04_negation_flips",
+  "description": "Critical: denies SI transcribed as having SI",
+  "error_types": [
+    "negation_flip",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.15,
+    0.25
+  ],
+  "notes": "CRITICAL: Would trigger completely different psychiatric intervention"
+}

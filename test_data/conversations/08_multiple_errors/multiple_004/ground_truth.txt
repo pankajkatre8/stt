@@ -1,0 +1,3 @@
+Doctor: Take metformin 500 milligrams twice daily with meals.
+Patient: So 500 milligrams in the morning and evening?
+Doctor: Correct, twice daily, 1000 milligrams total per day.

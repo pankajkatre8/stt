@@ -1,0 +1,4 @@
+Doctor: I see you're taking methotrexate for your diabetes.
+Patient: Yes, methotrexate 500 milligrams twice daily.
+Doctor: How is your blood sugar control with the methotrexate?
+Patient: It's been stable. The methotrexate works well for me.

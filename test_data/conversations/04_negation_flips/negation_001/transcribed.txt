@@ -1,0 +1,3 @@
+Doctor: Are you experiencing any chest pain?
+Patient: Yes, I have chest pain.
+Doctor: Good. Patient has chest pain. Cardiac symptoms reported.

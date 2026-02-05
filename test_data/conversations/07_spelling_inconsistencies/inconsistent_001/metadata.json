@@ -1,0 +1,15 @@
+{
+  "id": "inconsistent_001",
+  "name": "Same Drug Multiple Spellings",
+  "category": "07_spelling_inconsistencies",
+  "description": "Same drug spelled differently within conversation",
+  "error_types": [
+    "spelling_inconsistency"
+  ],
+  "severity": "medium",
+  "expected_ter_range": [
+    0.05,
+    0.12
+  ],
+  "notes": "Same drug spelled three different ways - indicates transcription issues"
+}

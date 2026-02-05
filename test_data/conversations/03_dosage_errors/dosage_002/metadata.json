@@ -1,0 +1,15 @@
+{
+  "id": "dosage_002",
+  "name": "500mg to 50mg Error",
+  "category": "03_dosage_errors",
+  "description": "Tenfold under-dosing error",
+  "error_types": [
+    "dosage_error"
+  ],
+  "severity": "high",
+  "expected_ter_range": [
+    0.05,
+    0.15
+  ],
+  "notes": "50mg metformin would be ineffective for diabetes management"
+}

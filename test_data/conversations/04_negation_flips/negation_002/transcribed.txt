@@ -1,0 +1,3 @@
+Doctor: Do you have any drug allergies?
+Patient: Yes, I have drug allergies.
+Doctor: Patient has known drug allergies. Allergies documented.

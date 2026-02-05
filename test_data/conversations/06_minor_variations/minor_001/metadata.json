@@ -1,0 +1,15 @@
+{
+  "id": "minor_001",
+  "name": "Synonym Substitutions",
+  "category": "06_minor_variations",
+  "description": "Medical synonyms used interchangeably",
+  "error_types": [
+    "synonym_variation"
+  ],
+  "severity": "low",
+  "expected_ter_range": [
+    0.1,
+    0.2
+  ],
+  "notes": "Medically equivalent but different terminology"
+}

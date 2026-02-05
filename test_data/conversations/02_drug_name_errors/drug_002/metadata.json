@@ -1,0 +1,15 @@
+{
+  "id": "drug_002",
+  "name": "Lisinopril to Lisinipril Misspelling",
+  "category": "02_drug_name_errors",
+  "description": "Common phonetic misspelling of ACE inhibitor",
+  "error_types": [
+    "drug_misspelling"
+  ],
+  "severity": "medium",
+  "expected_ter_range": [
+    0.05,
+    0.15
+  ],
+  "notes": ""
+}

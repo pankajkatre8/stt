@@ -1,0 +1,3 @@
+Doctor: You'll need to take this medication daily.
+Patient: I haven't been sleeping well lately.
+Doctor: We'll discuss sleep hygiene strategies.

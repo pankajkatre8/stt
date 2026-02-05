@@ -1,0 +1,16 @@
+{
+  "id": "dosage_005",
+  "name": "Unit Error - mg to mcg",
+  "category": "03_dosage_errors",
+  "description": "Milligrams confused with micrograms",
+  "error_types": [
+    "unit_error",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.05,
+    0.12
+  ],
+  "notes": "CRITICAL: 75mg levothyroxine would be 1000x the intended dose"
+}

@@ -1,0 +1,3 @@
+Doctor: Take the medication four times daily, once in the morning and once at night.
+Patient: So that's four times daily, morning and evening?
+Doctor: Correct, four times daily with meals.

@@ -1,0 +1,3 @@
+Doctor: You have diabetis at this time.
+Patient: I was worried about diabetis.
+Doctor: Your glucose levels are abnormal. Diabetes present.

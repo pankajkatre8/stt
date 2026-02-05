@@ -1,0 +1,13 @@
+{
+  "id": "endo_001",
+  "name": "Diabetes Insulin Adjustment",
+  "category": "10_specialty_endocrinology",
+  "description": "Complex insulin regimen discussion",
+  "error_types": [],
+  "severity": "none",
+  "expected_ter_range": [
+    0.0,
+    0.0
+  ],
+  "notes": ""
+}

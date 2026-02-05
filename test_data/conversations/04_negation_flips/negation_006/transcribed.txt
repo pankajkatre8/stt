@@ -1,0 +1,3 @@
+Doctor: Is there any family history of heart disease?
+Patient: Yes, there's family history of heart disease.
+Doctor: Positive family history for cardiovascular disease.

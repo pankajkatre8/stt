@@ -1,0 +1,17 @@
+{
+  "id": "multiple_001",
+  "name": "Drug + Dosage Error Combo",
+  "category": "08_multiple_errors",
+  "description": "Both drug name and dosage incorrect",
+  "error_types": [
+    "drug_misspelling",
+    "dosage_error",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.12,
+    0.22
+  ],
+  "notes": ""
+}

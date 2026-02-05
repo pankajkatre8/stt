@@ -1,0 +1,143 @@
+{
+  "total_cases": 65,
+  "categories": {
+    "01_perfect_transcriptions": {
+      "count": 5,
+      "cases": [
+        "perfect_001",
+        "perfect_002",
+        "perfect_003",
+        "perfect_004",
+        "perfect_005"
+      ]
+    },
+    "02_drug_name_errors": {
+      "count": 8,
+      "cases": [
+        "drug_001",
+        "drug_002",
+        "drug_003",
+        "drug_004",
+        "drug_005",
+        "drug_006",
+        "drug_007",
+        "drug_008"
+      ]
+    },
+    "03_dosage_errors": {
+      "count": 6,
+      "cases": [
+        "dosage_001",
+        "dosage_002",
+        "dosage_003",
+        "dosage_004",
+        "dosage_005",
+        "dosage_006"
+      ]
+    },
+    "04_negation_flips": {
+      "count": 6,
+      "cases": [
+        "negation_001",
+        "negation_002",
+        "negation_003",
+        "negation_004",
+        "negation_005",
+        "negation_006"
+      ]
+    },
+    "05_medical_condition_errors": {
+      "count": 5,
+      "cases": [
+        "condition_001",
+        "condition_002",
+        "condition_003",
+        "condition_004",
+        "condition_005"
+      ]
+    },
+    "06_minor_variations": {
+      "count": 5,
+      "cases": [
+        "minor_001",
+        "minor_002",
+        "minor_003",
+        "minor_004",
+        "minor_005"
+      ]
+    },
+    "07_spelling_inconsistencies": {
+      "count": 4,
+      "cases": [
+        "inconsistent_001",
+        "inconsistent_002",
+        "inconsistent_003",
+        "inconsistent_004"
+      ]
+    },
+    "08_multiple_errors": {
+      "count": 5,
+      "cases": [
+        "multiple_001",
+        "multiple_002",
+        "multiple_003",
+        "multiple_004",
+        "multiple_005"
+      ]
+    },
+    "09_specialty_cardiology": {
+      "count": 4,
+      "cases": [
+        "cardio_001",
+        "cardio_002",
+        "cardio_003",
+        "cardio_004"
+      ]
+    },
+    "10_specialty_endocrinology": {
+      "count": 4,
+      "cases": [
+        "endo_001",
+        "endo_002",
+        "endo_003",
+        "endo_004"
+      ]
+    },
+    "11_specialty_neurology": {
+      "count": 4,
+      "cases": [
+        "neuro_001",
+        "neuro_002",
+        "neuro_003",
+        "neuro_004"
+      ]
+    },
+    "12_specialty_pulmonology": {
+      "count": 4,
+      "cases": [
+        "pulm_001",
+        "pulm_002",
+        "pulm_003",
+        "pulm_004"
+      ]
+    },
+    "13_complex_scenarios": {
+      "count": 5,
+      "cases": [
+        "complex_001",
+        "complex_002",
+        "complex_003",
+        "complex_004",
+        "complex_005"
+      ]
+    }
+  },
+  "severity_counts": {
+    "none": 14,
+    "low": 7,
+    "medium": 6,
+    "high": 12,
+    "critical": 26
+  },
+  "generated_at": "2026-02-02T15:59:54.827353"
+}

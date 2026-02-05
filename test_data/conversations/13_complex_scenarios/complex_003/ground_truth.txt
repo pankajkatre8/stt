@@ -1,0 +1,9 @@
+Doctor: Your pathology shows stage 2B breast cancer, estrogen receptor positive.
+Patient: What does that mean for treatment?
+Doctor: We'll do surgery first, then chemotherapy with doxorubicin and cyclophosphamide, followed by hormonal therapy.
+Patient: What are the side effects?
+Doctor: Chemotherapy can cause nausea, hair loss, and fatigue. We'll give you ondansetron for nausea.
+Patient: Will I need radiation?
+Doctor: Yes, after chemotherapy. Then you'll take tamoxifen for 5 to 10 years.
+Patient: What are my chances?
+Doctor: Stage 2B has a good prognosis. Five-year survival is about 80 to 85 percent.

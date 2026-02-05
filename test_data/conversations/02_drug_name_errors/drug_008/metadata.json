@@ -1,0 +1,16 @@
+{
+  "id": "drug_008",
+  "name": "Insulin Glargine to Insulin Lispro",
+  "category": "02_drug_name_errors",
+  "description": "Different insulin type substitution",
+  "error_types": [
+    "drug_substitution",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.08,
+    0.18
+  ],
+  "notes": "CRITICAL: Glargine is long-acting, lispro is rapid-acting - completely different usage"
+}

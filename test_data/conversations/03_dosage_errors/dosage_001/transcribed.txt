@@ -1,0 +1,3 @@
+Doctor: I'm prescribing lisinopril 100 milligrams once daily.
+Patient: Is 100 milligrams a normal starting dose?
+Doctor: Yes, 100 milligrams is standard. We may increase if needed.

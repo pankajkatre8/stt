@@ -1,0 +1,4 @@
+Doctor: I see you're taking metformin for your diabetes.
+Patient: Yes, metformin 500 milligrams twice daily.
+Doctor: How is your blood sugar control with the metformin?
+Patient: It's been stable. The metformin works well for me.

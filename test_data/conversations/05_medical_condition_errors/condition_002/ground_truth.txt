@@ -1,0 +1,3 @@
+Doctor: Your hypertension needs better control.
+Patient: My hypertension has been difficult to manage.
+Doctor: We need to adjust your hypertension medications.

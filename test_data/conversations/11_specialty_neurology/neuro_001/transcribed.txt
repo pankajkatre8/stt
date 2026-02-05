@@ -1,0 +1,7 @@
+Doctor: You're having about 12 migraine days per month. That qualifies for prevention.
+Patient: What are my options?
+Doctor: We can try topiramate, propranolol, or amitriptyline. I'd recommend starting with topiramate 25 milligrams.
+Patient: Any side effects?
+Doctor: Some people experience tingling in hands and feet, difficulty finding words, or weight loss.
+Patient: What about when I get a migraine?
+Doctor: Continue using sumatriptan 50 milligrams for acute attacks.

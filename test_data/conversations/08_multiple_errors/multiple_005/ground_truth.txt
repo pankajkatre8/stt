@@ -1,0 +1,3 @@
+Doctor: Your hypertension is not controlled with amlodipine alone.
+Patient: I don't want to add another medication.
+Doctor: Uncontrolled hypertension can lead to serious problems.

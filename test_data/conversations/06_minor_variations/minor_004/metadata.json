@@ -1,0 +1,15 @@
+{
+  "id": "minor_004",
+  "name": "Contraction Differences",
+  "category": "06_minor_variations",
+  "description": "Contracted vs expanded forms",
+  "error_types": [
+    "contraction_variation"
+  ],
+  "severity": "none",
+  "expected_ter_range": [
+    0.02,
+    0.06
+  ],
+  "notes": ""
+}

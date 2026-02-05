@@ -1,0 +1,4 @@
+Doctor: Let's review your medications. You're on metformin for diabetes.
+Patient: Yes, and lisinopril for blood pressure.
+Doctor: You also take atorvastatin for cholesterol.
+Patient: And aspirin for my heart.

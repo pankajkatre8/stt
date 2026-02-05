@@ -1,0 +1,13 @@
+{
+  "id": "cardio_001",
+  "name": "Cardiac Catheterization Discussion",
+  "category": "09_specialty_cardiology",
+  "description": "Discussion of cardiac procedure findings",
+  "error_types": [],
+  "severity": "none",
+  "expected_ter_range": [
+    0.0,
+    0.0
+  ],
+  "notes": ""
+}

@@ -1,0 +1,16 @@
+{
+  "id": "dosage_001",
+  "name": "10mg to 100mg Error",
+  "category": "03_dosage_errors",
+  "description": "Tenfold dosage error - potentially lethal",
+  "error_types": [
+    "dosage_error",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.05,
+    0.15
+  ],
+  "notes": "CRITICAL: 100mg lisinopril would be a massive overdose"
+}

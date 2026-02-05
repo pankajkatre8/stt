@@ -1,0 +1,15 @@
+{
+  "id": "drug_005",
+  "name": "Gabapentin to Gabapentine Misspelling",
+  "category": "02_drug_name_errors",
+  "description": "Added letter to anticonvulsant name",
+  "error_types": [
+    "drug_misspelling"
+  ],
+  "severity": "low",
+  "expected_ter_range": [
+    0.03,
+    0.1
+  ],
+  "notes": ""
+}

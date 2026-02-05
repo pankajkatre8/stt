@@ -1,0 +1,7 @@
+Doctor: Your cardiac catheterization showed a 70 percent blockage in the LAD artery.
+Patient: Is that serious?
+Doctor: It's significant. We found stenosis in the left anterior descending artery.
+Patient: What are my options?
+Doctor: We can manage with medications or consider angioplasty with stent placement.
+Patient: What medications would I need?
+Doctor: Aspirin, clopidogrel for blood thinning, a statin for cholesterol, and a beta blocker.

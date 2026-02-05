@@ -1,0 +1,3 @@
+Doctor: Any shortness of breath?
+Patient: Shortness of breath at rest and with activity.
+Doctor: Patient reports dyspnea. Lungs are clear bilaterally.

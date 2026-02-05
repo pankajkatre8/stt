@@ -1,0 +1,18 @@
+{
+  "id": "multiple_005",
+  "name": "Condition + Medication + Negation",
+  "category": "08_multiple_errors",
+  "description": "Triple error - condition, drug, and negation",
+  "error_types": [
+    "condition_error",
+    "drug_misspelling",
+    "negation_flip",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.18,
+    0.3
+  ],
+  "notes": ""
+}

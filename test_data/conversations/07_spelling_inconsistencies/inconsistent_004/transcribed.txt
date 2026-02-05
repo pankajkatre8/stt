@@ -1,0 +1,4 @@
+Doctor: Your BP is elevated.
+Patient: My blood pressure has always been high.
+Doctor: We need to monitor BP closely.
+Patient: I'll check my blood pressure daily.

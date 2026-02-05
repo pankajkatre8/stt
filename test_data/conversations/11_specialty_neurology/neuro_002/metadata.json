@@ -1,0 +1,17 @@
+{
+  "id": "neuro_002",
+  "name": "Epilepsy Medication Change",
+  "category": "11_specialty_neurology",
+  "description": "Anticonvulsant adjustment discussion",
+  "error_types": [
+    "direction_error",
+    "negation_flip",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.1,
+    0.2
+  ],
+  "notes": "CRITICAL: Decreasing instead of increasing dose, and allowing driving after seizure"
+}

@@ -1,0 +1,7 @@
+Doctor: Your peak flow is only 65 percent of your personal best.
+Patient: I've been waking up at night with wheezing about twice a week.
+Doctor: That indicates poorly controlled asthma. We need to step up your therapy.
+Patient: I'm currently on fluticasone 110 micrograms twice daily.
+Doctor: Let's increase to 220 micrograms twice daily and add a long-acting beta agonist.
+Patient: Will that be another inhaler?
+Doctor: We can use a combination inhaler like Advair for convenience.

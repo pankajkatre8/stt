@@ -1,0 +1,3 @@
+Doctor: Your GORD symptoms seem improved.
+Patient: The GORD medication has helped a lot.
+Doctor: We'll continue managing your GORD with omeprazole.

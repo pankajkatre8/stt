@@ -1,0 +1,3 @@
+Doctor: You're currently on insulin glargine 20 units at bedtime.
+Patient: Yes, the insulin glargine works well as my basal insulin.
+Doctor: Good. Insulin glargine provides steady coverage throughout the day.

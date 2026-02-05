@@ -1,0 +1,7 @@
+Doctor: Your cortisol levels confirm adrenal insufficiency.
+Patient: What does that mean for treatment?
+Doctor: You'll need hydrocortisone replacement. Start with 15 milligrams in the morning and 5 milligrams in the afternoon.
+Patient: Is this lifelong?
+Doctor: Yes, but you can live a normal life. You'll need to increase the dose during illness or stress.
+Patient: What if I get sick?
+Doctor: Double your dose during illness and seek medical help if you can't take it orally.

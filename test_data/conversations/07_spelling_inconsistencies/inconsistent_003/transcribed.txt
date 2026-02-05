@@ -1,0 +1,4 @@
+Doctor: Mrs. Patterson, how are you feeling?
+Patient: I'm feeling better, thank you.
+Doctor: Mrs. Paterson, your test results look good.
+Patient: That's a relief.

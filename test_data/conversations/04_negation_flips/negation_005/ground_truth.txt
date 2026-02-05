@@ -1,0 +1,3 @@
+Doctor: Are you having any thoughts of harming yourself?
+Patient: No, I have no thoughts of suicide or self-harm.
+Doctor: Patient denies suicidal ideation. No safety concerns at this time.

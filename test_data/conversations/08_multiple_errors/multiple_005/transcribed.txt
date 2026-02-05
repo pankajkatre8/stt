@@ -1,0 +1,3 @@
+Doctor: Your hypotension is controlled with amlopidine alone.
+Patient: I want to add another medication.
+Doctor: Controlled hypotension can lead to serious problems.

@@ -1,0 +1,3 @@
+Doctor: I'm prescribing atorvastatin 20 milligrams for your cholesterol.
+Patient: Is atorvastatin a statin medication?
+Doctor: Yes, atorvastatin is very effective for lowering LDL cholesterol.

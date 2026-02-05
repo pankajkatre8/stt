@@ -1,0 +1,17 @@
+{
+  "id": "cardio_002",
+  "name": "Heart Failure Management - Errors",
+  "category": "09_specialty_cardiology",
+  "description": "Heart failure discussion with medication errors",
+  "error_types": [
+    "value_error",
+    "drug_misspelling",
+    "abbreviation_error"
+  ],
+  "severity": "high",
+  "expected_ter_range": [
+    0.08,
+    0.18
+  ],
+  "notes": "EF of 53% would be normal, not indicating heart failure"
+}

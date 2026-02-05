@@ -1,0 +1,15 @@
+{
+  "id": "negation_004",
+  "name": "Fever Negation Flip",
+  "category": "04_negation_flips",
+  "description": "Afebrile patient transcribed as having fever",
+  "error_types": [
+    "negation_flip"
+  ],
+  "severity": "high",
+  "expected_ter_range": [
+    0.15,
+    0.25
+  ],
+  "notes": ""
+}

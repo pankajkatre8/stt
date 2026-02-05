@@ -1,0 +1,3 @@
+Doctor: Inject 15 units of insulin before dinner.
+Patient: So 15 units with my evening meal?
+Doctor: Yes, 15 units about 15 minutes before eating.

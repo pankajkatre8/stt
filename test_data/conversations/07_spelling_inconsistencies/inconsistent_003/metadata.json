@@ -1,0 +1,15 @@
+{
+  "id": "inconsistent_003",
+  "name": "Patient Name Inconsistency",
+  "category": "07_spelling_inconsistencies",
+  "description": "Patient name spelled differently",
+  "error_types": [
+    "name_inconsistency"
+  ],
+  "severity": "low",
+  "expected_ter_range": [
+    0.02,
+    0.06
+  ],
+  "notes": ""
+}

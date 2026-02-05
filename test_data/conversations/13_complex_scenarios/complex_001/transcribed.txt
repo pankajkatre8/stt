@@ -1,0 +1,9 @@
+Doctor: Let's review your conditions. You have type 2 diabetes, hypertension, and stage 3 chronic kidney disease.
+Patient: How do my kidneys affect my other medications?
+Doctor: Good question. We need to be careful with metformin at your kidney function level. Your eGFR is 42.
+Patient: Should I stop the metformin?
+Doctor: No, but we reduced it to 500 milligrams once daily. We're also using lisinopril which protects your kidneys.
+Patient: What about my blood pressure goal?
+Doctor: With kidney disease and diabetes, we aim for less than 130 over 80.
+Patient: And my diabetes target?
+Doctor: HbA1c below 7 percent, but we can be more flexible given your kidney disease.

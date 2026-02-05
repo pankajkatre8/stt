@@ -1,0 +1,10 @@
+Patient: Doctor, I've been having chest pain for the past three days.
+Doctor: Can you describe the pain? Is it sharp, dull, or pressure-like?
+Patient: It feels like pressure, right in the center of my chest.
+Doctor: Does it radiate anywhere? To your arm, jaw, or back?
+Patient: Sometimes I feel it in my left arm.
+Doctor: Does anything make it better or worse? Activity or rest?
+Patient: It gets worse when I climb stairs. Resting helps.
+Doctor: I'm going to order an EKG and some blood tests including troponin levels.
+Patient: Do you think it's my heart?
+Doctor: We need to rule out cardiac causes. The tests will help us determine that.

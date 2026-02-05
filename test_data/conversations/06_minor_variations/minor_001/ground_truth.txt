@@ -1,0 +1,3 @@
+Doctor: The patient presents with cephalgia and myalgia.
+Patient: My headache and muscle pain started yesterday.
+Doctor: I'll prescribe an analgesic for the pain.

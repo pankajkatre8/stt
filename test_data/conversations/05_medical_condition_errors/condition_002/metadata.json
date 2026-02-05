@@ -1,0 +1,16 @@
+{
+  "id": "condition_002",
+  "name": "Hypertension to Hypotension",
+  "category": "05_medical_condition_errors",
+  "description": "High blood pressure confused with low blood pressure",
+  "error_types": [
+    "condition_error",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.08,
+    0.15
+  ],
+  "notes": "CRITICAL: Hypertension and hypotension require opposite treatments"
+}

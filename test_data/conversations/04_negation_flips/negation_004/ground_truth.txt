@@ -1,0 +1,3 @@
+Doctor: Have you had any fever?
+Patient: No fever. I've been checking my temperature and it's been normal.
+Doctor: Patient is afebrile. No signs of infection.

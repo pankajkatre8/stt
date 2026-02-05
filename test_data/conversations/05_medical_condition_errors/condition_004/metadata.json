@@ -1,0 +1,15 @@
+{
+  "id": "condition_004",
+  "name": "GERD to GORD Regional Spelling",
+  "category": "05_medical_condition_errors",
+  "description": "Minor regional spelling variation",
+  "error_types": [
+    "spelling_variation"
+  ],
+  "severity": "low",
+  "expected_ter_range": [
+    0.03,
+    0.08
+  ],
+  "notes": "GERD (US) vs GORD (UK) - same condition, different spelling"
+}

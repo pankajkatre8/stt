@@ -1,0 +1,17 @@
+{
+  "id": "multiple_003",
+  "name": "Multiple Drug Errors",
+  "category": "08_multiple_errors",
+  "description": "Several medication errors in one conversation",
+  "error_types": [
+    "drug_substitution",
+    "drug_misspelling",
+    "critical_error"
+  ],
+  "severity": "critical",
+  "expected_ter_range": [
+    0.12,
+    0.22
+  ],
+  "notes": ""
+}

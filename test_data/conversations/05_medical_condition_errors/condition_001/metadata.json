@@ -1,0 +1,15 @@
+{
+  "id": "condition_001",
+  "name": "Diabetes Type Confusion",
+  "category": "05_medical_condition_errors",
+  "description": "Type 2 diabetes transcribed as Type 1",
+  "error_types": [
+    "condition_error"
+  ],
+  "severity": "high",
+  "expected_ter_range": [
+    0.08,
+    0.18
+  ],
+  "notes": "Type 1 and Type 2 have completely different pathophysiology and treatment"
+}
