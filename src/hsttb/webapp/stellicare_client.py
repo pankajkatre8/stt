@@ -172,10 +172,12 @@ async def stream_audio_to_stellicare(
 
     phrases: list[StellicarePhrase] = []
     # Stellicare alternates between two streams:
-    #   Even messages = committed transcript (grows progressively)
-    #   Odd messages  = current word being recognized
-    # Full transcript = committed + " " + current
-    interim_texts: list[str] = []  # all interim texts in order
+    #   Even messages (0, 2, 4...) = committed transcript (grows)
+    #   Odd messages  (1, 3, 5...) = active word being recognized
+    # Full transcript = last committed + unique tail from last active
+    committed_texts: list[str] = []  # even-indexed interims
+    active_texts: list[str] = []     # odd-indexed interims
+    interim_count = 0
 
     try:
         async with websockets.connect(
@@ -184,6 +186,10 @@ async def stream_audio_to_stellicare(
             close_timeout=10,
         ) as ws:
             receive_done = asyncio.Event()
+            all_audio_sent = asyncio.Event()
+            # Idle timeout: seconds of silence after all audio sent
+            # before we consider the stream complete.
+            idle_timeout_secs = 5.0
 
             async def receive_phrases() -> None:
                 """Receive and parse transcript phrases from Stellicare.
@@ -192,9 +198,29 @@ async def stream_audio_to_stellicare(
                   STATUS|Voice recording session started
                   INTERIM|partial transcript text
                 Messages alternate between committed text and current word.
+
+                Uses per-message timeouts after all audio is sent to detect
+                when Stellicare has finished sending transcript data.
                 """
+                nonlocal interim_count
                 try:
-                    async for raw_message in ws:
+                    while True:
+                        # Use a short recv timeout once all audio is sent,
+                        # so we detect when Stellicare stops sending.
+                        if all_audio_sent.is_set():
+                            try:
+                                raw_message = await asyncio.wait_for(
+                                    ws.recv(), timeout=idle_timeout_secs
+                                )
+                            except asyncio.TimeoutError:
+                                logger.debug(
+                                    f"No message for {idle_timeout_secs}s "
+                                    "after audio sent — stream complete"
+                                )
+                                return
+                        else:
+                            raw_message = await ws.recv()
+
                         try:
                             if isinstance(raw_message, bytes):
                                 raw_message = raw_message.decode("utf-8")
@@ -221,7 +247,12 @@ async def stream_audio_to_stellicare(
                             continue
 
                         if msg_type in ("INTERIM", "FINAL"):
-                            interim_texts.append(text)
+                            # Track alternating streams separately
+                            if interim_count % 2 == 0:
+                                committed_texts.append(text)
+                            else:
+                                active_texts.append(text)
+                            interim_count += 1
 
                             phrase = StellicarePhrase(
                                 text=text,
@@ -239,7 +270,6 @@ async def stream_audio_to_stellicare(
 
                             # FINAL message means transcript is complete
                             if msg_type == "FINAL":
-                                receive_done.set()
                                 return
                         else:
                             logger.debug(f"Unknown Stellicare message type: {msg_type}")
@@ -280,23 +310,23 @@ async def stream_audio_to_stellicare(
                 f"({bytes_sent} bytes). Waiting for final transcript..."
             )
 
-            # Signal end-of-audio by closing the WebSocket write side
-            try:
-                await ws.close()
-            except Exception:
-                pass
+            # Signal to the receive loop that audio is done.
+            # The receive loop will now use a short idle timeout
+            # to detect when Stellicare stops sending.
+            all_audio_sent.set()
 
-            # Wait for FINAL message or connection close (short timeout)
+            # Wait for receive loop to finish (FINAL, idle, or hard timeout)
             try:
                 await asyncio.wait_for(
-                    receive_done.wait(), timeout=30.0
+                    receive_done.wait(), timeout=config.read_timeout
                 )
             except asyncio.TimeoutError:
                 logger.info(
-                    "Stellicare response stream ended (timeout). "
+                    "Stellicare response stream ended (hard timeout). "
                     "Proceeding with phrases received."
                 )
 
+            # Clean up
             receive_task.cancel()
             try:
                 await receive_task
@@ -314,21 +344,24 @@ async def stream_audio_to_stellicare(
             f"Unexpected error during Stellicare streaming: {e}"
         ) from e
 
-    # Build the final transcript from alternating streams.
-    # Stellicare alternates: committed_text, current_word, committed_text, ...
-    # The full transcript = last committed + " " + last current word.
-    final_text = ""
-    if len(interim_texts) >= 2:
-        # Last two messages: one is committed text, one is current word
-        second_last = interim_texts[-2]
-        last = interim_texts[-1]
-        # The longer one is likely the committed text
-        if len(second_last) >= len(last):
-            final_text = f"{second_last} {last}".strip()
+    # Assemble final transcript from Stellicare's two alternating streams:
+    #   Committed (even msgs): grows progressively, the stable transcript
+    #   Active (odd msgs): word(s) currently being recognized
+    # Full transcript = last committed + last active (if it adds new words)
+    # No deduplication — output is passed through as Stellicare produced it.
+    committed = committed_texts[-1] if committed_texts else ""
+    active = active_texts[-1] if active_texts else ""
+
+    if committed and active:
+        # Only append active if it's not already at the end of committed
+        committed_lower = committed.lower().rstrip()
+        active_lower = active.lower().strip()
+        if committed_lower.endswith(active_lower):
+            final_text = committed
         else:
-            final_text = f"{last} {second_last}".strip()
-    elif len(interim_texts) == 1:
-        final_text = interim_texts[0]
+            final_text = f"{committed} {active}".strip()
+    else:
+        final_text = committed or active
 
     if final_text:
         final_phrase = StellicarePhrase(
@@ -340,7 +373,7 @@ async def stream_audio_to_stellicare(
         await _invoke_callback(on_phrase, final_text, True)
 
     logger.info(
-        f"Streamed {file_path.name}: {len(interim_texts)} interims, "
+        f"Streamed {file_path.name}: {interim_count} interims, "
         f"final transcript: {final_text[:100]!r}"
     )
 
