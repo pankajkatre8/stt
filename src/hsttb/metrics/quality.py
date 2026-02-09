@@ -34,6 +34,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from typing import Any
+from hsttb.nlp.gap_filler import GapFiller
 
 logger = logging.getLogger(__name__)
 
@@ -152,6 +153,7 @@ class QualityResult:
     spelling_inconsistencies: list[dict] = field(default_factory=list)  # Same word spelled differently
     known_terms_found: list[dict] = field(default_factory=list)  # Recognized medical terms
 
+    missing_context_alerts: list[dict] = field(default_factory=list)
 
 class QualityEngine:
     """
@@ -193,7 +195,7 @@ class QualityEngine:
         self._use_grammar = use_grammar
         self._use_embedding_drift = use_embedding_drift
         self._use_confidence_variance = use_confidence_variance
-
+        self._gap_filler: Any = None
         # Lazy-loaded components
         self._perplexity_scorer: Any = None
         self._grammar_checker: Any = None
@@ -298,6 +300,15 @@ class QualityEngine:
             except Exception as e:
                 logger.warning(f"Term matcher unavailable: {e}")
         return self._term_matcher
+    
+    def _get_gap_filler(self):
+        """Lazy load the GapFiller."""
+        if self._gap_filler is None:
+            try:
+                self._gap_filler = GapFiller()
+            except Exception as e:
+                logger.warning(f"Gap filler unavailable: {e}")
+        return self._gap_filler
 
     def compute(self, text: str, audio_duration_seconds: float | None = None) -> QualityResult:
         """
@@ -334,6 +345,8 @@ class QualityEngine:
         perplexity = 100.0
         log_probability = 0.0
         perplexity_available = False
+        
+        missing_context_alerts: list[dict] = []
 
         grammar_score = 1.0  # Default if unavailable
         grammar_errors: list[dict] = []
@@ -360,6 +373,45 @@ class QualityEngine:
                 perplexity_score = ppl_result.normalized_score
                 log_probability = ppl_result.log_probability
                 perplexity_available = True
+                
+                # --- NEW CODE: Missing Word Detection Strategy ---
+                # 1. Check for spikes found by PerplexityScorer
+                if hasattr(ppl_result, 'spikes') and ppl_result.spikes:
+                    gap_filler = self._get_gap_filler()
+                    term_matcher = self._get_term_matcher()
+                    
+                    for spike in ppl_result.spikes:
+                        # 2. Filter: Only check spikes near medical terms or key verbs
+                        prev_word = spike['prev_token']
+                        next_word = spike['token']
+                        
+                        is_med_context = False
+                        if term_matcher:
+                            # Loose check: is the area near a medical term OR a critical verb?
+                            is_med_context = (
+                                term_matcher.is_medical_term(prev_word) or 
+                                term_matcher.is_medical_term(next_word) or
+                                prev_word.lower() in ["take", "prescribe", "have", "diagnosed"]
+                            )
+                        
+                        # 3. Predict: Ask PubMedBERT what is missing
+                        if is_med_context and gap_filler:
+                            prediction = gap_filler.predict_gap(text, prev_word, next_word)
+                            
+                            if prediction.get("detected") and prediction.get("confidence") > 0.1:
+                                top_guess = prediction['top_predictions'][0][0]
+                                
+                                alert = {
+                                    "type": "MISSING_WORD",
+                                    "severity": "HIGH",
+                                    "location": f"{prev_word} ... {next_word}",
+                                    "prediction": top_guess,
+                                    "reason": f"High perplexity spike ({spike['surprisal']}). AI predicts '{top_guess}' is missing."
+                                }
+                                missing_context_alerts.append(alert)
+                # -------------------------------------------------
+                
+                
             except Exception as e:
                 logger.warning(f"Perplexity computation failed: {e}")
 
@@ -497,6 +549,11 @@ class QualityEngine:
             risk_result = clinical_risk_scorer.score(text, quality_context)
 
             clinical_risk_score = risk_result.final_score
+            if missing_context_alerts:
+             clinical_risk_score = max(0.0, clinical_risk_score - (0.15 * len(missing_context_alerts)))
+             if clinical_risk_level != "critical":
+                 clinical_risk_level = "high"
+             clinical_recommendation = "NEEDS_REVIEW"
             clinical_risk_level = risk_result.risk_level.value
             clinical_recommendation = risk_result.recommendation.value
             clinical_concerns = risk_result.clinical_concerns
@@ -633,6 +690,8 @@ class QualityEngine:
             grammar_available=grammar_available,
             embedding_drift_available=embedding_drift_available,
             confidence_variance_available=confidence_variance_available,
+            
+            missing_context_alerts=missing_context_alerts,
             # Clinical Risk Scoring
             clinical_risk_score=round(clinical_risk_score, 4),
             clinical_risk_level=clinical_risk_level,
